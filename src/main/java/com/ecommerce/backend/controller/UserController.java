@@ -1,7 +1,7 @@
 package com.ecommerce.backend.controller;
 
 import com.ecommerce.backend.dto.requests.UserRequest;
-import com.ecommerce.backend.entity.User;
+import com.ecommerce.backend.dto.requests.GoogleLoginRequest;
 import com.ecommerce.backend.dto.responses.UserResponse;
 import com.ecommerce.backend.service.UserService;
 import lombok.RequiredArgsConstructor;
@@ -39,5 +39,11 @@ public class UserController {
     @DeleteMapping("/{id}")
     public void deleteUser(@PathVariable Integer id) {
         userService.deleteUser(id);
+    }
+
+    // API GOOGLE LOGIN
+    @PostMapping("/google-login")
+    public UserResponse loginGoogle(@RequestBody GoogleLoginRequest request) {
+        return userService.loginWithGoogle(request);
     }
 }

@@ -81,8 +81,6 @@ public class ReviewService {
 
         mapRequestToReview(review, request, user, product);
 
-        review.setCreatedAt(LocalDateTime.now());
-
         Review saved = reviewRepository.save(review);
 
         return mapToDTO(saved);

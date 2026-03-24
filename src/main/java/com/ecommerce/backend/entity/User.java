@@ -1,5 +1,6 @@
 package com.ecommerce.backend.entity;
 
+import com.ecommerce.backend.enums.Provider;
 import com.ecommerce.backend.enums.Role;
 import com.ecommerce.backend.enums.UserStatus;
 import jakarta.persistence.*;
@@ -31,7 +32,7 @@ public class User {
     @Column(nullable = false, length = 50)
     private String username;
 
-    @Column(nullable = false, length = 255)
+    @Column(length = 255)
     private String password;
 
     @Column(nullable = false, length = 100)
@@ -50,4 +51,12 @@ public class User {
 
     @Column(name = "created_at", insertable = false, updatable = false)
     private LocalDateTime createdAt;
+
+    @Column(name = "google_id", unique = true)
+    private String googleId;
+
+    @Enumerated(EnumType.STRING)
+    @Column(length = 10)
+    private Provider provider = Provider.LOCAL;
+
 }
