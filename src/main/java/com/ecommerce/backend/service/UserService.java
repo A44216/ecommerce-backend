@@ -135,4 +135,29 @@ public class UserService {
 
         return res;
     }
+
+    public UserResponse login(UserRequest request) {
+
+        // 1. Tìm user theo username hoặc email
+        User user = null;
+
+        if (request.getUsername() != null) {
+            user = userRepository.findByUsername(request.getUsername()).orElse(null);
+        } else if (request.getEmail() != null) {
+            user = userRepository.findByEmail(request.getEmail()).orElse(null);
+        }
+
+        if (user == null) {
+            throw new RuntimeException("User không tồn tại");
+        }
+
+        // 2. So sánh password (hiện tại dùng plain text, sau này có thể hash)
+        if (!request.getPassword().equals(user.getPassword())) {
+            throw new RuntimeException("Mật khẩu không đúng");
+        }
+
+        // 3. Trả về UserResponse
+        return mapToResponse(user);
+    }
+
 }

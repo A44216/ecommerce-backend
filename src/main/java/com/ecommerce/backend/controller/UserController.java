@@ -46,4 +46,10 @@ public class UserController {
     public UserResponse loginGoogle(@RequestBody GoogleLoginRequest request) {
         return userService.loginWithGoogle(request);
     }
+
+    @PostMapping("/login")
+    public UserResponse login(@RequestBody UserRequest request) {
+        return userService.login(request);
+    }
+
 }
