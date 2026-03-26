@@ -4,9 +4,13 @@ import com.ecommerce.backend.dto.requests.UserRequest;
 import com.ecommerce.backend.dto.requests.GoogleLoginRequest;
 import com.ecommerce.backend.entity.User;
 import com.ecommerce.backend.enums.Provider;
+import com.ecommerce.backend.enums.UserStatus;
+import com.ecommerce.backend.exception.BadRequestException;
+import com.ecommerce.backend.exception.ResourceNotFoundException;
 import com.ecommerce.backend.repository.UserRepository;
 import com.ecommerce.backend.dto.responses.UserResponse;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -18,6 +22,7 @@ import java.util.stream.Collectors;
 public class UserService {
 
     private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
 
     public List<UserResponse> getAllUsers() {
         return userRepository.findAll()
@@ -39,12 +44,14 @@ public class UserService {
 
         user.setFullName(request.getFullName());
         user.setUsername(request.getUsername());
-        user.setPassword(request.getPassword());
         user.setEmail(request.getEmail());
         user.setPhone(request.getPhone());
         user.setRole(request.getRole());
 
         user.setProvider(Provider.LOCAL);
+
+        // Mã hóa mật khẩu
+        user.setPassword(passwordEncoder.encode(request.getPassword()));
 
         userRepository.save(user);
 
@@ -136,27 +143,32 @@ public class UserService {
         return res;
     }
 
+    // Đăng nhập thường
     public UserResponse login(UserRequest request) {
 
-        // 1. Tìm user theo username hoặc email
-        User user = null;
+        if (request.getPassword() == null ||
+                (request.getUsername() == null && request.getEmail() == null)) {
+            throw new BadRequestException("Thiếu username/email hoặc password");
+        }
+
+        User user;
 
         if (request.getUsername() != null) {
-            user = userRepository.findByUsername(request.getUsername()).orElse(null);
-        } else if (request.getEmail() != null) {
-            user = userRepository.findByEmail(request.getEmail()).orElse(null);
+            user = userRepository.findByUsername(request.getUsername())
+                    .orElseThrow(() -> new ResourceNotFoundException("User không tồn tại"));
+        } else {
+            user = userRepository.findByEmail(request.getEmail())
+                    .orElseThrow(() -> new ResourceNotFoundException("User không tồn tại"));
         }
 
-        if (user == null) {
-            throw new RuntimeException("User không tồn tại");
+        if (user.getStatus() == UserStatus.BLOCKED) {
+            throw new BadRequestException("Tài khoản đã bị khóa");
         }
 
-        // 2. So sánh password (hiện tại dùng plain text, sau này có thể hash)
-        if (!request.getPassword().equals(user.getPassword())) {
-            throw new RuntimeException("Mật khẩu không đúng");
+        if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
+            throw new BadRequestException("Mật khẩu không đúng");
         }
 
-        // 3. Trả về UserResponse
         return mapToResponse(user);
     }
 
