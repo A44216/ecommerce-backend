@@ -31,7 +31,7 @@ public class EcommerceBackendApplication {
 
                 repo.save(admin);
 
-                System.out.println("✅ Admin created");
+                System.out.println("Admin created");
             }
 
             // ===== CUSTOMER =====
@@ -45,7 +45,7 @@ public class EcommerceBackendApplication {
                 user.setStatus(UserStatus.ACTIVE);
 
                 repo.save(user);
-                System.out.println("✅ Customer created");
+                System.out.println("Customer created");
             }
 
         };

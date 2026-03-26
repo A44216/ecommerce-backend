@@ -11,6 +11,6 @@ public class LoginResponse {
     private String email;
     private String role;
 
-    // sau này thêm JWT
-    private String token;
+    private String token; // token JWT
+
 }

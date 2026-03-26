@@ -4,9 +4,11 @@ import com.ecommerce.backend.dto.requests.LoginRequest;
 import com.ecommerce.backend.dto.responses.LoginResponse;
 import com.ecommerce.backend.dto.responses.UserResponse;
 import com.ecommerce.backend.entity.User;
+import com.ecommerce.backend.enums.UserStatus;
 import com.ecommerce.backend.exception.BadRequestException;
 import com.ecommerce.backend.exception.ResourceNotFoundException;
 import com.ecommerce.backend.repository.UserRepository;
+import com.ecommerce.backend.security.JwtService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -18,9 +20,18 @@ public class AuthService {
     private final UserRepository userRepository;
 
     private final PasswordEncoder passwordEncoder;
+    private final JwtService jwtService;
+
 
     public LoginResponse login(LoginRequest request) {
 
+        // 1. validate input
+        if (request.getPassword() == null ||
+                (request.getUsername() == null && request.getEmail() == null)) {
+            throw new BadRequestException("Thiếu username/email hoặc password");
+        }
+
+        // 2. tìm user
         User user;
 
         if (request.getUsername() != null) {
@@ -31,15 +42,26 @@ public class AuthService {
                     .orElseThrow(() -> new ResourceNotFoundException("User không tồn tại"));
         }
 
-        if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
-            throw new BadRequestException("Sai mật khẩu");
+        // 3. check status
+        if (user.getStatus() == UserStatus.BLOCKED) {
+            throw new BadRequestException("Tài khoản đã bị khóa");
         }
 
+        // 4. check password
+        if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
+            throw new BadRequestException("Mật khẩu không đúng");
+        }
+
+        // 5. generate JWT
+        String token = jwtService.generateToken(user.getUsername());
+
+        // 6. response
         LoginResponse res = new LoginResponse();
         res.setId(user.getId());
         res.setUsername(user.getUsername());
         res.setEmail(user.getEmail());
         res.setRole(user.getRole().name());
+        res.setToken(token);
 
         return res;
     }
