@@ -1,6 +1,7 @@
 package com.ecommerce.backend.service;
 
 import com.ecommerce.backend.dto.requests.LoginRequest;
+import com.ecommerce.backend.dto.requests.UserRequest;
 import com.ecommerce.backend.dto.responses.LoginResponse;
 import com.ecommerce.backend.dto.responses.UserResponse;
 import com.ecommerce.backend.entity.User;
@@ -80,4 +81,32 @@ public class AuthService {
 
         return res;
     }
+
+    public UserResponse register(UserRequest request) {
+
+        if (userRepository.existsByUsername(request.getUsername())) {
+            throw new BadRequestException("Username đã tồn tại");
+        }
+
+        if (userRepository.existsByEmail(request.getEmail())) {
+            throw new BadRequestException("Email đã tồn tại");
+        }
+
+        User user = new User();
+        user.setFullName(request.getFullName());
+        user.setUsername(request.getUsername());
+        user.setEmail(request.getEmail());
+        user.setPhone(request.getPhone());
+
+        user.setPassword(passwordEncoder.encode(request.getPassword()));
+
+        // QUAN TRỌNG
+        user.setRole(request.getRole());
+        user.setStatus(UserStatus.ACTIVE);
+
+        userRepository.save(user);
+
+        return mapToResponse(user);
+    }
+
 }
