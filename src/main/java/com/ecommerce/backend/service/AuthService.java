@@ -29,7 +29,7 @@ public class AuthService {
         // 1. validate input
         if (request.getPassword() == null ||
                 (request.getUsername() == null && request.getEmail() == null)) {
-            throw new BadRequestException("Thiếu username/email hoặc password");
+            throw new BadRequestException("INVALID_INPUT");
         }
 
         // 2. tìm user
@@ -37,20 +37,20 @@ public class AuthService {
 
         if (request.getUsername() != null) {
             user = userRepository.findByUsername(request.getUsername())
-                    .orElseThrow(() -> new ResourceNotFoundException("User không tồn tại"));
+                    .orElseThrow(() -> new ResourceNotFoundException("USER_NOT_FOUND"));
         } else {
             user = userRepository.findByEmail(request.getEmail())
-                    .orElseThrow(() -> new ResourceNotFoundException("User không tồn tại"));
+                    .orElseThrow(() -> new ResourceNotFoundException("USER_NOT_FOUND"));
         }
 
         // 3. check status
         if (user.getStatus() == UserStatus.BLOCKED) {
-            throw new BadRequestException("Tài khoản đã bị khóa");
+            throw new BadRequestException("ACCOUNT_BLOCKED");
         }
 
         // 4. check password
         if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
-            throw new BadRequestException("Mật khẩu không đúng");
+            throw new BadRequestException("WRONG_PASSWORD");
         }
 
         // 5. generate JWT
@@ -85,11 +85,11 @@ public class AuthService {
     public UserResponse register(UserRequest request) {
 
         if (userRepository.existsByUsername(request.getUsername())) {
-            throw new BadRequestException("Username đã tồn tại");
+            throw new BadRequestException("USERNAME_EXIST");
         }
 
         if (userRepository.existsByEmail(request.getEmail())) {
-            throw new BadRequestException("Email đã tồn tại");
+            throw new BadRequestException("EMAIL_EXIST");
         }
 
         User user = new User();
