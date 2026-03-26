@@ -26,20 +26,25 @@ public class AuthService {
 
     public LoginResponse login(LoginRequest request) {
 
-        // 1. validate input
-        if (request.getPassword() == null ||
-                (request.getUsername() == null && request.getEmail() == null)) {
+        String username = request.getUsername() != null ? request.getUsername().trim() : null;
+        String email = request.getEmail() != null ? request.getEmail().trim() : null;
+        String password = request.getPassword() != null ? request.getPassword().trim() : null;
+
+        // 1. Validate
+        if (password == null || password.isEmpty()
+                || ((username == null || username.isEmpty())
+                && (email == null || email.isEmpty()))) {
             throw new BadRequestException("INVALID_INPUT");
         }
 
         // 2. tìm user
         User user;
 
-        if (request.getUsername() != null) {
-            user = userRepository.findByUsername(request.getUsername())
+        if (username != null && !username.isEmpty()) {
+            user = userRepository.findByUsername(username)
                     .orElseThrow(() -> new ResourceNotFoundException("USER_NOT_FOUND"));
         } else {
-            user = userRepository.findByEmail(request.getEmail())
+            user = userRepository.findByEmail(email)
                     .orElseThrow(() -> new ResourceNotFoundException("USER_NOT_FOUND"));
         }
 
@@ -49,13 +54,12 @@ public class AuthService {
         }
 
         // 4. check password
-        if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
+        if (!passwordEncoder.matches(password, user.getPassword())) {
             throw new BadRequestException("WRONG_PASSWORD");
         }
 
         // 5. generate JWT
-        String token = jwtService.generateToken(user.getUsername());
-
+        String token = jwtService.generateToken(user.getId() + ":" + user.getRole().name());
         // 6. response
         LoginResponse res = new LoginResponse();
         res.setId(user.getId());
@@ -83,6 +87,10 @@ public class AuthService {
     }
 
     public UserResponse register(UserRequest request) {
+        String username = request.getUsername() != null ? request.getUsername().trim() : null;
+        String email = request.getEmail() != null ? request.getEmail().trim() : null;
+        String fullName = request.getFullName() != null ? request.getFullName().trim() : null;
+        String phone = request.getPhone() != null ? request.getPhone().trim() : null;
 
         if (userRepository.existsByUsername(request.getUsername())) {
             throw new BadRequestException("USERNAME_EXIST");
@@ -93,10 +101,10 @@ public class AuthService {
         }
 
         User user = new User();
-        user.setFullName(request.getFullName());
-        user.setUsername(request.getUsername());
-        user.setEmail(request.getEmail());
-        user.setPhone(request.getPhone());
+        user.setUsername(username);
+        user.setEmail(email);
+        user.setFullName(fullName);
+        user.setPhone(phone);
 
         user.setPassword(passwordEncoder.encode(request.getPassword()));
 
