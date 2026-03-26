@@ -1,9 +1,9 @@
 package com.ecommerce.backend.service;
 
-import com.ecommerce.backend.dto.requests.UserRequest;
+import com.ecommerce.backend.dto.requests.LoginRequest;
+import com.ecommerce.backend.dto.responses.LoginResponse;
 import com.ecommerce.backend.dto.responses.UserResponse;
 import com.ecommerce.backend.entity.User;
-import com.ecommerce.backend.enums.UserStatus;
 import com.ecommerce.backend.exception.BadRequestException;
 import com.ecommerce.backend.exception.ResourceNotFoundException;
 import com.ecommerce.backend.repository.UserRepository;
@@ -19,15 +19,8 @@ public class AuthService {
 
     private final PasswordEncoder passwordEncoder;
 
-    public UserResponse login(UserRequest request) {
+    public LoginResponse login(LoginRequest request) {
 
-        // 1. validate input
-        if (request.getPassword() == null ||
-                (request.getUsername() == null && request.getEmail() == null)) {
-            throw new BadRequestException("Thiếu username/email hoặc password");
-        }
-
-        // 2. tìm user
         User user;
 
         if (request.getUsername() != null) {
@@ -38,18 +31,17 @@ public class AuthService {
                     .orElseThrow(() -> new ResourceNotFoundException("User không tồn tại"));
         }
 
-        // 3. check status
-        if (user.getStatus() == UserStatus.BLOCKED) {
-            throw new BadRequestException("Tài khoản đã bị khóa");
-        }
-
-        // 4. check password
         if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
-            throw new BadRequestException("Mật khẩu không đúng");
+            throw new BadRequestException("Sai mật khẩu");
         }
 
-        // 5. return
-        return mapToResponse(user);
+        LoginResponse res = new LoginResponse();
+        res.setId(user.getId());
+        res.setUsername(user.getUsername());
+        res.setEmail(user.getEmail());
+        res.setRole(user.getRole().name());
+
+        return res;
     }
 
     private UserResponse mapToResponse(User user) {
