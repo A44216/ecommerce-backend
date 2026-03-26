@@ -100,6 +100,11 @@ public class AuthService {
             throw new BadRequestException("EMAIL_EXIST");
         }
 
+        if (phone != null && !phone.isEmpty()
+                && userRepository.existsByPhone(phone)) {
+            throw new BadRequestException("PHONE_EXIST");
+        }
+
         User user = new User();
         user.setUsername(username);
         user.setEmail(email);
