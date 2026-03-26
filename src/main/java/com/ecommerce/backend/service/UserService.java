@@ -1,5 +1,6 @@
 package com.ecommerce.backend.service;
 
+import com.ecommerce.backend.dto.requests.LoginRequest;
 import com.ecommerce.backend.dto.requests.UserRequest;
 import com.ecommerce.backend.dto.requests.GoogleLoginRequest;
 import com.ecommerce.backend.entity.User;
@@ -144,7 +145,7 @@ public class UserService {
     }
 
     // Đăng nhập thường
-    public UserResponse login(UserRequest request) {
+    public UserResponse login(LoginRequest request) {
 
         if (request.getPassword() == null ||
                 (request.getUsername() == null && request.getEmail() == null)) {

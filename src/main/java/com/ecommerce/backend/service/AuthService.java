@@ -26,9 +26,9 @@ public class AuthService {
 
     public LoginResponse login(LoginRequest request) {
 
-        String username = request.getUsername() != null ? request.getUsername().trim() : null;
-        String email = request.getEmail() != null ? request.getEmail().trim() : null;
-        String password = request.getPassword() != null ? request.getPassword().trim() : null;
+        String username = request.getUsername() != null ? request.getUsername().trim().toLowerCase() : null;
+        String email = request.getEmail() != null ? request.getEmail().trim().toLowerCase() : null;
+        String password = request.getPassword();
 
         // 1. Validate
         if (password == null || password.isEmpty()
@@ -40,7 +40,7 @@ public class AuthService {
         // 2. tìm user
         User user;
 
-        if (username != null && !username.isEmpty()) {
+        if (username != null) {
             user = userRepository.findByUsername(username)
                     .orElseThrow(() -> new ResourceNotFoundException("USER_NOT_FOUND"));
         } else {
@@ -90,18 +90,46 @@ public class AuthService {
         String username = request.getUsername() != null ? request.getUsername().trim() : null;
         String email = request.getEmail() != null ? request.getEmail().trim() : null;
         String fullName = request.getFullName() != null ? request.getFullName().trim() : null;
-        String phone = request.getPhone() != null ? request.getPhone().trim() : null;
+        if (fullName == null || fullName.isEmpty()) {
+            throw new BadRequestException("INVALID_FULLNAME");
+        }
 
-        if (userRepository.existsByUsername(request.getUsername())) {
+        String phone = request.getPhone();
+        if (phone != null) {
+            phone = phone.trim();
+            if (phone.isEmpty()) {
+                phone = null;
+            }
+        }
+
+        if (username == null || !username.matches("^[a-zA-Z0-9_]{7,}$")) {
+            throw new BadRequestException("INVALID_USERNAME");
+        }
+        if (email == null || email.isEmpty()) {
+            throw new BadRequestException("INVALID_EMAIL");
+        }
+        if (!email.matches("^[\\w.-]+@[\\w.-]+\\.[a-zA-Z]{2,}$")) {
+            throw new BadRequestException("INVALID_EMAIL");
+        }
+        if (request.getPassword() == null || request.getPassword().length() < 6) {
+            throw new BadRequestException("INVALID_PASSWORD");
+        }
+        if (phone != null && !phone.matches("^0\\d{9}$")) {
+            throw new BadRequestException("INVALID_PHONE");
+        }
+
+        username = username.toLowerCase();
+        email = email.toLowerCase();
+
+        if (userRepository.existsByUsername(username)) {
             throw new BadRequestException("USERNAME_EXIST");
         }
 
-        if (userRepository.existsByEmail(request.getEmail())) {
+        if (userRepository.existsByEmail(email)) {
             throw new BadRequestException("EMAIL_EXIST");
         }
 
-        if (phone != null && !phone.isEmpty()
-                && userRepository.existsByPhone(phone)) {
+        if (phone != null && userRepository.existsByPhone(phone)) {
             throw new BadRequestException("PHONE_EXIST");
         }
 
@@ -111,7 +139,11 @@ public class AuthService {
         user.setFullName(fullName);
         user.setPhone(phone);
 
-        user.setPassword(passwordEncoder.encode(request.getPassword()));
+        String rawPassword = request.getPassword();
+        if (rawPassword != null) {
+            rawPassword = rawPassword.trim();
+        }
+        user.setPassword(passwordEncoder.encode(rawPassword));
 
         // QUAN TRỌNG
         user.setRole(request.getRole());

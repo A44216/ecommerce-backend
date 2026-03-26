@@ -1,9 +1,11 @@
 package com.ecommerce.backend.controller;
 
+import com.ecommerce.backend.dto.requests.LoginRequest;
 import com.ecommerce.backend.dto.requests.UserRequest;
 import com.ecommerce.backend.dto.requests.GoogleLoginRequest;
 import com.ecommerce.backend.dto.responses.UserResponse;
 import com.ecommerce.backend.service.UserService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
@@ -27,12 +29,12 @@ public class UserController {
     }
 
     @PostMapping
-    public UserResponse createUser(@RequestBody UserRequest request) {
+    public UserResponse createUser(@Valid @RequestBody UserRequest request) {
         return userService.createUser(request);
     }
 
     @PutMapping("/{id}")
-    public UserResponse updateUser(@PathVariable Integer id, @RequestBody UserRequest request) {
+    public UserResponse updateUser(@PathVariable Integer id, @Valid @RequestBody UserRequest request) {
         return userService.updateUser(id, request);
     }
 
@@ -48,7 +50,7 @@ public class UserController {
     }
 
     @PostMapping("/login")
-    public UserResponse login(@RequestBody UserRequest request) {
+    public UserResponse login(@RequestBody LoginRequest request) {
         return userService.login(request);
     }
 
