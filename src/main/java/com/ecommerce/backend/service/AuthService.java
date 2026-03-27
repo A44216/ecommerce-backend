@@ -68,8 +68,13 @@ public class AuthService {
             throw new BadRequestException("ACCOUNT_BLOCKED");
         }
 
+        // 4. check quyền login
+        if (user.getProvider() == Provider.GOOGLE && user.getPassword() == null) {
+            throw new BadRequestException("ACCOUNT_USER_GOOGLE_LOGIN");
+        }
+
         // 4. check password
-        if (!passwordEncoder.matches(password, user.getPassword())) {
+        if (user.getPassword() == null || !passwordEncoder.matches(password, user.getPassword())) {
             throw new BadRequestException("WRONG_PASSWORD");
         }
 
