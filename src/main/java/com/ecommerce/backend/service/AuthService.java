@@ -1,6 +1,7 @@
 package com.ecommerce.backend.service;
 
 import com.ecommerce.backend.dto.requests.LoginRequest;
+import com.ecommerce.backend.dto.requests.ResetPasswordRequest;
 import com.ecommerce.backend.dto.requests.UserRequest;
 import com.ecommerce.backend.dto.responses.LoginResponse;
 import com.ecommerce.backend.dto.responses.UserResponse;
@@ -144,14 +145,37 @@ public class AuthService {
             rawPassword = rawPassword.trim();
         }
         user.setPassword(passwordEncoder.encode(rawPassword));
-
-        // QUAN TRỌNG
         user.setRole(request.getRole());
         user.setStatus(UserStatus.ACTIVE);
 
         userRepository.save(user);
 
         return mapToResponse(user);
+    }
+
+    public void resetPassword(ResetPasswordRequest request) {
+
+        String email = request.getEmail() != null ? request.getEmail().trim().toLowerCase() : null;
+
+        String newPassword = request.getNewPassword();
+
+        // 1. Validate input
+        if (email == null || email.isEmpty()) {
+            throw new BadRequestException("INVALID_EMAIL");
+        }
+
+        if (newPassword == null || newPassword.trim().length() < 6) {
+            throw new BadRequestException("INVALID_PASSWORD");
+        }
+
+        // 2. tìm user
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new ResourceNotFoundException("USER_NOT_FOUND"));
+
+        // 3. update password
+        user.setPassword(passwordEncoder.encode(newPassword.trim()));
+
+        userRepository.save(user);
     }
 
 }
