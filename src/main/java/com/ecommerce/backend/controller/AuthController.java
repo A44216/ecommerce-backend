@@ -10,6 +10,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import com.ecommerce.backend.dto.requests.GoogleLoginRequest;
+
 @RestController
 @RequestMapping("/api/auth")
 @RequiredArgsConstructor
@@ -33,4 +35,8 @@ public class AuthController {
         return ResponseEntity.ok().build();
     }
 
+    @PostMapping("/google")
+    public LoginResponse googleLogin(@RequestBody com.ecommerce.backend.dto.requests.GoogleLoginRequest request) {
+        return authService.googleLogin(request);
+    }
 }

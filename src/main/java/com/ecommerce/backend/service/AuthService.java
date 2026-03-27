@@ -15,9 +15,23 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+
+import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
+import com.google.api.client.googleapis.auth.oauth2.GoogleIdTokenVerifier;
+import com.google.api.client.http.javanet.NetHttpTransport;
+import com.google.api.client.json.gson.GsonFactory;
+import com.ecommerce.backend.dto.requests.GoogleLoginRequest;
+import com.ecommerce.backend.enums.Provider;
+import com.ecommerce.backend.enums.Role;
+import java.util.Collections;
+import java.util.UUID;
+
 @Service
 @RequiredArgsConstructor
 public class AuthService {
+
+    @org.springframework.beans.factory.annotation.Value("${google.client.id}")
+    private String googleClientId;
 
     private final UserRepository userRepository;
 
@@ -60,7 +74,7 @@ public class AuthService {
         }
 
         // 5. generate JWT
-        String token = jwtService.generateToken(user.getId() + ":" + user.getRole().name());
+        String token = jwtService.generateToken(user.getUsername());
         // 6. response
         LoginResponse res = new LoginResponse();
         res.setId(user.getId());
@@ -178,4 +192,67 @@ public class AuthService {
         userRepository.save(user);
     }
 
+
+    public LoginResponse googleLogin(GoogleLoginRequest request) {
+        try {
+            // 1. Xác thực ID Token với Google
+            com.google.api.client.googleapis.auth.oauth2.GoogleIdTokenVerifier verifier =
+                    new com.google.api.client.googleapis.auth.oauth2.GoogleIdTokenVerifier.Builder(
+                            new com.google.api.client.http.javanet.NetHttpTransport(),
+                            new com.google.api.client.json.gson.GsonFactory())
+                            .setAudience(java.util.Collections.singletonList(googleClientId))
+                            .build();
+
+            com.google.api.client.googleapis.auth.oauth2.GoogleIdToken idToken = verifier.verify(request.getIdToken());
+            if (idToken == null) {
+                throw new BadRequestException("INVALID_GOOGLE_TOKEN");
+            }
+
+            // 2. Lấy thông tin từ token của Google
+            com.google.api.client.googleapis.auth.oauth2.GoogleIdToken.Payload payload = idToken.getPayload();
+            String email = payload.getEmail().toLowerCase();
+            String googleId = payload.getSubject();
+            String name = (String) payload.get("name");
+
+            // 3. Tìm hoặc tạo User mới
+            User user = userRepository.findByEmail(email).orElse(null);
+
+            if (user == null) {
+                user = new User();
+                user.setEmail(email);
+                user.setFullName(name);
+                user.setGoogleId(googleId);
+                user.setProvider(Provider.GOOGLE);
+                user.setRole(Role.CUSTOMER);
+                user.setStatus(UserStatus.ACTIVE);
+                user.setUsername("user_" + java.util.UUID.randomUUID().toString().substring(0, 8));
+                userRepository.save(user);
+            } else {
+                if (user.getGoogleId() == null) {
+                    user.setGoogleId(googleId);
+                    user.setProvider(Provider.GOOGLE);
+                    userRepository.save(user);
+                }
+                if (user.getStatus() == UserStatus.BLOCKED) {
+                    throw new BadRequestException("ACCOUNT_BLOCKED");
+                }
+            }
+
+            // 4. Tạo JWT của hệ thống (Nhớ dùng getUsername() như chúng ta đã thống nhất)
+            String token = jwtService.generateToken(user.getUsername());
+
+            LoginResponse res = new LoginResponse();
+            res.setId(user.getId());
+            res.setUsername(user.getUsername());
+            res.setEmail(user.getEmail());
+            res.setRole(user.getRole().name());
+            res.setToken(token);
+
+            return res;
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new BadRequestException("GOOGLE_AUTHENTICATION_FAILED: " + e.getMessage());
+        }
+    }
 }
