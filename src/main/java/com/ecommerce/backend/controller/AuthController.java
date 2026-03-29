@@ -9,8 +9,11 @@ import com.ecommerce.backend.service.AuthService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import com.ecommerce.backend.dto.requests.SendOtpRequest;
 
 import com.ecommerce.backend.dto.requests.GoogleLoginRequest;
+
+import java.util.Collections;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -38,5 +41,13 @@ public class AuthController {
     @PostMapping("/google")
     public LoginResponse googleLogin(@RequestBody com.ecommerce.backend.dto.requests.GoogleLoginRequest request) {
         return authService.googleLogin(request);
+    }
+
+    @PostMapping("/send-register-otp")
+    public ResponseEntity<?> sendRegisterOtp(@RequestBody SendOtpRequest request) {
+        authService.sendRegisterOtp(request);
+
+        // Trả về JSON báo thành công cho Android biết
+        return ResponseEntity.ok(Collections.singletonMap("message", "OTP_SENT_SUCCESSFULLY"));
     }
 }

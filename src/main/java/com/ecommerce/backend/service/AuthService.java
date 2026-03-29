@@ -15,6 +15,11 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import com.ecommerce.backend.repository.OtpTokenRepository;
+import com.ecommerce.backend.service.EmailService;
+import com.ecommerce.backend.entity.OtpToken;
+import com.ecommerce.backend.dto.requests.SendOtpRequest;
+
 
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdTokenVerifier;
@@ -25,6 +30,10 @@ import com.ecommerce.backend.enums.Provider;
 import com.ecommerce.backend.enums.Role;
 import java.util.Collections;
 import java.util.UUID;
+
+import org.springframework.transaction.annotation.Transactional;
+import java.time.LocalDateTime;
+import java.util.Random;
 
 @Service
 @RequiredArgsConstructor
@@ -38,6 +47,8 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
 
+    private final OtpTokenRepository otpTokenRepository;
+    private final EmailService emailService;
 
     public LoginResponse login(LoginRequest request) {
 
@@ -105,11 +116,12 @@ public class AuthService {
 
         return res;
     }
-
+    @Transactional
     public UserResponse register(UserRequest request) {
         String username = request.getUsername() != null ? request.getUsername().trim() : null;
         String email = request.getEmail() != null ? request.getEmail().trim() : null;
         String fullName = request.getFullName() != null ? request.getFullName().trim() : null;
+        String otpCode = request.getOtpCode();
         if (fullName == null || fullName.isEmpty()) {
             throw new BadRequestException("INVALID_FULLNAME");
         }
@@ -152,6 +164,16 @@ public class AuthService {
         if (phone != null && userRepository.existsByPhone(phone)) {
             throw new BadRequestException("PHONE_EXIST");
         }
+        if (otpCode == null || otpCode.trim().isEmpty()) {
+            throw new BadRequestException("OTP_REQUIRED");
+        }
+        OtpToken validOtp = otpTokenRepository.findByEmailAndOtp(email, otpCode.trim())
+                .orElseThrow(() -> new BadRequestException("INVALID_OTP"));
+
+        if (validOtp.getExpiryDate().isBefore(LocalDateTime.now())) {
+            otpTokenRepository.delete(validOtp); // Xóa OTP đã hết hạn
+            throw new BadRequestException("OTP_EXPIRED");
+        }
 
         User user = new User();
         user.setUsername(username);
@@ -166,8 +188,11 @@ public class AuthService {
         user.setPassword(passwordEncoder.encode(rawPassword));
         user.setRole(request.getRole());
         user.setStatus(UserStatus.ACTIVE);
-
+        user.setProvider(Provider.LOCAL);
         userRepository.save(user);
+
+        // Đăng ký thành công thì xóa OTP đi để tránh dùng lại
+        otpTokenRepository.deleteByEmail(email);
 
         return mapToResponse(user);
     }
@@ -259,5 +284,36 @@ public class AuthService {
             e.printStackTrace();
             throw new BadRequestException("GOOGLE_AUTHENTICATION_FAILED: " + e.getMessage());
         }
+    }
+
+    @Transactional
+    public void sendRegisterOtp(SendOtpRequest request) {
+        String email = request.getEmail();
+        if (email == null || email.trim().isEmpty()) {
+            throw new BadRequestException("INVALID_EMAIL");
+        }
+        email = email.trim().toLowerCase();
+
+        // 1. Kiểm tra xem Email đã có ai đăng ký chưa (tránh trùng lặp)
+        if (userRepository.existsByEmail(email)) {
+            throw new BadRequestException("EMAIL_ALREADY_EXISTS");
+        }
+
+        // 2. Dọn dẹp rác: Xóa các mã OTP cũ của email này
+        otpTokenRepository.deleteByEmail(email);
+
+        // 3. Sinh mã OTP ngẫu nhiên 6 chữ số
+        String otpCode = String.format("%06d", new Random().nextInt(999999));
+
+        // 4. Lưu mã OTP vào Database (Cài đặt hết hạn sau 5 phút)
+        OtpToken otpToken = new OtpToken(
+                email,
+                otpCode,
+                LocalDateTime.now().plusMinutes(5)
+        );
+        otpTokenRepository.save(otpToken);
+
+        // 5. Gửi Email
+        emailService.sendOtpEmail(email, otpCode);
     }
 }
