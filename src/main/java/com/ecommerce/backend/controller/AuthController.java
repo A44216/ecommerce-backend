@@ -1,17 +1,12 @@
 package com.ecommerce.backend.controller;
 
-import com.ecommerce.backend.dto.requests.LoginRequest;
-import com.ecommerce.backend.dto.requests.ResetPasswordRequest;
-import com.ecommerce.backend.dto.requests.UserRequest;
+import com.ecommerce.backend.dto.requests.*;
 import com.ecommerce.backend.dto.responses.LoginResponse;
 import com.ecommerce.backend.dto.responses.UserResponse;
 import com.ecommerce.backend.service.AuthService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import com.ecommerce.backend.dto.requests.SendOtpRequest;
-
-import com.ecommerce.backend.dto.requests.GoogleLoginRequest;
 
 import java.util.Collections;
 
@@ -49,5 +44,17 @@ public class AuthController {
 
         // Trả về JSON báo thành công cho Android biết
         return ResponseEntity.ok(Collections.singletonMap("message", "OTP_SENT_SUCCESSFULLY"));
+    }
+
+    @PostMapping("/send-forgot-password-otp")
+    public ResponseEntity<?> sendForgotPasswordOtp(@RequestBody SendOtpRequest request) {
+        authService.sendForgotPasswordOtp(request);
+        return ResponseEntity.ok(Collections.singletonMap("message", "OTP_SENT_SUCCESSFULLY"));
+    }
+
+    @PostMapping("/verify-otp")
+    public ResponseEntity<?> verifyOtp(@RequestBody VerifyOtpRequest request) {
+        authService.verifyOtp(request);
+        return ResponseEntity.ok(Collections.singletonMap("message", "OTP_VALID"));
     }
 }

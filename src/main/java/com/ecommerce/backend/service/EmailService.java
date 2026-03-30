@@ -20,4 +20,17 @@ public class EmailService {
 
         mailSender.send(message);
     }
+    public void sendForgotPasswordEmail(String toEmail, String otpCode) {
+        SimpleMailMessage message = new SimpleMailMessage();
+        message.setTo(toEmail);
+        message.setSubject("Yêu cầu Đặt lại mật khẩu - Ứng dụng Thương mại điện tử");
+        message.setText("Xin chào,\n\n"
+                + "Chúng tôi nhận được yêu cầu đặt lại mật khẩu cho tài khoản của bạn.\n"
+                + "Mã xác thực (OTP) của bạn là: " + otpCode + "\n\n"
+                + "Mã này sẽ hết hạn sau 5 phút. Vui lòng không chia sẻ mã này cho bất kỳ ai.\n\n"
+                + "Nếu bạn không yêu cầu đổi mật khẩu, vui lòng bỏ qua email này.\n\n"
+                + "Trân trọng,\nĐội ngũ hỗ trợ.");
+
+        mailSender.send(message);
+    }
 }

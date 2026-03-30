@@ -1,8 +1,6 @@
 package com.ecommerce.backend.service;
 
-import com.ecommerce.backend.dto.requests.LoginRequest;
-import com.ecommerce.backend.dto.requests.ResetPasswordRequest;
-import com.ecommerce.backend.dto.requests.UserRequest;
+import com.ecommerce.backend.dto.requests.*;
 import com.ecommerce.backend.dto.responses.LoginResponse;
 import com.ecommerce.backend.dto.responses.UserResponse;
 import com.ecommerce.backend.entity.User;
@@ -18,14 +16,12 @@ import org.springframework.stereotype.Service;
 import com.ecommerce.backend.repository.OtpTokenRepository;
 import com.ecommerce.backend.service.EmailService;
 import com.ecommerce.backend.entity.OtpToken;
-import com.ecommerce.backend.dto.requests.SendOtpRequest;
 
 
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdTokenVerifier;
 import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.json.gson.GsonFactory;
-import com.ecommerce.backend.dto.requests.GoogleLoginRequest;
 import com.ecommerce.backend.enums.Provider;
 import com.ecommerce.backend.enums.Role;
 import java.util.Collections;
@@ -196,30 +192,26 @@ public class AuthService {
 
         return mapToResponse(user);
     }
-
+    // 3. HÀM ĐỔI MẬT KHẨU
+    @Transactional
     public void resetPassword(ResetPasswordRequest request) {
-
-        String email = request.getEmail() != null ? request.getEmail().trim().toLowerCase() : null;
-
+        String input = request.getEmail() != null ? request.getEmail().trim().toLowerCase() : null;
         String newPassword = request.getNewPassword();
 
-        // 1. Validate input
-        if (email == null || email.isEmpty()) {
-            throw new BadRequestException("INVALID_EMAIL");
+        if (input == null || input.isEmpty()) throw new BadRequestException("INVALID_EMAIL");
+        if (newPassword == null || newPassword.trim().length() < 6) throw new BadRequestException("INVALID_PASSWORD");
+
+        // Tìm user bằng email hoặc username
+        User user;
+        if (input.contains("@")) {
+            user = userRepository.findByEmail(input).orElseThrow(() -> new ResourceNotFoundException("USER_NOT_FOUND"));
+        } else {
+            user = userRepository.findByUsername(input).orElseThrow(() -> new ResourceNotFoundException("USER_NOT_FOUND"));
         }
 
-        if (newPassword == null || newPassword.trim().length() < 6) {
-            throw new BadRequestException("INVALID_PASSWORD");
-        }
-
-        // 2. tìm user
-        User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new ResourceNotFoundException("USER_NOT_FOUND"));
-
-        // 3. update password
         user.setPassword(passwordEncoder.encode(newPassword.trim()));
-
         userRepository.save(user);
+        otpTokenRepository.deleteByEmail(user.getEmail()); // Xóa rác OTP bằng Email thật
     }
 
 
@@ -258,11 +250,12 @@ public class AuthService {
                 user.setUsername("user_" + java.util.UUID.randomUUID().toString().substring(0, 8));
                 userRepository.save(user);
             } else {
-                if (user.getGoogleId() == null) {
-                    user.setGoogleId(googleId);
-                    user.setProvider(Provider.GOOGLE);
-                    userRepository.save(user);
+                // BỔ SUNG: Chặn việc ghi đè tài khoản LOCAL
+                if (user.getProvider() == Provider.LOCAL) {
+                    throw new BadRequestException("EMAIL_ALREADY_REGISTERED_LOCAL");
                 }
+
+                // Nếu user đã tồn tại và provider là GOOGLE thì cho đi tiếp (đăng nhập bình thường)
                 if (user.getStatus() == UserStatus.BLOCKED) {
                     throw new BadRequestException("ACCOUNT_BLOCKED");
                 }
@@ -315,5 +308,52 @@ public class AuthService {
 
         // 5. Gửi Email
         emailService.sendOtpEmail(email, otpCode);
+    }
+    // 1. HÀM GỬI MÃ
+    @Transactional
+    public void sendForgotPasswordOtp(SendOtpRequest request) {
+        String input = request.getEmail().trim().toLowerCase();
+
+        User user;
+        if (input.contains("@")) {
+            user = userRepository.findByEmail(input).orElseThrow(() -> new ResourceNotFoundException("USER_NOT_FOUND"));
+        } else {
+            user = userRepository.findByUsername(input).orElseThrow(() -> new ResourceNotFoundException("USER_NOT_FOUND"));
+        }
+
+        if (user.getPassword() == null) {
+            throw new BadRequestException("GOOGLE_ACCOUNT_NO_PASSWORD");
+        }
+
+        String targetEmail = user.getEmail();
+        otpTokenRepository.deleteByEmail(targetEmail);
+
+        String otpCode = String.format("%06d", new Random().nextInt(999999));
+        OtpToken otpToken = new OtpToken(targetEmail, otpCode, LocalDateTime.now().plusMinutes(5));
+        otpTokenRepository.save(otpToken);
+
+        // Lát nữa chúng ta sẽ đổi tên hàm này ở Vấn đề 2
+        emailService.sendForgotPasswordEmail(targetEmail, otpCode);
+    }
+
+    // 2. HÀM XÁC NHẬN MÃ
+    public void verifyOtp(VerifyOtpRequest request) {
+        String input = request.getEmail().trim().toLowerCase(); // Chứa email hoặc username
+        String otpCode = request.getOtpCode().trim();
+
+        // Dịch từ Username sang Email thật (nếu cần)
+        String targetEmail = input;
+        if (!input.contains("@")) {
+            User user = userRepository.findByUsername(input).orElseThrow(() -> new ResourceNotFoundException("USER_NOT_FOUND"));
+            targetEmail = user.getEmail();
+        }
+
+        OtpToken validOtp = otpTokenRepository.findByEmailAndOtp(targetEmail, otpCode)
+                .orElseThrow(() -> new BadRequestException("INVALID_OTP"));
+
+        if (validOtp.getExpiryDate().isBefore(LocalDateTime.now())) {
+            otpTokenRepository.delete(validOtp);
+            throw new BadRequestException("OTP_EXPIRED");
+        }
     }
 }
