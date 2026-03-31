@@ -11,8 +11,6 @@ public class ProductImageResponse {
 
     private Integer id;
 
-    private Integer productId;
-
     private String imageUrl;
 
 }

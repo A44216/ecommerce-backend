@@ -33,7 +33,6 @@ public class OrderItemService {
                 .id(item.getId())
                 .productId(item.getProduct().getId())
                 .productName(item.getProduct().getName())
-                .productImage(item.getProduct().getImage()) // Giả sử Entity Product của bạn có hàm getImage()
                 .price(item.getPrice())
                 .quantity(item.getQuantity())
                 .build();

@@ -6,6 +6,7 @@ import lombok.Getter;
 import lombok.AllArgsConstructor;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 @Getter
 @AllArgsConstructor
@@ -17,7 +18,6 @@ public class ProductResponse {
     private BigDecimal price;
     private int stock;
     private String description;
-    private String image;
 
     private String categoryName;
     private String shopName;
@@ -27,5 +27,7 @@ public class ProductResponse {
     private int soldCount;
 
     private ProductStatus status;
+
+    private List<String> images;
 
 }

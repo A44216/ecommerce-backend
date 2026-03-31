@@ -4,6 +4,7 @@ import com.ecommerce.backend.dto.requests.ProductRequest;
 import com.ecommerce.backend.dto.responses.ProductResponse;
 import com.ecommerce.backend.entity.Category;
 import com.ecommerce.backend.entity.Product;
+import com.ecommerce.backend.entity.ProductImage;
 import com.ecommerce.backend.entity.Shop;
 import com.ecommerce.backend.repository.ProductRepository;
 import org.springframework.stereotype.Service;
@@ -27,13 +28,18 @@ public class ProductService {
                 .price(product.getPrice())
                 .stock(product.getStock())
                 .description(product.getDescription())
-                .image(product.getImage())
                 .categoryName(product.getCategory().getName())
                 .shopName(product.getShop().getShopName())
                 .ratingAvg(product.getRatingAvg())
                 .ratingCount(product.getRatingCount())
                 .soldCount(product.getSoldCount())
                 .status(product.getStatus())
+                .images(
+                        product.getImages() == null ? List.of() :
+                                product.getImages().stream()
+                                        .map(ProductImage::getImageUrl)
+                                        .toList()
+                )
                 .build();
     }
 
@@ -44,7 +50,6 @@ public class ProductService {
         product.setPrice(request.getPrice());
         product.setStock(request.getStock());
         product.setDescription(request.getDescription());
-        product.setImage(request.getImage());
 
         Category category = new Category();
         category.setId(request.getCategoryId());

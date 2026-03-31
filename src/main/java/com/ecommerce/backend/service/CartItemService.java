@@ -31,12 +31,23 @@ public class CartItemService {
     }
 
     private CartItemResponse mapToDTO(CartItem item) {
+
+        Product product = item.getProduct();
+
+        String image = null;
+
+        if (product.getImages() != null && !product.getImages().isEmpty()) {
+            image = product.getImages()
+                    .getFirst()
+                    .getImageUrl();
+        }
+
         return new CartItemResponse(
                 item.getId(),
-                item.getProduct().getId(),
-                item.getProduct().getName(),
-                item.getProduct().getImage(),
-                item.getProduct().getPrice(),
+                product.getId(),
+                product.getName(),
+                image,
+                product.getPrice(),
                 item.getQuantity()
         );
     }

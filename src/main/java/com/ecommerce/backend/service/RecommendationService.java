@@ -33,7 +33,6 @@ public class RecommendationService {
                 .productId(recommendation.getProduct().getId())
                 .productName(recommendation.getProduct().getName())
                 // giả sử Entity Product dùng biến image lưu link ảnh giống file ProductService
-                .imageUrl(recommendation.getProduct().getImage())
                 .price(recommendation.getProduct().getPrice())
                 .score(recommendation.getScore())
                 .build();

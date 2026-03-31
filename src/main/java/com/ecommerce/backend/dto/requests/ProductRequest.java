@@ -28,9 +28,6 @@ public class ProductRequest {
     @Size(max = 2000, message = "Description must be less than 2000 characters")
     private String description;
 
-    @Size(max = 255, message = "Image URL must be less than 255 characters")
-    private String image;
-
     @NotNull(message = "Shop id is required")
     private Integer shopId;
 }

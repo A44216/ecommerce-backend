@@ -7,6 +7,7 @@ import lombok.Setter;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Entity
 @Table(
@@ -49,9 +50,6 @@ public class Product {
     @Column(columnDefinition = "TEXT")
     private String description;
 
-    @Column(length = 255)
-    private String image;
-
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private ProductStatus status = ProductStatus.AVAILABLE;
@@ -70,5 +68,8 @@ public class Product {
 
     @Column(name = "is_deleted", nullable = false)
     private boolean isDeleted = false;
+
+    @OneToMany(mappedBy = "product", fetch = FetchType.LAZY)
+    private List<ProductImage> images;
 
 }

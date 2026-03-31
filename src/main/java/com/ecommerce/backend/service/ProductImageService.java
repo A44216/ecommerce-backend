@@ -26,7 +26,6 @@ public class ProductImageService {
     private ProductImageResponse mapToDTO(ProductImage productImage) {
         return ProductImageResponse.builder()
                 .id(productImage.getId())
-                .productId(productImage.getProduct().getId())
                 .imageUrl(productImage.getImageUrl())
                 .build();
     }
