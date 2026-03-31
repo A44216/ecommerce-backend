@@ -30,11 +30,11 @@ public class ProductService {
                 .image(product.getImage())
                 .categoryName(product.getCategory().getName())
                 .shopName(product.getShop().getShopName())
-                // Bổ sung 4 trường còn thiếu
                 .ratingAvg(product.getRatingAvg())
                 .ratingCount(product.getRatingCount())
                 .soldCount(product.getSoldCount())
                 .status(product.getStatus())
+                .isDeleted(product.isDeleted())
                 .build();
     }
 
@@ -59,7 +59,7 @@ public class ProductService {
     // lấy tất cả sản phẩm
     public List<ProductResponse> getAllProducts() {
 
-        List<Product> products = productRepository.findAll();
+        List<Product> products = productRepository.findByIsDeletedFalse();
 
         return products.stream()
                 .map(this::mapToDTO)
@@ -69,7 +69,7 @@ public class ProductService {
     // lấy sản phẩm theo id
     public ProductResponse getProductById(Integer id) {
 
-        Product product = productRepository.findById(id)
+        Product product = productRepository.findByIdAndIsDeletedFalse(id)
                 .orElseThrow(() -> new RuntimeException("Product not found"));
 
         return mapToDTO(product);
@@ -90,7 +90,7 @@ public class ProductService {
     // cập nhật sản phẩm
     public ProductResponse updateProduct(Integer id, ProductRequest request) {
 
-        Product product = productRepository.findById(id)
+        Product product = productRepository.findByIdAndIsDeletedFalse(id)
                 .orElseThrow(() -> new RuntimeException("Product not found"));
 
         mapRequestToProduct(product, request);
@@ -102,13 +102,20 @@ public class ProductService {
 
     // xóa sản phẩm
     public void deleteProduct(Integer id) {
-        productRepository.deleteById(id);
+        Product product = productRepository.findByIdAndIsDeletedFalse(id)
+                .orElseThrow(() -> new RuntimeException("Product not found"));
+
+        if (product.isDeleted()) {
+            throw new RuntimeException("Product already deleted");
+        }
+
+        productRepository.save(product);
     }
 
     // tìm sản phẩm theo tên
     public List<ProductResponse> searchProducts(String keyword) {
 
-        List<Product> products = productRepository.findByNameContainingIgnoreCase(keyword);
+        List<Product> products = productRepository.findByNameContainingIgnoreCaseAndIsDeletedFalse(keyword);
 
         return products.stream()
                 .map(this::mapToDTO)
@@ -118,7 +125,7 @@ public class ProductService {
     // sản phẩm theo category
     public List<ProductResponse> getProductsByCategory(Integer categoryId) {
 
-        List<Product> products = productRepository.findByCategoryId(categoryId);
+        List<Product> products = productRepository.findByCategoryIdAndIsDeletedFalse(categoryId);
 
         return products.stream()
                 .map(this::mapToDTO)
@@ -128,7 +135,7 @@ public class ProductService {
     // sản phẩm theo shop
     public List<ProductResponse> getProductsByShop(Integer shopId) {
 
-        List<Product> products = productRepository.findByShopId(shopId);
+        List<Product> products = productRepository.findByShopIdAndIsDeletedFalse(shopId);
 
         return products.stream()
                 .map(this::mapToDTO)

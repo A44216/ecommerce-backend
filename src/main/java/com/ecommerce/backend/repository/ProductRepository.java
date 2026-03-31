@@ -4,16 +4,18 @@ import com.ecommerce.backend.entity.Product;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface ProductRepository extends JpaRepository<Product, Integer> {
 
-    // tìm theo tên sản phẩm
-    List<Product> findByNameContainingIgnoreCase(String keyword);
+    List<Product> findByIsDeletedFalse();
 
-    // sản phẩm theo category
-    List<Product> findByCategoryId(Integer categoryId);
+    Optional<Product> findByIdAndIsDeletedFalse(Integer id);
 
-    // sản phẩm theo shop
-    List<Product> findByShopId(Integer shopId);
+    List<Product> findByNameContainingIgnoreCaseAndIsDeletedFalse(String keyword);
+
+    List<Product> findByCategoryIdAndIsDeletedFalse(Integer categoryId);
+
+    List<Product> findByShopIdAndIsDeletedFalse(Integer shopId);
 
 }
