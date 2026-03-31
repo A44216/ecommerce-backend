@@ -82,4 +82,16 @@ public class ProductController {
     public ResponseEntity<List<ProductResponse>> getProductsByShop(@PathVariable Integer shopId) {
         return ResponseEntity.ok(productService.getProductsByShop(shopId));
     }
+
+    @PutMapping("/restore/{id}")
+    public ResponseEntity<Void> restoreProduct(@PathVariable Integer id) {
+        productService.restoreProduct(id);
+        return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/deleted")
+    public ResponseEntity<List<ProductResponse>> getDeletedProducts() {
+        return ResponseEntity.ok(productService.getDeletedProducts());
+    }
+
 }

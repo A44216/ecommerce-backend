@@ -18,4 +18,6 @@ public interface ProductRepository extends JpaRepository<Product, Integer> {
 
     List<Product> findByShopIdAndIsDeletedFalse(Integer shopId);
 
+    List<Product> findByIsDeletedTrue();
+
 }

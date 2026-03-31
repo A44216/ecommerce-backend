@@ -34,7 +34,6 @@ public class ProductService {
                 .ratingCount(product.getRatingCount())
                 .soldCount(product.getSoldCount())
                 .status(product.getStatus())
-                .isDeleted(product.isDeleted())
                 .build();
     }
 
@@ -105,9 +104,7 @@ public class ProductService {
         Product product = productRepository.findByIdAndIsDeletedFalse(id)
                 .orElseThrow(() -> new RuntimeException("Product not found"));
 
-        if (product.isDeleted()) {
-            throw new RuntimeException("Product already deleted");
-        }
+        product.setDeleted(true);
 
         productRepository.save(product);
     }
@@ -138,6 +135,25 @@ public class ProductService {
         List<Product> products = productRepository.findByShopIdAndIsDeletedFalse(shopId);
 
         return products.stream()
+                .map(this::mapToDTO)
+                .toList();
+    }
+
+    public void restoreProduct(Integer id) {
+        Product product = productRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Product not found"));
+
+        if (!product.isDeleted()) {
+            throw new RuntimeException("Product is not deleted");
+        }
+
+        product.setDeleted(false);
+        productRepository.save(product);
+    }
+
+    public List<ProductResponse> getDeletedProducts() {
+        return productRepository.findByIsDeletedTrue()
+                .stream()
                 .map(this::mapToDTO)
                 .toList();
     }

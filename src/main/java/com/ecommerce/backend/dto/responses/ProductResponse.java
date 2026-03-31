@@ -27,5 +27,5 @@ public class ProductResponse {
     private int soldCount;
 
     private ProductStatus status;
-    private boolean isDeleted;
+
 }
