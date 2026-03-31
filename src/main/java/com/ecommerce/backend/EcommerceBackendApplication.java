@@ -50,6 +50,19 @@ public class EcommerceBackendApplication {
                 System.out.println("Customer created");
             }
 
+            if (repo.findByEmail("seller@gmail.com").isEmpty()) {
+                User user = new User();
+                user.setFullName("seller12345");
+                user.setUsername("seller12345");
+                user.setEmail("seller@gmail.com");
+                user.setPassword(encoder.encode("123456"));
+                user.setRole(Role.SELLER);
+                user.setStatus(UserStatus.ACTIVE);
+
+                repo.save(user);
+                System.out.println("Seller created");
+            }
+
         };
     }
 
