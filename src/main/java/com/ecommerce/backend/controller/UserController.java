@@ -3,7 +3,9 @@ package com.ecommerce.backend.controller;
 import com.ecommerce.backend.dto.requests.LoginRequest;
 import com.ecommerce.backend.dto.requests.UserRequest;
 import com.ecommerce.backend.dto.requests.GoogleLoginRequest;
+import com.ecommerce.backend.dto.responses.ShopResponse;
 import com.ecommerce.backend.dto.responses.UserResponse;
+import com.ecommerce.backend.service.ShopService;
 import com.ecommerce.backend.service.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -17,6 +19,7 @@ import java.util.List;
 public class UserController {
 
     private final UserService userService;
+    private final ShopService shopService;
 
     @GetMapping
     public List<UserResponse> getAllUsers() {
@@ -52,6 +55,11 @@ public class UserController {
     @PostMapping("/login")
     public UserResponse login(@RequestBody LoginRequest request) {
         return userService.login(request);
+    }
+
+    @GetMapping("/user/{userId}")
+    public ShopResponse getShopByUser(@PathVariable Integer userId) {
+        return shopService.getShopByUser(userId);
     }
 
 }

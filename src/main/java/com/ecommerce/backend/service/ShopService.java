@@ -61,16 +61,6 @@ public class ShopService {
         return mapToDTO(shop);
     }
 
-    // shop theo user
-    public List<ShopResponse> getShopsByUser(Integer userId) {
-
-        List<Shop> shops = shopRepository.findByUserId(userId);
-
-        return shops.stream()
-                .map(this::mapToDTO)
-                .toList();
-    }
-
     // tạo shop
     public ShopResponse createShop(ShopRequest request) {
 
@@ -103,4 +93,14 @@ public class ShopService {
     public void deleteShop(Integer id) {
         shopRepository.deleteById(id);
     }
+
+    // shop theo user
+    public ShopResponse getShopByUser(Integer userId) {
+
+        Shop shop = shopRepository.findByUserId(userId)
+                .orElseThrow(() -> new RuntimeException("Shop not found"));
+
+        return mapToDTO(shop);
+    }
+
 }

@@ -32,8 +32,8 @@ public class ShopController {
 
     // shop theo user
     @GetMapping("/user/{userId}")
-    public List<ShopResponse> getShopsByUser(@PathVariable Integer userId) {
-        return shopService.getShopsByUser(userId);
+    public ShopResponse getShopByUser(@PathVariable Integer userId) {
+        return shopService.getShopByUser(userId);
     }
 
     // tạo shop

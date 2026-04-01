@@ -35,6 +35,11 @@ public class ProductController {
         return ResponseEntity.ok(productService.getProductById(id));
     }
 
+    @GetMapping("/shop/{shopId}")
+    public List<ProductResponse> getProductByShop(@PathVariable Integer shopId) {
+        return productService.getProductsByShop(shopId);
+    }
+
     // tạo sản phẩm mới
     // API: POST /api/products
     @PostMapping
@@ -78,10 +83,10 @@ public class ProductController {
 
     // lấy danh sách sản phẩm của một Shop cụ thể
     // API: GET /api/products/shop/{shopId}
-    @GetMapping("/shop/{shopId}")
-    public ResponseEntity<List<ProductResponse>> getProductsByShop(@PathVariable Integer shopId) {
-        return ResponseEntity.ok(productService.getProductsByShop(shopId));
-    }
+//    @GetMapping("/shop/{shopId}")
+//    public ResponseEntity<List<ProductResponse>> getProductsByShop(@PathVariable Integer shopId) {
+//        return ResponseEntity.ok(productService.getProductsByShop(shopId));
+//    }
 
     @PutMapping("/restore/{id}")
     public ResponseEntity<Void> restoreProduct(@PathVariable Integer id) {
