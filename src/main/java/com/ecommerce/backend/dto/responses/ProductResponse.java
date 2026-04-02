@@ -28,6 +28,6 @@ public class ProductResponse {
 
     private ProductStatus status;
 
-    private List<String> images;
+    private List<ProductImageResponse> images;
 
 }

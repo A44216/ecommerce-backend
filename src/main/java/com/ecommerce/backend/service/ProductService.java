@@ -1,6 +1,7 @@
 package com.ecommerce.backend.service;
 
 import com.ecommerce.backend.dto.requests.ProductRequest;
+import com.ecommerce.backend.dto.responses.ProductImageResponse;
 import com.ecommerce.backend.dto.responses.ProductResponse;
 import com.ecommerce.backend.entity.Category;
 import com.ecommerce.backend.entity.Product;
@@ -38,7 +39,10 @@ public class ProductService {
                 .images(
                         product.getImages() == null ? List.of() :
                                 product.getImages().stream()
-                                        .map(ProductImage::getImageUrl)
+                                        .map(img -> ProductImageResponse.builder()
+                                                .id(img.getId())
+                                                .imageUrl(img.getImageUrl())
+                                                .build())
                                         .toList()
                 )
                 .build();
