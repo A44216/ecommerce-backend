@@ -8,6 +8,7 @@ import com.ecommerce.backend.entity.Product;
 import com.ecommerce.backend.entity.ProductImage;
 import com.ecommerce.backend.entity.Shop;
 import com.ecommerce.backend.enums.ProductStatus;
+import com.ecommerce.backend.repository.CategoryRepository;
 import com.ecommerce.backend.repository.ProductRepository;
 import org.springframework.stereotype.Service;
 
@@ -17,9 +18,12 @@ import java.util.List;
 public class ProductService {
 
     private final ProductRepository productRepository;
+    private final CategoryRepository categoryRepository;
 
-    public ProductService(ProductRepository productRepository) {
+    public ProductService(ProductRepository productRepository,
+                          CategoryRepository categoryRepository) {
         this.productRepository = productRepository;
+        this.categoryRepository = categoryRepository;
     }
 
     // ENTITY -> RESPONSE DTO
@@ -30,7 +34,11 @@ public class ProductService {
                 .price(product.getPrice())
                 .stock(product.getStock())
                 .description(product.getDescription())
-                .categoryName(product.getCategory().getName())
+                .categoryName(
+                        product.getCategory() != null
+                                ? product.getCategory().getName()
+                                : null
+                )
                 .shopName(product.getShop().getShopName())
                 .ratingAvg(product.getRatingAvg())
                 .ratingCount(product.getRatingCount())
@@ -56,9 +64,16 @@ public class ProductService {
         product.setStock(request.getStock());
         product.setDescription(request.getDescription());
 
-        Category category = new Category();
-        category.setId(request.getCategoryId());
-        product.setCategory(category);
+        if (request.getCategoryId() != null) {
+
+            Category category = categoryRepository.findById(request.getCategoryId())
+                    .orElseThrow(() -> new RuntimeException("Category not found"));
+
+            product.setCategory(category);
+
+        } else {
+            product.setCategory(null);
+        }
 
         Shop shop = new Shop();
         shop.setId(request.getShopId());
