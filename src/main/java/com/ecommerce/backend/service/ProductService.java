@@ -6,6 +6,7 @@ import com.ecommerce.backend.entity.Category;
 import com.ecommerce.backend.entity.Product;
 import com.ecommerce.backend.entity.ProductImage;
 import com.ecommerce.backend.entity.Shop;
+import com.ecommerce.backend.enums.ProductStatus;
 import com.ecommerce.backend.repository.ProductRepository;
 import org.springframework.stereotype.Service;
 
@@ -58,6 +59,15 @@ public class ProductService {
         Shop shop = new Shop();
         shop.setId(request.getShopId());
         product.setShop(shop);
+
+        product.setStatus(calculateStatus(request.getStock()));
+
+    }
+
+    private ProductStatus calculateStatus(int stock) {
+        return stock > 0 ?
+                ProductStatus.AVAILABLE :
+                ProductStatus.UNAVAILABLE;
     }
 
     // lấy tất cả sản phẩm
