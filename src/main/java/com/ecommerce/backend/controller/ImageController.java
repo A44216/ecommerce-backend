@@ -3,6 +3,7 @@ package com.ecommerce.backend.controller;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.io.File;
 import java.io.IOException;
@@ -23,14 +24,17 @@ public class ImageController {
             dir.mkdirs();
         }
 
-        String fileName = UUID.randomUUID() + ".jpg";
+        String fileName = UUID.randomUUID() + "_" + file.getOriginalFilename();
 
         Path path = Paths.get(uploadDir + fileName);
-
         Files.copy(file.getInputStream(), path, StandardCopyOption.REPLACE_EXISTING);
 
-        String url = "http://10.0.2.2:8081/images/" + fileName;
+        String url = ServletUriComponentsBuilder.fromCurrentContextPath()
+                .path("/api/images/")
+                .path(fileName)
+                .toUriString();
 
         return ResponseEntity.ok(url);
     }
+
 }
