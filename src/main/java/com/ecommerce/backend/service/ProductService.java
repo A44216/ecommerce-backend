@@ -10,6 +10,7 @@ import com.ecommerce.backend.entity.Shop;
 import com.ecommerce.backend.enums.ProductStatus;
 import com.ecommerce.backend.repository.CategoryRepository;
 import com.ecommerce.backend.repository.ProductRepository;
+import jakarta.validation.constraints.NotNull;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -188,6 +189,30 @@ public class ProductService {
     public List<ProductResponse> getDeletedProducts() {
         return productRepository.findByIsDeletedTrue()
                 .stream()
+                .map(this::mapToDTO)
+                .toList();
+    }
+
+    public List<ProductResponse> searchProducts(String keyword, Integer shopId) {
+
+        List<Product> products = (shopId != null)
+                ? productRepository.findByShopIdAndIsDeletedFalse(shopId)
+                : productRepository.findByIsDeletedFalse();
+
+        if (keyword != null && !keyword.trim().isEmpty()) {
+
+            String k = keyword.trim().toLowerCase();
+
+            products = products.stream()
+                    .filter(p ->
+                            (p.getName() != null && p.getName().toLowerCase().contains(k))
+                                    || (p.getCategory() != null
+                                    && p.getCategory().getName().toLowerCase().contains(k))
+                    )
+                    .toList();
+        }
+
+        return products.stream()
                 .map(this::mapToDTO)
                 .toList();
     }

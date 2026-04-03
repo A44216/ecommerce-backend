@@ -29,10 +29,10 @@ public class Coupon {
     @Column(name = "discount_percent")
     private Integer discountPercent;
 
-    @Column(name = "discount_amount", precision = 10, scale = 2)
+    @Column(name = "discount_amount", precision = 18, scale = 2)
     private BigDecimal discountAmount;
 
-    @Column(name = "min_order_value", precision = 10, scale = 2, nullable = false)
+    @Column(name = "min_order_value", precision = 18, scale = 2, nullable = false)
     private BigDecimal minOrderValue = BigDecimal.ZERO;
 
     @Column(name = "start_date")

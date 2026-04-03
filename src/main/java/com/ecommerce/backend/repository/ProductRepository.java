@@ -1,5 +1,6 @@
 package com.ecommerce.backend.repository;
 
+import com.ecommerce.backend.dto.responses.ProductResponse;
 import com.ecommerce.backend.entity.Product;
 import org.springframework.data.jpa.repository.JpaRepository;
 

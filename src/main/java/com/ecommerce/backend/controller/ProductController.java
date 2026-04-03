@@ -69,10 +69,10 @@ public class ProductController {
 
     // tìm kiếm sản phẩm theo tên
     // API: GET /api/products/search?keyword=...
-    @GetMapping("/search")
-    public ResponseEntity<List<ProductResponse>> searchProducts(@RequestParam String keyword) {
-        return ResponseEntity.ok(productService.searchProducts(keyword));
-    }
+//    @GetMapping("/search")
+//    public ResponseEntity<List<ProductResponse>> searchProducts(@RequestParam String keyword) {
+//        return ResponseEntity.ok(productService.searchProducts(keyword));
+//    }
 
     // lấy danh sách sản phẩm theo Category (Danh mục)
     // API: GET /api/products/category/{categoryId}
@@ -97,6 +97,16 @@ public class ProductController {
     @GetMapping("/deleted")
     public ResponseEntity<List<ProductResponse>> getDeletedProducts() {
         return ResponseEntity.ok(productService.getDeletedProducts());
+    }
+
+    @GetMapping("/search")
+    public ResponseEntity<List<ProductResponse>> searchProducts(
+            @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) Integer shopId
+    ) {
+        return ResponseEntity.ok(
+                productService.searchProducts(keyword, shopId)
+        );
     }
 
 }

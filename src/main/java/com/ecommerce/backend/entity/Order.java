@@ -50,7 +50,7 @@ public class Order {
     @Column(nullable = false)
     private OrderStatus status = OrderStatus.PENDING;
 
-    @Column(name = "total_price", nullable = false, precision = 10, scale = 2)
+    @Column(name = "total_price", nullable = false, precision = 18, scale = 2)
     private BigDecimal totalPrice = BigDecimal.ZERO;
 
     @Enumerated(EnumType.STRING)
