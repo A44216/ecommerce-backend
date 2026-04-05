@@ -22,4 +22,7 @@ public class OrderRequest {
 
     @NotNull(message = "Total price is required")
     private java.math.BigDecimal totalPrice;
+
+    @NotNull(message = "Shop id is required")
+    private Integer shopId;
 }

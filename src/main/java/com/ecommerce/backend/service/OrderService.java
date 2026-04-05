@@ -10,9 +10,12 @@ import com.ecommerce.backend.exception.BadRequestException;
 import com.ecommerce.backend.exception.ResourceNotFoundException;
 import com.ecommerce.backend.repository.AddressRepository;
 import com.ecommerce.backend.repository.OrderRepository;
+import com.ecommerce.backend.repository.ShopRepository;
 import com.ecommerce.backend.repository.UserRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -23,13 +26,15 @@ public class OrderService {
     private final OrderRepository repository;
     private final UserRepository userRepository;
     private final AddressRepository addressRepository;
-
+    private final ShopRepository shopRepository;
     public OrderService(OrderRepository repository,
                         UserRepository userRepository,
-                        AddressRepository addressRepository) {
+                        AddressRepository addressRepository,
+                        ShopRepository shopRepository) {
         this.repository = repository;
         this.userRepository = userRepository;
         this.addressRepository = addressRepository;
+        this.shopRepository = shopRepository;
     }
 
     private OrderResponse mapToDTO(Order order) {
@@ -102,9 +107,13 @@ public class OrderService {
             throw new BadRequestException("Address does not belong to this user");
         }
 
+        com.ecommerce.backend.entity.Shop shop = shopRepository.findById(request.getShopId())
+                .orElseThrow(() -> new ResourceNotFoundException("Shop not found"));
+
         Order order = new Order();
         order.setUser(user);
         order.setAddress(address);
+        order.setShop(shop); // GẮN SHOP VÀO ĐƠN HÀNG
         order.setPaymentMethod(request.getPaymentMethod());
         order.setTotalPrice(request.getTotalPrice());
         order.setStatus(OrderStatus.PENDING);
