@@ -1,6 +1,7 @@
 package com.ecommerce.backend.service;
 
 import com.ecommerce.backend.dto.requests.OrderRequest;
+import com.ecommerce.backend.dto.responses.OrderItemResponse; // <-- THÊM IMPORT NÀY
 import com.ecommerce.backend.dto.responses.OrderResponse;
 import com.ecommerce.backend.entity.Address;
 import com.ecommerce.backend.entity.Order;
@@ -15,10 +16,9 @@ import com.ecommerce.backend.repository.UserRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-
-
-import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class OrderService {
@@ -27,38 +27,73 @@ public class OrderService {
     private final UserRepository userRepository;
     private final AddressRepository addressRepository;
     private final ShopRepository shopRepository;
+    private final com.ecommerce.backend.repository.ProductRepository productRepository;
+    private final com.ecommerce.backend.repository.OrderItemRepository orderItemRepository;
+
     public OrderService(OrderRepository repository,
                         UserRepository userRepository,
                         AddressRepository addressRepository,
-                        ShopRepository shopRepository) {
+                        ShopRepository shopRepository,
+                        com.ecommerce.backend.repository.ProductRepository productRepository,
+                        com.ecommerce.backend.repository.OrderItemRepository orderItemRepository) {
         this.repository = repository;
         this.userRepository = userRepository;
         this.addressRepository = addressRepository;
         this.shopRepository = shopRepository;
+        this.productRepository = productRepository;
+        this.orderItemRepository = orderItemRepository;
     }
 
     private OrderResponse mapToDTO(Order order) {
 
         Address address = order.getAddress();
 
+        //CHUYỂN ĐỔI DANH SÁCH SẢN PHẨM ---
+        List<OrderItemResponse> itemResponses = new ArrayList<>();
+
+        // Kiểm tra xem đơn hàng có danh sách sản phẩm không
+        if (order.getOrderItems() != null) {
+            itemResponses = order.getOrderItems().stream()
+                    .map(item -> {
+                        // Lấy URL của ảnh đầu tiên (nếu có)
+                        String firstImageUrl = null;
+                        if (item.getProduct().getImages() != null && !item.getProduct().getImages().isEmpty()) {
+                            firstImageUrl = item.getProduct().getImages().get(0).getImageUrl();
+                        }
+
+                        return OrderItemResponse.builder()
+                                .id(item.getId())
+                                .productId(item.getProduct().getId())
+                                .productName(item.getProduct().getName())
+                                .productImage(firstImageUrl) // Truyền URL ảnh vừa lấy được
+                                .price(item.getPrice())
+                                .quantity(item.getQuantity())
+                                .build();
+                    })
+                    .collect(Collectors.toList());
+        }
+        // ---------------------------------------------------
+
         return OrderResponse.builder()
                 .id(order.getId())
                 .userId(order.getUser().getId())
                 .username(order.getUser().getUsername())
-                // Giả định bảng Order liên kết với bảng Shop. Nếu chỉ lưu số thì dùng order.getShopId()
                 .shopId(order.getShop() != null ? order.getShop().getId() : null)
                 .status(order.getStatus())
                 .totalPrice(order.getTotalPrice())
                 .paymentMethod(order.getPaymentMethod())
                 .paymentStatus(order.getPaymentStatus())
                 .createdAt(order.getCreatedAt())
-                // Lấy thông tin từ object Address (dựa theo cấu trúc Address)
                 .shippingName(address.getFullName())
                 .shippingPhone(address.getPhone())
                 .addressLine(address.getAddressLine())
                 .city(address.getCity())
                 .district(address.getDistrict())
                 .ward(address.getWard())
+
+                // --- NHÉT DANH SÁCH SẢN PHẨM VÀO ĐÂY ---
+                .orderItems(itemResponses)
+
                 .build();
     }
 
@@ -110,17 +145,54 @@ public class OrderService {
         com.ecommerce.backend.entity.Shop shop = shopRepository.findById(request.getShopId())
                 .orElseThrow(() -> new ResourceNotFoundException("Shop not found"));
 
+        // 1. Tạo vỏ Đơn hàng
         Order order = new Order();
         order.setUser(user);
         order.setAddress(address);
-        order.setShop(shop); // GẮN SHOP VÀO ĐƠN HÀNG
+        order.setShop(shop);
         order.setPaymentMethod(request.getPaymentMethod());
         order.setTotalPrice(request.getTotalPrice());
         order.setStatus(OrderStatus.PENDING);
 
-        Order saved = repository.save(order);
+        Order savedOrder = repository.save(order); // Lưu để lấy Order ID
 
-        return mapToDTO(saved);
+        // 2. Lưu danh sách sản phẩm (Snapshot Data)
+        if (request.getOrderItems() != null && !request.getOrderItems().isEmpty()) {
+            List<com.ecommerce.backend.entity.OrderItem> orderItemsList = new java.util.ArrayList<>();
+
+            for (OrderRequest.OrderItemRequest itemReq : request.getOrderItems()) {
+
+                if (itemReq.getProductId() == null) {
+                    throw new BadRequestException("Lỗi: Có một sản phẩm trong giỏ hàng bị thiếu ID!");
+                }
+
+                com.ecommerce.backend.entity.Product product = productRepository.findById(itemReq.getProductId())
+                        .orElseThrow(() -> new ResourceNotFoundException("Product not found"));
+
+                com.ecommerce.backend.entity.OrderItem orderItem = new com.ecommerce.backend.entity.OrderItem();
+                orderItem.setOrder(savedOrder);
+                orderItem.setProduct(product);
+                orderItem.setPrice(itemReq.getPrice());
+                orderItem.setQuantity(itemReq.getQuantity());
+
+                // Lấy Tên và Ảnh tại thời điểm mua (Snapshot)
+                orderItem.setProductName(product.getName());
+
+                String firstImageUrl = null;
+                if (product.getImages() != null && !product.getImages().isEmpty()) {
+                    firstImageUrl = product.getImages().get(0).getImageUrl();
+                }
+                orderItem.setProductImage(firstImageUrl);
+
+                orderItemsList.add(orderItem);
+            }
+
+            // Lưu tất cả OrderItems vào DB
+            orderItemRepository.saveAll(orderItemsList);
+            savedOrder.setOrderItems(orderItemsList);
+        }
+
+        return mapToDTO(savedOrder);
     }
 
     @Transactional

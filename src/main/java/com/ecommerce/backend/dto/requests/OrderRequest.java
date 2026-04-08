@@ -5,6 +5,9 @@ import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.math.BigDecimal;
+import java.util.List;
+
 @Getter
 @Setter
 public class OrderRequest {
@@ -25,4 +28,15 @@ public class OrderRequest {
 
     @NotNull(message = "Shop id is required")
     private Integer shopId;
+
+    private List<OrderItemRequest> orderItems;
+
+    // Class con chứa thông tin từng món hàng
+    @Getter
+    @Setter
+    public static class OrderItemRequest {
+        private Integer productId;
+        private Integer quantity;
+        private BigDecimal price;
+    }
 }

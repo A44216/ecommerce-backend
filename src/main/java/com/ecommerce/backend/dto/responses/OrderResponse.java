@@ -9,6 +9,7 @@ import lombok.Getter;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Getter
 @AllArgsConstructor
@@ -16,7 +17,6 @@ import java.time.LocalDateTime;
 public class OrderResponse {
 
     private Integer id;
-
     private Integer userId;
     private String username;
 
@@ -39,5 +39,7 @@ public class OrderResponse {
     private String city;
     private String district;
     private String ward;
+
+    private List<OrderItemResponse> orderItems;
 
 }
