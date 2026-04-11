@@ -8,6 +8,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+@PreAuthorize("hasRole('SELLER')")
 @RestController
 @RequestMapping("/api/seller/shops")
 @RequiredArgsConstructor
@@ -16,7 +17,6 @@ public class SellerShopController {
     private final SellerShopService sellerShopService;
 
     @GetMapping("/me")
-    @PreAuthorize("hasRole('SELLER')")
     public SellerShopResponse getMyShop() {
         return sellerShopService.getMyShop();
     }

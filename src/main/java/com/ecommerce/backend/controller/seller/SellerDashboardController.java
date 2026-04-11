@@ -4,6 +4,7 @@ import com.ecommerce.backend.dto.responses.seller.dashboard.SellerDashboardRespo
 import com.ecommerce.backend.dto.responses.seller.dashboard.SellerRevenueChartResponse;
 import com.ecommerce.backend.enums.ChartType;
 import com.ecommerce.backend.service.seller.SellerDashboardService;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -12,6 +13,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
+@PreAuthorize("hasRole('SELLER')")
 @RestController
 @RequestMapping("/api/seller")
 public class SellerDashboardController {

@@ -5,8 +5,10 @@ import com.ecommerce.backend.dto.responses.seller.PageResponse;
 import com.ecommerce.backend.dto.responses.seller.review.SellerReviewResponse;
 import com.ecommerce.backend.service.seller.SellerReviewService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+@PreAuthorize("hasRole('SELLER')")
 @RestController
 @RequestMapping("/api/seller/reviews")
 @RequiredArgsConstructor
