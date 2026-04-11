@@ -1,0 +1,218 @@
+package com.ecommerce.backend.service.seller;
+
+import com.ecommerce.backend.dto.requests.seller.product.SellerProductRequest;
+import com.ecommerce.backend.dto.responses.ProductImageResponse;
+import com.ecommerce.backend.dto.responses.seller.product.SellerProductResponse;
+import com.ecommerce.backend.entity.Category;
+import com.ecommerce.backend.entity.Product;
+import com.ecommerce.backend.entity.Shop;
+import com.ecommerce.backend.enums.ProductStatus;
+import com.ecommerce.backend.repository.CategoryRepository;
+import com.ecommerce.backend.repository.ProductRepository;
+import org.springframework.stereotype.Service;
+
+import java.util.List;
+
+@Service
+public class SellerProductService {
+
+    private final ProductRepository productRepository;
+    private final CategoryRepository categoryRepository;
+
+    public SellerProductService(ProductRepository productRepository,
+                                CategoryRepository categoryRepository) {
+        this.productRepository = productRepository;
+        this.categoryRepository = categoryRepository;
+    }
+
+    // ENTITY -> RESPONSE DTO
+    private SellerProductResponse mapToDTO(Product product) {
+        return SellerProductResponse.builder()
+                .id(product.getId())
+                .name(product.getName())
+                .price(product.getPrice())
+                .stock(product.getStock())
+                .description(product.getDescription())
+                .categoryName(
+                        product.getCategory() != null
+                                ? product.getCategory().getName()
+                                : null
+                )
+                .shopName(product.getShop().getShopName())
+                .ratingAvg(product.getRatingAvg())
+                .ratingCount(product.getRatingCount())
+                .soldCount(product.getSoldCount())
+                .status(product.getStatus())
+                .images(
+                        product.getImages() == null ? List.of() :
+                                product.getImages().stream()
+                                        .map(img -> ProductImageResponse.builder()
+                                                .id(img.getId())
+                                                .imageUrl(img.getImageUrl())
+                                                .build())
+                                        .toList()
+                )
+                .build();
+    }
+
+    // REQUEST DTO -> ENTITY
+    private void mapRequestToProduct(Product product, SellerProductRequest request) {
+
+        product.setName(request.getName());
+        product.setPrice(request.getPrice());
+        product.setStock(request.getStock());
+        product.setDescription(request.getDescription());
+
+        if (request.getCategoryId() != null) {
+
+            Category category = categoryRepository.findById(request.getCategoryId())
+                    .orElseThrow(() -> new RuntimeException("Category not found"));
+
+            product.setCategory(category);
+
+        } else {
+            product.setCategory(null);
+        }
+
+        Shop shop = new Shop();
+        shop.setId(request.getShopId());
+        product.setShop(shop);
+
+        product.setStatus(calculateStatus(request.getStock()));
+
+    }
+
+    private ProductStatus calculateStatus(int stock) {
+        return stock > 0 ?
+                ProductStatus.AVAILABLE :
+                ProductStatus.UNAVAILABLE;
+    }
+
+    // lấy tất cả sản phẩm
+    public List<SellerProductResponse> getAllProducts() {
+
+        List<Product> products = productRepository.findByIsDeletedFalse();
+
+        return products.stream()
+                .map(this::mapToDTO)
+                .toList();
+    }
+
+    // lấy sản phẩm theo id
+    public SellerProductResponse getProductById(Integer id) {
+
+        Product product = productRepository.findByIdAndIsDeletedFalse(id)
+                .orElseThrow(() -> new RuntimeException("Product not found"));
+
+        return mapToDTO(product);
+    }
+
+    // thêm sản phẩm
+    public SellerProductResponse createProduct(SellerProductRequest request) {
+
+        Product product = new Product();
+
+        mapRequestToProduct(product, request);
+
+        Product saved = productRepository.save(product);
+
+        return mapToDTO(saved);
+    }
+
+    // cập nhật sản phẩm
+    public SellerProductResponse updateProduct(Integer id, SellerProductRequest request) {
+
+        Product product = productRepository.findByIdAndIsDeletedFalse(id)
+                .orElseThrow(() -> new RuntimeException("Product not found"));
+
+        mapRequestToProduct(product, request);
+
+        Product updated = productRepository.save(product);
+
+        return mapToDTO(updated);
+    }
+
+    // xóa sản phẩm
+    public void deleteProduct(Integer id) {
+        Product product = productRepository.findByIdAndIsDeletedFalse(id)
+                .orElseThrow(() -> new RuntimeException("Product not found"));
+
+        product.setDeleted(true);
+
+        productRepository.save(product);
+    }
+
+    // tìm sản phẩm theo tên
+    public List<SellerProductResponse> searchProducts(String keyword) {
+
+        List<Product> products = productRepository.findByNameContainingIgnoreCaseAndIsDeletedFalse(keyword);
+
+        return products.stream()
+                .map(this::mapToDTO)
+                .toList();
+    }
+
+    // sản phẩm theo category
+    public List<SellerProductResponse> getProductsByCategory(Integer categoryId) {
+
+        List<Product> products = productRepository.findByCategoryIdAndIsDeletedFalse(categoryId);
+
+        return products.stream()
+                .map(this::mapToDTO)
+                .toList();
+    }
+
+    // sản phẩm theo shop
+    public List<SellerProductResponse> getProductsByShop(Integer shopId) {
+
+        List<Product> products = productRepository.findByShopIdAndIsDeletedFalse(shopId);
+
+        return products.stream()
+                .map(this::mapToDTO)
+                .toList();
+    }
+
+    public void restoreProduct(Integer id) {
+        Product product = productRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Product not found"));
+
+        if (!product.isDeleted()) {
+            throw new RuntimeException("Product is not deleted");
+        }
+
+        product.setDeleted(false);
+        productRepository.save(product);
+    }
+
+    public List<SellerProductResponse> getDeletedProducts() {
+        return productRepository.findByIsDeletedTrue()
+                .stream()
+                .map(this::mapToDTO)
+                .toList();
+    }
+
+    public List<SellerProductResponse> searchProducts(String keyword, Integer shopId) {
+
+        List<Product> products = (shopId != null)
+                ? productRepository.findByShopIdAndIsDeletedFalse(shopId)
+                : productRepository.findByIsDeletedFalse();
+
+        if (keyword != null && !keyword.trim().isEmpty()) {
+
+            String k = keyword.trim().toLowerCase();
+
+            products = products.stream()
+                    .filter(p ->
+                            (p.getName() != null && p.getName().toLowerCase().contains(k))
+                                    || (p.getCategory() != null
+                                    && p.getCategory().getName().toLowerCase().contains(k))
+                    )
+                    .toList();
+        }
+
+        return products.stream()
+                .map(this::mapToDTO)
+                .toList();
+    }
+
+}
