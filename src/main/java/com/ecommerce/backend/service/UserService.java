@@ -10,6 +10,7 @@ import com.ecommerce.backend.exception.BadRequestException;
 import com.ecommerce.backend.exception.ResourceNotFoundException;
 import com.ecommerce.backend.repository.UserRepository;
 import com.ecommerce.backend.dto.responses.UserResponse;
+import com.ecommerce.backend.dto.requests.UpdateProfileRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -140,6 +141,7 @@ public class UserService {
         res.setRole(user.getRole());
         res.setStatus(user.getStatus());
         res.setCreatedAt(user.getCreatedAt());
+        res.setAvatar(user.getAvatar());
 
         return res;
     }
@@ -171,6 +173,44 @@ public class UserService {
         }
 
         return mapToResponse(user);
+    }
+
+    public UserResponse updateUserAvatar(Integer id, String avatarUrl) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        user.setAvatar(avatarUrl); // Set link ảnh mới
+        User updatedUser = userRepository.save(user);
+        return mapToResponse(updatedUser);
+    }
+
+    public UserResponse updateProfile(Integer id, UpdateProfileRequest request) {
+        // Tìm User
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        // Chỉ cập nhật các trường được phép
+        user.setFullName(request.getFullName());
+        user.setUsername(request.getUsername());
+        user.setEmail(request.getEmail());
+        user.setPhone(request.getPhone());
+
+        // Lưu lại
+        User updatedUser = userRepository.save(user);
+
+        // Trả về DTO (Giả sử bạn dùng mapper hoặc Builder tương tự các hàm khác)
+        UserResponse response = new UserResponse();
+        response.setId(updatedUser.getId());
+        response.setFullName(updatedUser.getFullName());
+        response.setUsername(updatedUser.getUsername());
+        response.setEmail(updatedUser.getEmail());
+        response.setPhone(updatedUser.getPhone());
+        response.setRole(updatedUser.getRole());
+        response.setStatus(updatedUser.getStatus());
+        response.setAvatar(updatedUser.getAvatar());
+
+
+        return response;
     }
 
 }

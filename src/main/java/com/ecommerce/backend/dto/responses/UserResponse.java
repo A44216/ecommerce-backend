@@ -19,5 +19,6 @@ public class UserResponse {
     private Role role;
     private UserStatus status;
     private LocalDateTime createdAt;
+    private String avatar;
 
 }

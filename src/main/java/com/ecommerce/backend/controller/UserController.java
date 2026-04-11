@@ -7,9 +7,14 @@ import com.ecommerce.backend.dto.responses.ShopResponse;
 import com.ecommerce.backend.dto.responses.UserResponse;
 import com.ecommerce.backend.service.ShopService;
 import com.ecommerce.backend.service.UserService;
+import com.ecommerce.backend.dto.requests.UpdateProfileRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
+
+import com.ecommerce.backend.service.FileStorageService;
+import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.util.List;
 
@@ -20,7 +25,7 @@ public class UserController {
 
     private final UserService userService;
     private final ShopService shopService;
-
+    private final FileStorageService fileStorageService;
     @GetMapping
     public List<UserResponse> getAllUsers() {
         return userService.getAllUsers();
@@ -62,4 +67,24 @@ public class UserController {
         return shopService.getShopByUser(userId);
     }
 
+
+    @PostMapping("/{id}/avatar")
+    public UserResponse uploadAvatar(@PathVariable Integer id, @RequestParam("file") MultipartFile file) {
+        // 1. Lưu file vật lý vào máy
+        String fileName = fileStorageService.storeFile(file);
+
+        // 2. Tạo link URL để truy cập ảnh (Ví dụ: http://10.0.2.2:8080/api/images/abc.jpg)
+        String fileDownloadUri = ServletUriComponentsBuilder.fromCurrentContextPath()
+                .path("/api/images/")
+                .path(fileName)
+                .toUriString();
+
+        // 3. Lưu link URL đó vào bảng Users trong Database
+        return userService.updateUserAvatar(id, fileDownloadUri);
+    }
+
+    @PutMapping("/{id}/profile")
+    public UserResponse updateProfile(@PathVariable Integer id, @RequestBody UpdateProfileRequest request) {
+        return userService.updateProfile(id, request);
+    }
 }

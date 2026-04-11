@@ -40,6 +40,7 @@ public class ProductService {
                                 ? product.getCategory().getName()
                                 : null
                 )
+                .shopId(product.getShop() != null ? product.getShop().getId() : null)
                 .shopName(product.getShop().getShopName())
                 .ratingAvg(product.getRatingAvg())
                 .ratingCount(product.getRatingCount())

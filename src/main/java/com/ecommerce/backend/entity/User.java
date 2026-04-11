@@ -59,4 +59,7 @@ public class User {
     @Column(length = 10)
     private Provider provider = Provider.LOCAL;
 
+
+    @Column(name = "avatar")
+    private String avatar;
 }
