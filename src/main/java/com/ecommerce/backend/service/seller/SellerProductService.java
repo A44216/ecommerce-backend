@@ -2,6 +2,7 @@ package com.ecommerce.backend.service.seller;
 
 import com.ecommerce.backend.dto.requests.seller.product.SellerProductRequest;
 import com.ecommerce.backend.dto.responses.ProductImageResponse;
+import com.ecommerce.backend.dto.responses.seller.PageResponse;
 import com.ecommerce.backend.dto.responses.seller.product.SellerProductResponse;
 import com.ecommerce.backend.entity.Category;
 import com.ecommerce.backend.entity.Product;
@@ -9,6 +10,9 @@ import com.ecommerce.backend.entity.Shop;
 import com.ecommerce.backend.enums.ProductStatus;
 import com.ecommerce.backend.repository.CategoryRepository;
 import com.ecommerce.backend.repository.ProductRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -18,11 +22,14 @@ public class SellerProductService {
 
     private final ProductRepository productRepository;
     private final CategoryRepository categoryRepository;
+    private final SellerShopService sellerShopService;
 
     public SellerProductService(ProductRepository productRepository,
-                                CategoryRepository categoryRepository) {
+                                CategoryRepository categoryRepository,
+                                SellerShopService sellerShopService) {
         this.productRepository = productRepository;
         this.categoryRepository = categoryRepository;
+        this.sellerShopService = sellerShopService;
     }
 
     // ENTITY -> RESPONSE DTO
@@ -74,35 +81,49 @@ public class SellerProductService {
             product.setCategory(null);
         }
 
+        // LẤY SHOP TỪ USER LOGIN
+        Integer shopId = sellerShopService.getMyShop().getId();
+
         Shop shop = new Shop();
-        shop.setId(request.getShopId());
+        shop.setId(shopId);
+
         product.setShop(shop);
 
-        product.setStatus(calculateStatus(request.getStock()));
-
-    }
-
-    private ProductStatus calculateStatus(int stock) {
-        return stock > 0 ?
-                ProductStatus.AVAILABLE :
-                ProductStatus.UNAVAILABLE;
+        product.setStatus(ProductStatus.PENDING);
     }
 
     // lấy tất cả sản phẩm
-    public List<SellerProductResponse> getAllProducts() {
+    public PageResponse<SellerProductResponse> getAllProducts(int page, int size) {
 
-        List<Product> products = productRepository.findByIsDeletedFalse();
+        Pageable pageable = PageRequest.of(page, size);
 
-        return products.stream()
-                .map(this::mapToDTO)
-                .toList();
+        Integer shopId = sellerShopService.getMyShop().getId();
+
+        Page<Product> products =
+                productRepository.findByShopIdAndIsDeletedFalse(shopId, pageable);
+
+        Page<SellerProductResponse> mapped = products.map(this::mapToDTO);
+
+        return new PageResponse<>(
+                mapped.getContent(),
+                mapped.getNumber(),
+                mapped.getSize(),
+                mapped.getTotalElements(),
+                mapped.getTotalPages()
+        );
     }
 
     // lấy sản phẩm theo id
     public SellerProductResponse getProductById(Integer id) {
 
+        Integer shopId = sellerShopService.getMyShop().getId();
+
         Product product = productRepository.findByIdAndIsDeletedFalse(id)
                 .orElseThrow(() -> new RuntimeException("Product not found"));
+
+        if (!product.getShop().getId().equals(shopId)) {
+            throw new RuntimeException("Access denied");
+        }
 
         return mapToDTO(product);
     }
@@ -122,8 +143,14 @@ public class SellerProductService {
     // cập nhật sản phẩm
     public SellerProductResponse updateProduct(Integer id, SellerProductRequest request) {
 
+        Integer shopId = sellerShopService.getMyShop().getId();
+
         Product product = productRepository.findByIdAndIsDeletedFalse(id)
                 .orElseThrow(() -> new RuntimeException("Product not found"));
+
+        if (!product.getShop().getId().equals(shopId)) {
+            throw new RuntimeException("Access denied");
+        }
 
         mapRequestToProduct(product, request);
 
@@ -134,42 +161,60 @@ public class SellerProductService {
 
     // xóa sản phẩm
     public void deleteProduct(Integer id) {
+
+        Integer shopId = sellerShopService.getMyShop().getId();
+
         Product product = productRepository.findByIdAndIsDeletedFalse(id)
                 .orElseThrow(() -> new RuntimeException("Product not found"));
+
+        if (!product.getShop().getId().equals(shopId)) {
+            throw new RuntimeException("Access denied");
+        }
 
         product.setDeleted(true);
 
         productRepository.save(product);
     }
 
-    // tìm sản phẩm theo tên
-    public List<SellerProductResponse> searchProducts(String keyword) {
-
-        List<Product> products = productRepository.findByNameContainingIgnoreCaseAndIsDeletedFalse(keyword);
-
-        return products.stream()
-                .map(this::mapToDTO)
-                .toList();
-    }
-
     // sản phẩm theo category
-    public List<SellerProductResponse> getProductsByCategory(Integer categoryId) {
+    public PageResponse<SellerProductResponse> getProductsByCategory(Integer categoryId, int page, int size) {
 
-        List<Product> products = productRepository.findByCategoryIdAndIsDeletedFalse(categoryId);
+        Pageable pageable = PageRequest.of(page, size);
 
-        return products.stream()
-                .map(this::mapToDTO)
-                .toList();
+        Integer shopId = sellerShopService.getMyShop().getId();
+
+        Page<Product> products =
+                productRepository.findByShopIdAndCategoryIdAndIsDeletedFalse(
+                        shopId, categoryId, pageable
+                );
+
+        Page<SellerProductResponse> mapped = products.map(this::mapToDTO);
+
+        return new PageResponse<>(
+                mapped.getContent(),
+                mapped.getNumber(),
+                mapped.getSize(),
+                mapped.getTotalElements(),
+                mapped.getTotalPages()
+        );
     }
 
     // sản phẩm theo shop
-    public List<SellerProductResponse> getProductsByShop(Integer shopId) {
+    public PageResponse<SellerProductResponse> getProductsByShop(Integer shopId, int page, int size) {
 
-        List<Product> products = productRepository.findByShopIdAndIsDeletedFalse(shopId);
+        Pageable pageable = PageRequest.of(page, size);
 
-        return products.stream()
-                .map(this::mapToDTO)
-                .toList();
+        Page<Product> products = productRepository.findByShopIdAndIsDeletedFalse(shopId, pageable);
+
+        Page<SellerProductResponse> mapped = products.map(this::mapToDTO);
+
+        return new PageResponse<>(
+                mapped.getContent(),
+                mapped.getNumber(),
+                mapped.getSize(),
+                mapped.getTotalElements(),
+                mapped.getTotalPages()
+        );
     }
 
     public void restoreProduct(Integer id) {
@@ -184,35 +229,53 @@ public class SellerProductService {
         productRepository.save(product);
     }
 
-    public List<SellerProductResponse> getDeletedProducts() {
-        return productRepository.findByIsDeletedTrue()
-                .stream()
-                .map(this::mapToDTO)
-                .toList();
+    public PageResponse<SellerProductResponse> getDeletedProducts(int page, int size) {
+
+        Pageable pageable = PageRequest.of(page, size);
+
+        Integer shopId = sellerShopService.getMyShop().getId();
+
+        Page<Product> products =
+                productRepository.findByShopIdAndIsDeletedTrue(shopId, pageable);
+
+        Page<SellerProductResponse> mapped = products.map(this::mapToDTO);
+
+        return new PageResponse<>(
+                mapped.getContent(),
+                mapped.getNumber(),
+                mapped.getSize(),
+                mapped.getTotalElements(),
+                mapped.getTotalPages()
+        );
     }
 
-    public List<SellerProductResponse> searchProducts(String keyword, Integer shopId) {
+    public PageResponse<SellerProductResponse> searchProducts(String keyword, int page, int size) {
 
-        List<Product> products = (shopId != null)
-                ? productRepository.findByShopIdAndIsDeletedFalse(shopId)
-                : productRepository.findByIsDeletedFalse();
+        Pageable pageable = PageRequest.of(page, size);
+
+        Integer shopId = sellerShopService.getMyShop().getId();
+
+        Page<Product> products;
 
         if (keyword != null && !keyword.trim().isEmpty()) {
-
-            String k = keyword.trim().toLowerCase();
-
-            products = products.stream()
-                    .filter(p ->
-                            (p.getName() != null && p.getName().toLowerCase().contains(k))
-                                    || (p.getCategory() != null
-                                    && p.getCategory().getName().toLowerCase().contains(k))
-                    )
-                    .toList();
+            products = productRepository.searchByNameOrCategory(
+                    shopId,
+                    keyword.trim(),
+                    pageable
+            );
+        } else {
+            products = productRepository.findByShopIdAndIsDeletedFalse(shopId, pageable);
         }
 
-        return products.stream()
-                .map(this::mapToDTO)
-                .toList();
+        Page<SellerProductResponse> mapped = products.map(this::mapToDTO);
+
+        return new PageResponse<>(
+                mapped.getContent(),
+                mapped.getNumber(),
+                mapped.getSize(),
+                mapped.getTotalElements(),
+                mapped.getTotalPages()
+        );
     }
 
 }

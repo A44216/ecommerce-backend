@@ -1,6 +1,7 @@
 package com.ecommerce.backend.controller.seller;
 
 import com.ecommerce.backend.dto.requests.seller.product.SellerProductRequest;
+import com.ecommerce.backend.dto.responses.seller.PageResponse;
 import com.ecommerce.backend.dto.responses.seller.product.SellerProductResponse;
 import com.ecommerce.backend.service.seller.SellerProductService;
 import jakarta.validation.Valid;
@@ -26,8 +27,11 @@ public class SellerProductController {
     // lấy danh sách tất cả sản phẩm
     // API: GET /api/products
     @GetMapping
-    public ResponseEntity<List<SellerProductResponse>> getAllProducts() {
-        return ResponseEntity.ok(productService.getAllProducts());
+    public ResponseEntity<PageResponse<SellerProductResponse>> getAllProducts(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size
+    ) {
+        return ResponseEntity.ok(productService.getAllProducts(page, size));
     }
 
     // lấy thông tin chi tiết một sản phẩm theo ID
@@ -35,11 +39,6 @@ public class SellerProductController {
     @GetMapping("/{id}")
     public ResponseEntity<SellerProductResponse> getProductById(@PathVariable Integer id) {
         return ResponseEntity.ok(productService.getProductById(id));
-    }
-
-    @GetMapping("/shop/{shopId}")
-    public List<SellerProductResponse> getProductByShop(@PathVariable Integer shopId) {
-        return productService.getProductsByShop(shopId);
     }
 
     // tạo sản phẩm mới
@@ -69,26 +68,18 @@ public class SellerProductController {
         return ResponseEntity.noContent().build();
     }
 
-    // tìm kiếm sản phẩm theo tên
-    // API: GET /api/products/search?keyword=...
-//    @GetMapping("/search")
-//    public ResponseEntity<List<ProductResponse>> searchProducts(@RequestParam String keyword) {
-//        return ResponseEntity.ok(productService.searchProducts(keyword));
-//    }
-
     // lấy danh sách sản phẩm theo Category (Danh mục)
     // API: GET /api/products/category/{categoryId}
     @GetMapping("/category/{categoryId}")
-    public ResponseEntity<List<SellerProductResponse>> getProductsByCategory(@PathVariable Integer categoryId) {
-        return ResponseEntity.ok(productService.getProductsByCategory(categoryId));
+    public ResponseEntity<PageResponse<SellerProductResponse>> getProductsByCategory(
+            @PathVariable Integer categoryId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size
+    ) {
+        return ResponseEntity.ok(
+                productService.getProductsByCategory(categoryId, page, size)
+        );
     }
-
-    // lấy danh sách sản phẩm của một Shop cụ thể
-    // API: GET /api/products/shop/{shopId}
-//    @GetMapping("/shop/{shopId}")
-//    public ResponseEntity<List<ProductResponse>> getProductsByShop(@PathVariable Integer shopId) {
-//        return ResponseEntity.ok(productService.getProductsByShop(shopId));
-//    }
 
     @PutMapping("/restore/{id}")
     public ResponseEntity<Void> restoreProduct(@PathVariable Integer id) {
@@ -97,17 +88,23 @@ public class SellerProductController {
     }
 
     @GetMapping("/deleted")
-    public ResponseEntity<List<SellerProductResponse>> getDeletedProducts() {
-        return ResponseEntity.ok(productService.getDeletedProducts());
+    public ResponseEntity<PageResponse<SellerProductResponse>> getDeletedProducts(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size
+    ) {
+        return ResponseEntity.ok(
+                productService.getDeletedProducts(page, size)
+        );
     }
 
     @GetMapping("/search")
-    public ResponseEntity<List<SellerProductResponse>> searchProducts(
+    public ResponseEntity<PageResponse<SellerProductResponse>> searchProducts(
             @RequestParam(required = false) String keyword,
-            @RequestParam(required = false) Integer shopId
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size
     ) {
         return ResponseEntity.ok(
-                productService.searchProducts(keyword, shopId)
+                productService.searchProducts(keyword, page, size)
         );
     }
 

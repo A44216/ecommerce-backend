@@ -27,6 +27,4 @@ public class SellerProductRequest {
     @Size(max = 2000, message = "Description must be less than 2000 characters")
     private String description;
 
-    @NotNull(message = "Shop id is required")
-    private Integer shopId;
 }
