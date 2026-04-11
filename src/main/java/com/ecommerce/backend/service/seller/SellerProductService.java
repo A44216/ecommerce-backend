@@ -46,7 +46,9 @@ public class SellerProductService {
                                 ? product.getCategory().getName()
                                 : null
                 )
-                .shopName(product.getShop().getShopName())
+                .shopName(
+                        product.getShop() != null ? product.getShop().getShopName() : null
+                )
                 .ratingAvg(product.getRatingAvg())
                 .ratingCount(product.getRatingCount())
                 .soldCount(product.getSoldCount())
@@ -90,28 +92,10 @@ public class SellerProductService {
 
         product.setShop(shop);
 
-        product.setStatus(ProductStatus.PENDING);
-    }
+        if (product.getId() == null) {
+            product.setStatus(ProductStatus.PENDING);
+        }
 
-    // lấy tất cả sản phẩm
-    public PageResponse<SellerProductResponse> getAllProducts(int page, int size) {
-
-        Pageable pageable = PageRequest.of(page, size, Sort.by("id").ascending());
-
-        Integer shopId = sellerShopService.getMyShop().getId();
-
-        Page<Product> products =
-                productRepository.findByShopIdAndIsDeletedFalse(shopId, pageable);
-
-        Page<SellerProductResponse> mapped = products.map(this::mapToDTO);
-
-        return new PageResponse<>(
-                mapped.getContent(),
-                mapped.getNumber(),
-                mapped.getSize(),
-                mapped.getTotalElements(),
-                mapped.getTotalPages()
-        );
     }
 
     // lấy sản phẩm theo id
@@ -250,23 +234,19 @@ public class SellerProductService {
         );
     }
 
-    public PageResponse<SellerProductResponse> searchProducts(String keyword, int page, int size) {
+    public PageResponse<SellerProductResponse> filterProducts(
+            ProductStatus status, String keyword, int page, int size) {
 
         Pageable pageable = PageRequest.of(page, size, Sort.by("id").ascending());
 
         Integer shopId = sellerShopService.getMyShop().getId();
 
-        Page<Product> products;
-
-        if (keyword != null && !keyword.trim().isEmpty()) {
-            products = productRepository.searchByNameOrCategory(
-                    shopId,
-                    keyword.trim(),
-                    pageable
-            );
-        } else {
-            products = productRepository.findByShopIdAndIsDeletedFalse(shopId, pageable);
-        }
+        Page<Product> products = productRepository.filterProducts(
+                shopId,
+                status,
+                (keyword == null || keyword.isBlank()) ? null : keyword.trim(),
+                pageable
+        );
 
         Page<SellerProductResponse> mapped = products.map(this::mapToDTO);
 

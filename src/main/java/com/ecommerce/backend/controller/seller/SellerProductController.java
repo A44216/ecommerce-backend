@@ -3,6 +3,7 @@ package com.ecommerce.backend.controller.seller;
 import com.ecommerce.backend.dto.requests.seller.product.SellerProductRequest;
 import com.ecommerce.backend.dto.responses.seller.PageResponse;
 import com.ecommerce.backend.dto.responses.seller.product.SellerProductResponse;
+import com.ecommerce.backend.enums.ProductStatus;
 import com.ecommerce.backend.service.seller.SellerProductService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -24,14 +25,16 @@ public class SellerProductController {
         this.productService = productService;
     }
 
-    // lấy danh sách tất cả sản phẩm
-    // API: GET /api/products
     @GetMapping
-    public ResponseEntity<PageResponse<SellerProductResponse>> getAllProducts(
+    public ResponseEntity<PageResponse<SellerProductResponse>> getProducts(
+            @RequestParam(required = false) ProductStatus status,
+            @RequestParam(required = false) String keyword,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size
     ) {
-        return ResponseEntity.ok(productService.getAllProducts(page, size));
+        return ResponseEntity.ok(
+                productService.filterProducts(status, keyword, page, size)
+        );
     }
 
     // lấy thông tin chi tiết một sản phẩm theo ID
@@ -94,17 +97,6 @@ public class SellerProductController {
     ) {
         return ResponseEntity.ok(
                 productService.getDeletedProducts(page, size)
-        );
-    }
-
-    @GetMapping("/search")
-    public ResponseEntity<PageResponse<SellerProductResponse>> searchProducts(
-            @RequestParam(required = false) String keyword,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size
-    ) {
-        return ResponseEntity.ok(
-                productService.searchProducts(keyword, page, size)
         );
     }
 
