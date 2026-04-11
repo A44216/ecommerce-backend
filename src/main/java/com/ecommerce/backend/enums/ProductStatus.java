@@ -1,6 +1,7 @@
 package com.ecommerce.backend.enums;
 
 public enum ProductStatus {
-    AVAILABLE,
-    UNAVAILABLE
+    PENDING,  // Chờ Admin duyệt
+    APPROVED, // Đã duyệt, được phép bán
+    REJECTED  // Bị từ chối
 }

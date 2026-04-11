@@ -52,7 +52,7 @@ public class Product {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private ProductStatus status = ProductStatus.AVAILABLE;
+    private ProductStatus status = ProductStatus.PENDING;
 
     @Column(name = "rating_avg", precision = 3, scale = 2, nullable = false)
     private BigDecimal ratingAvg = BigDecimal.ZERO;

@@ -80,98 +80,94 @@ public class ProductService {
         shop.setId(request.getShopId());
         product.setShop(shop);
 
-        product.setStatus(calculateStatus(request.getStock()));
-
+        // Đã xóa hàm calculateStatus(stock) ở đây
     }
 
-    private ProductStatus calculateStatus(int stock) {
-        return stock > 0 ?
-                ProductStatus.AVAILABLE :
-                ProductStatus.UNAVAILABLE;
-    }
+    // ==========================================
+    // CÁC HÀM GET DÀNH CHO USER (CHỈ LẤY APPROVED)
+    // ==========================================
 
-    // lấy tất cả sản phẩm
     public List<ProductResponse> getAllProducts() {
-
-        List<Product> products = productRepository.findByIsDeletedFalse();
-
-        return products.stream()
-                .map(this::mapToDTO)
-                .toList();
+        // Chỉ lấy sản phẩm APPROVED
+        List<Product> products = productRepository.findByStatusAndIsDeletedFalse(ProductStatus.APPROVED);
+        return products.stream().map(this::mapToDTO).toList();
     }
 
-    // lấy sản phẩm theo id
     public ProductResponse getProductById(Integer id) {
-
-        Product product = productRepository.findByIdAndIsDeletedFalse(id)
-                .orElseThrow(() -> new RuntimeException("Product not found"));
-
+        // Khách hàng chỉ xem được chi tiết nếu sản phẩm đó APPROVED
+        Product product = productRepository.findByIdAndStatusAndIsDeletedFalse(id, ProductStatus.APPROVED)
+                .orElseThrow(() -> new RuntimeException("Product not found or not approved"));
         return mapToDTO(product);
     }
 
-    // thêm sản phẩm
+    public List<ProductResponse> searchProducts(String keyword) {
+        List<Product> products = productRepository.findByNameContainingIgnoreCaseAndStatusAndIsDeletedFalse(keyword, ProductStatus.APPROVED);
+        return products.stream().map(this::mapToDTO).toList();
+    }
+
+    public List<ProductResponse> getProductsByCategory(Integer categoryId) {
+        List<Product> products = productRepository.findByCategoryIdAndStatusAndIsDeletedFalse(categoryId, ProductStatus.APPROVED);
+        return products.stream().map(this::mapToDTO).toList();
+    }
+
+    public List<ProductResponse> getProductsByShop(Integer shopId) {
+        List<Product> products = productRepository.findByShopIdAndStatusAndIsDeletedFalse(shopId, ProductStatus.APPROVED);
+        return products.stream().map(this::mapToDTO).toList();
+    }
+
+    public List<ProductResponse> searchProducts(String keyword, Integer shopId) {
+        List<Product> products = (shopId != null)
+                ? productRepository.findByShopIdAndStatusAndIsDeletedFalse(shopId, ProductStatus.APPROVED)
+                : productRepository.findByStatusAndIsDeletedFalse(ProductStatus.APPROVED);
+
+        if (keyword != null && !keyword.trim().isEmpty()) {
+            String k = keyword.trim().toLowerCase();
+            products = products.stream()
+                    .filter(p ->
+                            (p.getName() != null && p.getName().toLowerCase().contains(k))
+                                    || (p.getCategory() != null
+                                    && p.getCategory().getName().toLowerCase().contains(k))
+                    )
+                    .toList();
+        }
+
+        return products.stream().map(this::mapToDTO).toList();
+    }
+
+    // ==========================================
+    // CÁC HÀM THAO TÁC DATA (THÊM, SỬA, XÓA, KHÔI PHỤC)
+    // ==========================================
+
     public ProductResponse createProduct(ProductRequest request) {
-
         Product product = new Product();
-
         mapRequestToProduct(product, request);
 
-        Product saved = productRepository.save(product);
+        // MẶC ĐỊNH: Tạo mới phải chờ duyệt
+        product.setStatus(ProductStatus.PENDING);
 
+        Product saved = productRepository.save(product);
         return mapToDTO(saved);
     }
 
-    // cập nhật sản phẩm
     public ProductResponse updateProduct(Integer id, ProductRequest request) {
-
+        // Dùng hàm cũ để Seller có thể lấy ra sửa dù sản phẩm đang bị PENDING hay REJECTED
         Product product = productRepository.findByIdAndIsDeletedFalse(id)
                 .orElseThrow(() -> new RuntimeException("Product not found"));
 
         mapRequestToProduct(product, request);
 
-        Product updated = productRepository.save(product);
+        // MẶC ĐỊNH: Sửa thông tin xong phải chờ Admin duyệt lại
+        product.setStatus(ProductStatus.PENDING);
 
+        Product updated = productRepository.save(product);
         return mapToDTO(updated);
     }
 
-    // xóa sản phẩm
     public void deleteProduct(Integer id) {
         Product product = productRepository.findByIdAndIsDeletedFalse(id)
                 .orElseThrow(() -> new RuntimeException("Product not found"));
-
         product.setDeleted(true);
-
         productRepository.save(product);
-    }
-
-    // tìm sản phẩm theo tên
-    public List<ProductResponse> searchProducts(String keyword) {
-
-        List<Product> products = productRepository.findByNameContainingIgnoreCaseAndIsDeletedFalse(keyword);
-
-        return products.stream()
-                .map(this::mapToDTO)
-                .toList();
-    }
-
-    // sản phẩm theo category
-    public List<ProductResponse> getProductsByCategory(Integer categoryId) {
-
-        List<Product> products = productRepository.findByCategoryIdAndIsDeletedFalse(categoryId);
-
-        return products.stream()
-                .map(this::mapToDTO)
-                .toList();
-    }
-
-    // sản phẩm theo shop
-    public List<ProductResponse> getProductsByShop(Integer shopId) {
-
-        List<Product> products = productRepository.findByShopIdAndIsDeletedFalse(shopId);
-
-        return products.stream()
-                .map(this::mapToDTO)
-                .toList();
     }
 
     public void restoreProduct(Integer id) {
@@ -181,7 +177,6 @@ public class ProductService {
         if (!product.isDeleted()) {
             throw new RuntimeException("Product is not deleted");
         }
-
         product.setDeleted(false);
         productRepository.save(product);
     }
@@ -192,29 +187,4 @@ public class ProductService {
                 .map(this::mapToDTO)
                 .toList();
     }
-
-    public List<ProductResponse> searchProducts(String keyword, Integer shopId) {
-
-        List<Product> products = (shopId != null)
-                ? productRepository.findByShopIdAndIsDeletedFalse(shopId)
-                : productRepository.findByIsDeletedFalse();
-
-        if (keyword != null && !keyword.trim().isEmpty()) {
-
-            String k = keyword.trim().toLowerCase();
-
-            products = products.stream()
-                    .filter(p ->
-                            (p.getName() != null && p.getName().toLowerCase().contains(k))
-                                    || (p.getCategory() != null
-                                    && p.getCategory().getName().toLowerCase().contains(k))
-                    )
-                    .toList();
-        }
-
-        return products.stream()
-                .map(this::mapToDTO)
-                .toList();
-    }
-
 }
