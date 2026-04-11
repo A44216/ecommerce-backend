@@ -13,6 +13,7 @@ import com.ecommerce.backend.repository.ProductRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -95,7 +96,7 @@ public class SellerProductService {
     // lấy tất cả sản phẩm
     public PageResponse<SellerProductResponse> getAllProducts(int page, int size) {
 
-        Pageable pageable = PageRequest.of(page, size);
+        Pageable pageable = PageRequest.of(page, size, Sort.by("id").ascending());
 
         Integer shopId = sellerShopService.getMyShop().getId();
 
@@ -179,7 +180,7 @@ public class SellerProductService {
     // sản phẩm theo category
     public PageResponse<SellerProductResponse> getProductsByCategory(Integer categoryId, int page, int size) {
 
-        Pageable pageable = PageRequest.of(page, size);
+        Pageable pageable = PageRequest.of(page, size, Sort.by("id").ascending());
 
         Integer shopId = sellerShopService.getMyShop().getId();
 
@@ -202,7 +203,7 @@ public class SellerProductService {
     // sản phẩm theo shop
     public PageResponse<SellerProductResponse> getProductsByShop(Integer shopId, int page, int size) {
 
-        Pageable pageable = PageRequest.of(page, size);
+        Pageable pageable = PageRequest.of(page, size, Sort.by("id").ascending());
 
         Page<Product> products = productRepository.findByShopIdAndIsDeletedFalse(shopId, pageable);
 
@@ -231,7 +232,7 @@ public class SellerProductService {
 
     public PageResponse<SellerProductResponse> getDeletedProducts(int page, int size) {
 
-        Pageable pageable = PageRequest.of(page, size);
+        Pageable pageable = PageRequest.of(page, size, Sort.by("id").ascending());
 
         Integer shopId = sellerShopService.getMyShop().getId();
 
@@ -251,7 +252,7 @@ public class SellerProductService {
 
     public PageResponse<SellerProductResponse> searchProducts(String keyword, int page, int size) {
 
-        Pageable pageable = PageRequest.of(page, size);
+        Pageable pageable = PageRequest.of(page, size, Sort.by("id").ascending());
 
         Integer shopId = sellerShopService.getMyShop().getId();
 
