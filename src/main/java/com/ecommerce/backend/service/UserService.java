@@ -14,7 +14,9 @@ import com.ecommerce.backend.dto.requests.UpdateProfileRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-
+import com.ecommerce.backend.dto.requests.ChangePasswordRequest;
+import org.springframework.transaction.annotation.Transactional;
+import com.ecommerce.backend.entity.OtpToken;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -25,6 +27,7 @@ public class UserService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final com.ecommerce.backend.repository.OtpTokenRepository otpTokenRepository;
 
     public List<UserResponse> getAllUsers() {
         return userRepository.findAll()
@@ -211,6 +214,27 @@ public class UserService {
 
 
         return response;
+    }
+
+    @Transactional
+    public void changePassword(Integer userId, ChangePasswordRequest request) {
+        // 1. Lấy User hiện tại
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        // 2. Kiểm tra mã OTP xem có khớp với Email của User này không
+        OtpToken validOtp = otpTokenRepository.findByEmailAndOtp(user.getEmail(), request.getOtpCode().trim())
+                .orElseThrow(() -> new RuntimeException("Mã xác thực không chính xác"));
+
+        if (validOtp.getExpiryDate().isBefore(LocalDateTime.now())) {
+            otpTokenRepository.delete(validOtp);
+            throw new RuntimeException("Mã xác thực đã hết hạn");
+        }
+
+        // 3. Đổi mật khẩu và xóa OTP rác
+        user.setPassword(passwordEncoder.encode(request.getNewPassword().trim()));
+        userRepository.save(user);
+        otpTokenRepository.deleteByEmail(user.getEmail());
     }
 
 }

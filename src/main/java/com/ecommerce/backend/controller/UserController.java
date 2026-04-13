@@ -8,6 +8,8 @@ import com.ecommerce.backend.dto.responses.UserResponse;
 import com.ecommerce.backend.service.ShopService;
 import com.ecommerce.backend.service.UserService;
 import com.ecommerce.backend.dto.requests.UpdateProfileRequest;
+import com.ecommerce.backend.dto.requests.ChangePasswordRequest;
+import org.springframework.http.ResponseEntity;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
@@ -17,6 +19,7 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.util.List;
+import java.util.Collections;
 
 @RestController
 @RequestMapping("/api/users")
@@ -86,5 +89,11 @@ public class UserController {
     @PutMapping("/{id}/profile")
     public UserResponse updateProfile(@PathVariable Integer id, @RequestBody UpdateProfileRequest request) {
         return userService.updateProfile(id, request);
+    }
+
+    @PutMapping("/{id}/change-password")
+    public ResponseEntity<?> changePassword(@PathVariable Integer id, @RequestBody ChangePasswordRequest request) {
+        userService.changePassword(id, request);
+        return ResponseEntity.ok(Collections.singletonMap("message", "PASSWORD_CHANGED_SUCCESSFULLY"));
     }
 }
