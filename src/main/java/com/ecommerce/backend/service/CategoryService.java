@@ -9,7 +9,9 @@ import com.ecommerce.backend.repository.CategoryRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Comparator;
 import java.util.List;
+import java.util.Objects;
 
 @Service
 public class CategoryService {
@@ -34,9 +36,18 @@ public class CategoryService {
     }
 
     @Transactional(readOnly = true)
-    public List<CategoryResponse> getAllCategories() {
-        return categoryRepository.findAll()
-                .stream()
+    public List<CategoryResponse> getCategories(String keyword) {
+
+        List<Category> categories;
+
+        if (keyword == null || keyword.trim().isEmpty()) {
+            categories = categoryRepository.findAll();
+        } else {
+            categories = categoryRepository.findByNameContainingIgnoreCase(keyword.trim());
+        }
+
+        return categories.stream()
+                .sorted(Comparator.comparing(Category::getName))
                 .map(this::mapToDTO)
                 .toList();
     }
@@ -49,7 +60,7 @@ public class CategoryService {
     @Transactional
     public CategoryResponse createCategory(CategoryRequest request) {
 
-        String name = request.getName().trim();
+        String name = Objects.requireNonNull(request.getName()).trim();
 
         if (categoryRepository.existsByNameIgnoreCase(name)) {
             throw new BadRequestException("Category already exists");
@@ -66,7 +77,7 @@ public class CategoryService {
 
         Category category = getCategoryOrThrow(id);
 
-        String name = request.getName().trim();
+        String name = Objects.requireNonNull(request.getName()).trim();
 
         if (categoryRepository.existsByNameIgnoreCaseAndIdNot(name, id)) {
             throw new BadRequestException("Category name already exists");

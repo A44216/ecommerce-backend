@@ -10,6 +10,7 @@ import java.math.BigDecimal;
 @Setter
 public class SellerProductRequest {
 
+    @NotNull(message = "Category is required")
     private Integer categoryId;
 
     @NotBlank(message = "Product name is required")

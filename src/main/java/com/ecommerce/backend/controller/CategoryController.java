@@ -20,35 +20,36 @@ public class CategoryController {
         this.categoryService = categoryService;
     }
 
-    // tất cả category
+    // GET ALL + SEARCH
     @GetMapping
-    public List<CategoryResponse> getAllCategories() {
-        return categoryService.getAllCategories();
+    public List<CategoryResponse> getCategories(
+            @RequestParam(required = false) String keyword
+    ) {
+        return categoryService.getCategories(keyword);
     }
 
-    // category theo id
+    // GET BY ID
     @GetMapping("/{id}")
     public CategoryResponse getCategoryById(@PathVariable Integer id) {
         return categoryService.getCategoryById(id);
     }
 
-    // thêm category
+    // CREATE
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public CategoryResponse createCategory(@Valid @RequestBody CategoryRequest request) {
         return categoryService.createCategory(request);
     }
 
-    // cập nhật category
+    // UPDATE
     @PutMapping("/{id}")
     public CategoryResponse updateCategory(
             @PathVariable Integer id,
             @Valid @RequestBody CategoryRequest request) {
-
         return categoryService.updateCategory(id, request);
     }
 
-    // xoá category
+    // DELETE
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteCategory(@PathVariable Integer id) {

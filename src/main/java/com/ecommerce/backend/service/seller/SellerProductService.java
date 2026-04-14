@@ -41,11 +41,7 @@ public class SellerProductService {
                 .price(product.getPrice())
                 .stock(product.getStock())
                 .description(product.getDescription())
-                .categoryName(
-                        product.getCategory() != null
-                                ? product.getCategory().getName()
-                                : null
-                )
+                .categoryName(product.getCategory().getName())
                 .shopName(
                         product.getShop() != null ? product.getShop().getShopName() : null
                 )
