@@ -6,6 +6,7 @@ import com.ecommerce.backend.dto.responses.OrderResponse;
 import com.ecommerce.backend.entity.Address;
 import com.ecommerce.backend.entity.Order;
 import com.ecommerce.backend.entity.User;
+import com.ecommerce.backend.enums.NotificationType;
 import com.ecommerce.backend.enums.OrderStatus;
 import com.ecommerce.backend.exception.BadRequestException;
 import com.ecommerce.backend.exception.ResourceNotFoundException;
@@ -29,19 +30,21 @@ public class OrderService {
     private final ShopRepository shopRepository;
     private final com.ecommerce.backend.repository.ProductRepository productRepository;
     private final com.ecommerce.backend.repository.OrderItemRepository orderItemRepository;
+    private final NotificationService notificationService;
 
     public OrderService(OrderRepository repository,
                         UserRepository userRepository,
                         AddressRepository addressRepository,
                         ShopRepository shopRepository,
                         com.ecommerce.backend.repository.ProductRepository productRepository,
-                        com.ecommerce.backend.repository.OrderItemRepository orderItemRepository) {
+                        com.ecommerce.backend.repository.OrderItemRepository orderItemRepository, NotificationService notificationService) {
         this.repository = repository;
         this.userRepository = userRepository;
         this.addressRepository = addressRepository;
         this.shopRepository = shopRepository;
         this.productRepository = productRepository;
         this.orderItemRepository = orderItemRepository;
+        this.notificationService = notificationService;
     }
 
     private OrderResponse mapToDTO(Order order) {
@@ -154,7 +157,8 @@ public class OrderService {
         order.setTotalPrice(request.getTotalPrice());
         order.setStatus(OrderStatus.PENDING);
 
-        Order savedOrder = repository.save(order); // Lưu để lấy Order ID
+        // Biến savedOrder đã được khai báo ở đây
+        Order savedOrder = repository.save(order);
 
         // 2. Lưu danh sách sản phẩm (Snapshot Data)
         if (request.getOrderItems() != null && !request.getOrderItems().isEmpty()) {
@@ -191,6 +195,17 @@ public class OrderService {
             orderItemRepository.saveAll(orderItemsList);
             savedOrder.setOrderItems(orderItemsList);
         }
+
+        // ==========================================
+        // 3. TẠO THÔNG BÁO TỰ ĐỘNG (Đã xóa các dòng code thừa)
+        // ==========================================
+        notificationService.createNotification(
+                savedOrder.getUser().getId(),
+                "Đặt hàng thành công!",
+                "Đơn hàng #" + savedOrder.getId() + " đã được tạo và đang chờ người bán xác nhận.",
+                NotificationType.ORDER,
+                savedOrder.getId()
+        );
 
         return mapToDTO(savedOrder);
     }
