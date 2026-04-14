@@ -7,10 +7,18 @@ import java.util.List;
 
 public interface CategoryRepository extends JpaRepository<Category, Integer> {
 
-    boolean existsByNameIgnoreCase(String name);
+    // USER
+    List<Category> findByIsDeletedFalseOrderByNameAsc();
 
-    boolean existsByNameIgnoreCaseAndIdNot(String name, Integer id);
+    List<Category> findByNameContainingIgnoreCaseAndIsDeletedFalseOrderByNameAsc(String name);
 
-    List<Category> findByNameContainingIgnoreCase(String name);
+    boolean existsByNameIgnoreCaseAndIsDeletedFalse(String name);
 
+    boolean existsByNameIgnoreCaseAndIdNotAndIsDeletedFalse(String name, Integer id);
+
+    // ADMIN FILTER (CHUNG 1 HÀM)
+    List<Category> findByIsDeletedAndNameContainingIgnoreCaseOrderByNameAsc(
+            Boolean isDeleted,
+            String name
+    );
 }
