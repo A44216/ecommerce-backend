@@ -32,8 +32,7 @@ public class AdminCategoryService {
 
     private Category getCategoryOrThrow(Integer id) {
         return categoryRepository.findById(id)
-                .orElseThrow(() ->
-                        new ResourceNotFoundException("Category not found with id: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("CATEGORY_NOT_FOUND"));
     }
 
     // (FILTER + SEARCH)
@@ -57,14 +56,21 @@ public class AdminCategoryService {
 
         String name = Objects.requireNonNull(request.getName()).trim();
 
-        if (categoryRepository.existsByNameIgnoreCaseAndIsDeletedFalse(name)) {
-            throw new BadRequestException("Category already exists");
+        // check trùng trước
+        if (categoryRepository.existsByNameIgnoreCase(name)) {
+            throw new BadRequestException("CATEGORY_ALREADY_EXISTS");
         }
 
-        Category category = new Category();
-        category.setName(name);
+        try {
+            Category category = new Category();
+            category.setName(name);
 
-        return mapToAdminDTO(categoryRepository.save(category));
+            return mapToAdminDTO(categoryRepository.save(category));
+
+        } catch (org.springframework.dao.DataIntegrityViolationException e) {
+            // fallback chống race condition
+            throw new BadRequestException("CATEGORY_ALREADY_EXISTS");
+        }
     }
 
     // UPDATE
@@ -75,13 +81,20 @@ public class AdminCategoryService {
 
         String name = Objects.requireNonNull(request.getName()).trim();
 
-        if (categoryRepository.existsByNameIgnoreCaseAndIdNotAndIsDeletedFalse(name, id)) {
-            throw new BadRequestException("Category name already exists");
+        boolean isDuplicate = categoryRepository
+                .existsByNameIgnoreCaseAndIdNot(name, id);
+
+        if (isDuplicate) {
+            throw new BadRequestException("CATEGORY_ALREADY_EXISTS");
         }
 
-        category.setName(name);
+        try {
+            category.setName(name);
+            return mapToAdminDTO(categoryRepository.save(category));
 
-        return mapToAdminDTO(categoryRepository.save(category));
+        } catch (org.springframework.dao.DataIntegrityViolationException e) {
+            throw new BadRequestException("CATEGORY_ALREADY_EXISTS");
+        }
     }
 
     // DELETE (SOFT)
@@ -91,7 +104,7 @@ public class AdminCategoryService {
         Category category = getCategoryOrThrow(id);
 
         if (category.getIsDeleted()) {
-            throw new BadRequestException("Category already deleted");
+            throw new BadRequestException("CATEGORY_ALREADY_DELETED");
         }
 
         category.setIsDeleted(true);
@@ -104,7 +117,7 @@ public class AdminCategoryService {
         Category category = getCategoryOrThrow(id);
 
         if (!category.getIsDeleted()) {
-            throw new BadRequestException("Category is not deleted");
+            throw new BadRequestException("CATEGORY_NOT_DELETED");
         }
 
         category.setIsDeleted(false);

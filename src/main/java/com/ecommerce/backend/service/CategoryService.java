@@ -44,10 +44,10 @@ public class CategoryService {
     public CategoryResponse getCategoryById(Integer id) {
 
         Category category = categoryRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Category not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("CATEGORY_NOT_FOUND"));
 
         if (category.getIsDeleted()) {
-            throw new ResourceNotFoundException("Category not found");
+            throw new ResourceNotFoundException("CATEGORY_NOT_FOUND");
         }
 
         return mapToDTO(category);

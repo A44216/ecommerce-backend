@@ -12,9 +12,9 @@ public interface CategoryRepository extends JpaRepository<Category, Integer> {
 
     List<Category> findByNameContainingIgnoreCaseAndIsDeletedFalseOrderByNameAsc(String name);
 
-    boolean existsByNameIgnoreCaseAndIsDeletedFalse(String name);
+    boolean existsByNameIgnoreCase(String name);
 
-    boolean existsByNameIgnoreCaseAndIdNotAndIsDeletedFalse(String name, Integer id);
+    boolean existsByNameIgnoreCaseAndIdNot(String name, Integer id);
 
     // ADMIN FILTER (CHUNG 1 HÀM)
     List<Category> findByIsDeletedAndNameContainingIgnoreCaseOrderByNameAsc(
