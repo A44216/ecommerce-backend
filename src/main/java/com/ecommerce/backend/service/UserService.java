@@ -33,113 +33,9 @@ public class UserService {
 
     private final com.ecommerce.backend.repository.OtpTokenRepository otpTokenRepository;
 
-    public List<UserResponse> getAllUsers() {
-        return userRepository.findAll()
-                .stream()
-                .map(this::mapToResponse)
-                .collect(Collectors.toList());
-    }
-
-    public UserResponse getUserById(Integer id) {
-        User user = userRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("User not found"));
-
-        return mapToResponse(user);
-    }
-
-    public UserResponse createUser(UserRequest request) {
-
-        User user = new User();
-
-        user.setFullName(request.getFullName());
-        user.setUsername(request.getUsername());
-        user.setEmail(request.getEmail());
-        user.setPhone(request.getPhone());
-        user.setRole(request.getRole());
-
-        user.setProvider(Provider.LOCAL);
-
-        // Mã hóa mật khẩu
-        user.setPassword(passwordEncoder.encode(request.getPassword()));
-
-        userRepository.save(user);
-
-        return mapToResponse(user);
-    }
-
-    public UserResponse updateUser(Integer id, UserRequest request) {
-
-        User user = userRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("User not found"));
-
-        user.setFullName(request.getFullName());
-        user.setEmail(request.getEmail());
-        user.setPhone(request.getPhone());
-        user.setRole(request.getRole());
-
-        userRepository.save(user);
-
-        return mapToResponse(user);
-    }
-
-    public void deleteUser(Integer id) {
-        userRepository.deleteById(id);
-    }
-
-    // GOOGLE LOGIN
-    public UserResponse loginWithGoogle(GoogleLoginRequest request) {
-
-        // 1. check google_id
-        var userOpt = userRepository.findByGoogleId(request.getGoogleId());
-
-        if (userOpt.isPresent()) {
-            return mapToResponse(userOpt.get());
-        }
-
-        // 2. check email
-        var emailUserOpt = userRepository.findByEmail(request.getEmail());
-
-        User user;
-
-        if (emailUserOpt.isPresent()) {
-            user = emailUserOpt.get();
-            user.setGoogleId(request.getGoogleId());
-            user.setProvider(Provider.GOOGLE);
-        } else {
-            user = new User();
-            user.setFullName(request.getName());
-            user.setEmail(request.getEmail());
-            user.setGoogleId(request.getGoogleId());
-            user.setProvider(Provider.GOOGLE);
-
-            // tự sinh username
-            user.setUsername(generateUsername(request.getEmail()));
-
-            user.setPassword(null);
-        }
-
-        userRepository.save(user);
-
-        return mapToResponse(user);
-    }
-
-    // generate username
-    private String generateUsername(String email) {
-        String base = email.split("@")[0].replaceAll("[^a-zA-Z0-9]", "");
-        String username = base;
-        int count = 0;
-
-        while (userRepository.findByUsername(username).isPresent()) {
-            count++;
-            username = base + "_" + count;
-        }
-
-        return username;
-    }
-
+    // Helper map dữ liệu sang DTO (Dùng chung cho tất cả các hàm trả về UserResponse)
     private UserResponse mapToResponse(User user) {
         UserResponse res = new UserResponse();
-
         res.setId(user.getId());
         res.setFullName(user.getFullName());
         res.setUsername(user.getUsername());
@@ -150,99 +46,136 @@ public class UserService {
         res.setCreatedAt(user.getCreatedAt());
         res.setAvatar(user.getAvatar());
 
-        // CẬP NHẬT: Kiểm tra xem User có password hay không
-        boolean hasPassword = user.getPassword() != null && !user.getPassword().trim().isEmpty();
-        res.setHasPassword(hasPassword);
+        // Bổ sung các cờ trạng thái quan trọng cho Frontend
+        res.setHasPassword(user.getPassword() != null && !user.getPassword().trim().isEmpty());
+
+        // CHỐT CHẶN: Kiểm tra chính xác Enum Provider
+        res.setGoogleAccount(user.getProvider() != null && user.getProvider() == Provider.GOOGLE);
 
         return res;
     }
 
-    // Đăng nhập thường
-    public UserResponse login(LoginRequest request) {
+    public List<UserResponse> getAllUsers() {
+        return userRepository.findAll().stream().map(this::mapToResponse).collect(Collectors.toList());
+    }
 
-        if (request.getPassword() == null ||
-                (request.getUsername() == null && request.getEmail() == null)) {
-            throw new BadRequestException("Thiếu username/email hoặc password");
-        }
-
-        User user;
-
-        if (request.getUsername() != null) {
-            user = userRepository.findByUsername(request.getUsername())
-                    .orElseThrow(() -> new ResourceNotFoundException("User không tồn tại"));
-        } else {
-            user = userRepository.findByEmail(request.getEmail())
-                    .orElseThrow(() -> new ResourceNotFoundException("User không tồn tại"));
-        }
-
-        if (user.getStatus() == UserStatus.BLOCKED) {
-            throw new BadRequestException("Tài khoản đã bị khóa");
-        }
-
-        if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
-            throw new BadRequestException("Mật khẩu không đúng");
-        }
-
+    public UserResponse getUserById(Integer id) {
+        User user = userRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("User not found"));
         return mapToResponse(user);
     }
 
-    public UserResponse updateUserAvatar(Integer id, String avatarUrl) {
-        User user = userRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("User not found"));
-
-        user.setAvatar(avatarUrl); // Set link ảnh mới
-        User updatedUser = userRepository.save(user);
-        return mapToResponse(updatedUser);
-    }
-
-    public UserResponse updateProfile(Integer id, UpdateProfileRequest request) {
-        // Tìm User
-        User user = userRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("User not found"));
-
-        // Chỉ cập nhật các trường được phép
+    public UserResponse createUser(UserRequest request) {
+        User user = new User();
         user.setFullName(request.getFullName());
         user.setUsername(request.getUsername());
         user.setEmail(request.getEmail());
         user.setPhone(request.getPhone());
+        user.setRole(request.getRole());
+        user.setProvider(Provider.LOCAL);
+        user.setPassword(passwordEncoder.encode(request.getPassword()));
+        userRepository.save(user);
+        return mapToResponse(user);
+    }
 
-        // Lưu lại
-        User updatedUser = userRepository.save(user);
+    public UserResponse updateUser(Integer id, UserRequest request) {
+        User user = userRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("User not found"));
+        user.setFullName(request.getFullName());
+        user.setEmail(request.getEmail());
+        user.setPhone(request.getPhone());
+        user.setRole(request.getRole());
+        userRepository.save(user);
+        return mapToResponse(user);
+    }
 
-        // Trả về DTO
-        UserResponse response = new UserResponse();
-        response.setId(updatedUser.getId());
-        response.setFullName(updatedUser.getFullName());
-        response.setUsername(updatedUser.getUsername());
-        response.setEmail(updatedUser.getEmail());
-        response.setPhone(updatedUser.getPhone());
-        response.setRole(updatedUser.getRole());
-        response.setStatus(updatedUser.getStatus());
-        response.setAvatar(updatedUser.getAvatar());
+    public void deleteUser(Integer id) {
+        userRepository.deleteById(id);
+    }
 
-        // CẬP NHẬT: Thêm cờ hasPassword
-        boolean hasPassword = updatedUser.getPassword() != null && !updatedUser.getPassword().trim().isEmpty();
-        response.setHasPassword(hasPassword);
+    public UserResponse loginWithGoogle(GoogleLoginRequest request) {
+        var userOpt = userRepository.findByGoogleId(request.getGoogleId());
+        if (userOpt.isPresent()) {
+            return mapToResponse(userOpt.get());
+        }
+        var emailUserOpt = userRepository.findByEmail(request.getEmail());
+        User user;
+        if (emailUserOpt.isPresent()) {
+            user = emailUserOpt.get();
+            user.setGoogleId(request.getGoogleId());
+            user.setProvider(Provider.GOOGLE);
+        } else {
+            user = new User();
+            user.setFullName(request.getName());
+            user.setEmail(request.getEmail());
+            user.setGoogleId(request.getGoogleId());
+            user.setProvider(Provider.GOOGLE);
+            user.setUsername(generateUsername(request.getEmail()));
+            user.setPassword(null);
+        }
+        userRepository.save(user);
+        return mapToResponse(user);
+    }
 
-        return response;
+    private String generateUsername(String email) {
+        String base = email.split("@")[0].replaceAll("[^a-zA-Z0-9]", "");
+        String username = base;
+        int count = 0;
+        while (userRepository.findByUsername(username).isPresent()) {
+            count++;
+            username = base + "_" + count;
+        }
+        return username;
+    }
+
+    public UserResponse login(LoginRequest request) {
+        if (request.getPassword() == null || (request.getUsername() == null && request.getEmail() == null)) {
+            throw new BadRequestException("Thiếu username/email hoặc password");
+        }
+        User user;
+        if (request.getUsername() != null) {
+            user = userRepository.findByUsername(request.getUsername()).orElseThrow(() -> new ResourceNotFoundException("User không tồn tại"));
+        } else {
+            user = userRepository.findByEmail(request.getEmail()).orElseThrow(() -> new ResourceNotFoundException("User không tồn tại"));
+        }
+        if (user.getStatus() == UserStatus.BLOCKED) throw new BadRequestException("Tài khoản đã bị khóa");
+        if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) throw new BadRequestException("Mật khẩu không đúng");
+        return mapToResponse(user);
+    }
+
+    public UserResponse updateUserAvatar(Integer id, String avatarUrl) {
+        User user = userRepository.findById(id).orElseThrow(() -> new RuntimeException("User not found"));
+        user.setAvatar(avatarUrl);
+        return mapToResponse(userRepository.save(user));
+    }
+
+    public UserResponse updateProfile(Integer id, UpdateProfileRequest request) {
+        User user = userRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("User not found"));
+
+        user.setFullName(request.getFullName());
+        user.setPhone(request.getPhone());
+
+        // CHẶN ĐỔI EMAIL CHO TÀI KHOẢN GOOGLE TẠI SERVER
+        if (request.getEmail() != null && !request.getEmail().equals(user.getEmail())) {
+            if (user.getProvider() == Provider.GOOGLE) {
+                throw new BadRequestException("Tài khoản Google không thể thay đổi Email!");
+            }
+            if (userRepository.findByEmail(request.getEmail()).isPresent()) {
+                throw new BadRequestException("Email đã tồn tại!");
+            }
+            user.setEmail(request.getEmail());
+        }
+
+        return mapToResponse(userRepository.save(user));
     }
 
     @Transactional
     public void changePassword(Integer userId, ChangePasswordRequest request) {
-        // 1. Lấy User hiện tại
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found"));
-
-        // 2. Kiểm tra mã OTP xem có khớp với Email của User này không
+        User user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
         OtpToken validOtp = otpTokenRepository.findByEmailAndOtp(user.getEmail(), request.getOtpCode().trim())
                 .orElseThrow(() -> new RuntimeException("Mã xác thực không chính xác"));
-
         if (validOtp.getExpiryDate().isBefore(LocalDateTime.now())) {
             otpTokenRepository.delete(validOtp);
             throw new RuntimeException("Mã xác thực đã hết hạn");
         }
-
-        // 3. Đổi mật khẩu và xóa OTP rác
         user.setPassword(passwordEncoder.encode(request.getNewPassword().trim()));
         userRepository.save(user);
         otpTokenRepository.deleteByEmail(user.getEmail());
@@ -250,10 +183,7 @@ public class UserService {
 
     @Transactional
     public void setPasswordForGoogleAccount(Integer userId, String newPassword) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy người dùng"));
-
-        // Mã hóa mật khẩu mới và lưu lại
+        User user = userRepository.findById(userId).orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy người dùng"));
         user.setPassword(passwordEncoder.encode(newPassword));
         userRepository.save(user);
     }

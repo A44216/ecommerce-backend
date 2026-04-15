@@ -21,5 +21,6 @@ public class UserResponse {
     private LocalDateTime createdAt;
     private String avatar;
     private boolean hasPassword;
+    private boolean isGoogleAccount;
 
 }
