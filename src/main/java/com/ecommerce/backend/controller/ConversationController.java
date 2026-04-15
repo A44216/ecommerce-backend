@@ -1,5 +1,6 @@
 package com.ecommerce.backend.controller;
 
+import com.ecommerce.backend.dto.requests.ConversationRequest;
 import com.ecommerce.backend.dto.responses.ConversationResponse;
 import com.ecommerce.backend.entity.Conversation;
 import com.ecommerce.backend.service.ConversationService;
@@ -43,9 +44,10 @@ public class ConversationController {
     }
 
     // tạo conversation
+    // Trong ConversationController.java
     @PostMapping
-    public Conversation create(@RequestBody Conversation conversation) {
-        return service.create(conversation);
+    public ConversationResponse create(@RequestBody ConversationRequest request) {
+        return service.createConversation(request);
     }
 
     // xoá

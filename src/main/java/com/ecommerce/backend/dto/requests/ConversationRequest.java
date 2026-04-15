@@ -11,4 +11,7 @@ public class ConversationRequest {
     @NotNull(message = "Shop id is required")
     private Integer shopId;
 
+
+    @NotNull(message = "Customer id is required")
+    private Integer customerId;
 }

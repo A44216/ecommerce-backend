@@ -32,8 +32,8 @@ public class ReviewService {
     private ReviewResponse mapToDTO(Review review) {
         return ReviewResponse.builder()
                 .id(review.getId())
-                .userName(review.getUser().getFullName()) // vẫn giữ nguyên việc lấy fullName như code cũ
-                .productId(review.getProduct().getId())  //thông tin thứ 6 bị thiếu
+                .userName(review.getUser().getFullName())
+                .productId(review.getProduct().getId())
                 .rating(review.getRating())
                 .comment(review.getComment())
                 .createdAt(review.getCreatedAt())
