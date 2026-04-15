@@ -1,7 +1,7 @@
 package com.ecommerce.backend.service;
 
 import com.ecommerce.backend.dto.requests.OrderRequest;
-import com.ecommerce.backend.dto.responses.OrderItemResponse; // <-- THÊM IMPORT NÀY
+import com.ecommerce.backend.dto.responses.OrderItemResponse;
 import com.ecommerce.backend.dto.responses.OrderResponse;
 import com.ecommerce.backend.entity.Address;
 import com.ecommerce.backend.entity.Order;
@@ -51,6 +51,21 @@ public class OrderService {
 
         Address address = order.getAddress();
 
+        // ==========================================
+        // XỬ LÝ GỘP CHUỖI ĐỊA CHỈ TẠI ĐÂY
+        // ==========================================
+        String fullAddress = address.getAddressLine() != null ? address.getAddressLine() : "";
+
+        if (address.getWard() != null && !address.getWard().isEmpty()) {
+            fullAddress += ", " + address.getWard();
+        }
+        if (address.getDistrict() != null && !address.getDistrict().isEmpty()) {
+            fullAddress += ", " + address.getDistrict();
+        }
+        if (address.getCity() != null && !address.getCity().isEmpty()) {
+            fullAddress += ", " + address.getCity();
+        }
+
         //CHUYỂN ĐỔI DANH SÁCH SẢN PHẨM ---
         List<OrderItemResponse> itemResponses = new ArrayList<>();
 
@@ -89,7 +104,10 @@ public class OrderService {
                 .createdAt(order.getCreatedAt())
                 .shippingName(address.getFullName())
                 .shippingPhone(address.getPhone())
-                .addressLine(address.getAddressLine())
+
+                // --- TRUYỀN CHUỖI ĐỊA CHỈ ĐÃ GỘP ĐẦY ĐỦ VÀO ĐÂY ---
+                .addressLine(fullAddress)
+
                 .city(address.getCity())
                 .district(address.getDistrict())
                 .ward(address.getWard())
@@ -197,7 +215,7 @@ public class OrderService {
         }
 
         // ==========================================
-        // 3. TẠO THÔNG BÁO TỰ ĐỘNG (Đã xóa các dòng code thừa)
+        // 3. TẠO THÔNG BÁO TỰ ĐỘNG
         // ==========================================
         notificationService.createNotification(
                 savedOrder.getUser().getId(),
