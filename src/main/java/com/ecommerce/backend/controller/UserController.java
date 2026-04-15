@@ -1,14 +1,10 @@
 package com.ecommerce.backend.controller;
 
-import com.ecommerce.backend.dto.requests.LoginRequest;
-import com.ecommerce.backend.dto.requests.UserRequest;
-import com.ecommerce.backend.dto.requests.GoogleLoginRequest;
+import com.ecommerce.backend.dto.requests.*;
 import com.ecommerce.backend.dto.responses.ShopResponse;
 import com.ecommerce.backend.dto.responses.UserResponse;
 import com.ecommerce.backend.service.ShopService;
 import com.ecommerce.backend.service.UserService;
-import com.ecommerce.backend.dto.requests.UpdateProfileRequest;
-import com.ecommerce.backend.dto.requests.ChangePasswordRequest;
 import org.springframework.http.ResponseEntity;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -95,5 +91,11 @@ public class UserController {
     public ResponseEntity<?> changePassword(@PathVariable Integer id, @RequestBody ChangePasswordRequest request) {
         userService.changePassword(id, request);
         return ResponseEntity.ok(Collections.singletonMap("message", "PASSWORD_CHANGED_SUCCESSFULLY"));
+    }
+
+    @PutMapping("/{id}/set-password")
+    public ResponseEntity<?> setPassword(@PathVariable Integer id, @RequestBody SetPasswordRequest request) {
+        userService.setPasswordForGoogleAccount(id, request.getNewPassword());
+        return ResponseEntity.ok().body("Thiết lập mật khẩu thành công!");
     }
 }

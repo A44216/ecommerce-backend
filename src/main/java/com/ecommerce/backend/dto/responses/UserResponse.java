@@ -20,5 +20,6 @@ public class UserResponse {
     private UserStatus status;
     private LocalDateTime createdAt;
     private String avatar;
+    private boolean hasPassword;
 
 }

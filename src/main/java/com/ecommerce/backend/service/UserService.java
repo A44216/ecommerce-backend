@@ -12,6 +12,7 @@ import com.ecommerce.backend.repository.UserRepository;
 import com.ecommerce.backend.dto.responses.UserResponse;
 import com.ecommerce.backend.dto.requests.UpdateProfileRequest;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import com.ecommerce.backend.dto.requests.ChangePasswordRequest;
@@ -26,7 +27,10 @@ import java.util.stream.Collectors;
 public class UserService {
 
     private final UserRepository userRepository;
+
+    @Autowired
     private final PasswordEncoder passwordEncoder;
+
     private final com.ecommerce.backend.repository.OtpTokenRepository otpTokenRepository;
 
     public List<UserResponse> getAllUsers() {
@@ -146,6 +150,10 @@ public class UserService {
         res.setCreatedAt(user.getCreatedAt());
         res.setAvatar(user.getAvatar());
 
+        // CẬP NHẬT: Kiểm tra xem User có password hay không
+        boolean hasPassword = user.getPassword() != null && !user.getPassword().trim().isEmpty();
+        res.setHasPassword(hasPassword);
+
         return res;
     }
 
@@ -201,7 +209,7 @@ public class UserService {
         // Lưu lại
         User updatedUser = userRepository.save(user);
 
-        // Trả về DTO (Giả sử bạn dùng mapper hoặc Builder tương tự các hàm khác)
+        // Trả về DTO
         UserResponse response = new UserResponse();
         response.setId(updatedUser.getId());
         response.setFullName(updatedUser.getFullName());
@@ -212,6 +220,9 @@ public class UserService {
         response.setStatus(updatedUser.getStatus());
         response.setAvatar(updatedUser.getAvatar());
 
+        // CẬP NHẬT: Thêm cờ hasPassword
+        boolean hasPassword = updatedUser.getPassword() != null && !updatedUser.getPassword().trim().isEmpty();
+        response.setHasPassword(hasPassword);
 
         return response;
     }
@@ -237,4 +248,13 @@ public class UserService {
         otpTokenRepository.deleteByEmail(user.getEmail());
     }
 
+    @Transactional
+    public void setPasswordForGoogleAccount(Integer userId, String newPassword) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy người dùng"));
+
+        // Mã hóa mật khẩu mới và lưu lại
+        user.setPassword(passwordEncoder.encode(newPassword));
+        userRepository.save(user);
+    }
 }
