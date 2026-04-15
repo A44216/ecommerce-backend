@@ -1,7 +1,7 @@
 package com.ecommerce.backend.controller;
 
 import com.ecommerce.backend.dto.requests.*;
-import com.ecommerce.backend.dto.requests.admin.AdminChangePasswordRequest;
+import com.ecommerce.backend.dto.requests.admin.profile.AdminChangePasswordRequest;
 import com.ecommerce.backend.dto.responses.LoginResponse;
 import com.ecommerce.backend.dto.responses.UserResponse;
 import com.ecommerce.backend.service.AuthService;

@@ -1,7 +1,7 @@
 package com.ecommerce.backend.controller.admin;
 
 import com.ecommerce.backend.dto.requests.CategoryRequest;
-import com.ecommerce.backend.dto.responses.admin.category.CategoryAdminResponse;
+import com.ecommerce.backend.dto.responses.admin.profile.CategoryAdminResponse;
 import com.ecommerce.backend.service.admin.AdminCategoryService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;

@@ -1,4 +1,4 @@
-package com.ecommerce.backend.dto.requests.admin;
+package com.ecommerce.backend.dto.requests.admin.profile;
 
 
 import lombok.Getter;

@@ -1,7 +1,7 @@
 package com.ecommerce.backend.service;
 
 import com.ecommerce.backend.dto.requests.*;
-import com.ecommerce.backend.dto.requests.admin.AdminChangePasswordRequest;
+import com.ecommerce.backend.dto.requests.admin.profile.AdminChangePasswordRequest;
 import com.ecommerce.backend.dto.responses.LoginResponse;
 import com.ecommerce.backend.dto.responses.UserResponse;
 import com.ecommerce.backend.entity.User;
@@ -16,19 +16,13 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import com.ecommerce.backend.repository.OtpTokenRepository;
-import com.ecommerce.backend.service.EmailService;
 import com.ecommerce.backend.entity.OtpToken;
 
 
-import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
-import com.google.api.client.googleapis.auth.oauth2.GoogleIdTokenVerifier;
-import com.google.api.client.http.javanet.NetHttpTransport;
-import com.google.api.client.json.gson.GsonFactory;
 import com.ecommerce.backend.enums.Provider;
 import com.ecommerce.backend.enums.Role;
-import java.util.Collections;
+
 import java.util.Objects;
-import java.util.UUID;
 
 import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
