@@ -50,4 +50,10 @@ public class OrderController {
     public void deleteOrder(@PathVariable Integer id) {
         service.deleteOrder(id);
     }
+
+    // Nút Hủy đơn hàng
+    @PutMapping("/{id}/cancel")
+    public OrderResponse cancelOrder(@PathVariable Integer id) {
+        return service.cancelOrder(id);
+    }
 }

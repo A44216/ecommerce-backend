@@ -245,4 +245,29 @@ public class OrderService {
 
         repository.delete(order);
     }
+
+    @Transactional
+    public OrderResponse cancelOrder(Integer orderId) {
+        Order order = getOrderOrThrow(orderId);
+
+        // Chỉ cho phép hủy khi đơn hàng đang ở trạng thái PENDING (Chờ xác nhận)
+        if (order.getStatus() != OrderStatus.PENDING) {
+            throw new BadRequestException("Chỉ có thể hủy đơn hàng khi đang chờ xác nhận!");
+        }
+
+        // Cập nhật trạng thái
+        order.setStatus(OrderStatus.CANCELED);
+        Order savedOrder = repository.save(order);
+
+        // Bắn thông báo về hệ thống
+        notificationService.createNotification(
+                savedOrder.getUser().getId(),
+                "Đơn hàng đã bị hủy",
+                "Đơn hàng #" + savedOrder.getId() + " của bạn đã được hủy thành công.",
+                NotificationType.ORDER,
+                savedOrder.getId()
+        );
+
+        return mapToDTO(savedOrder);
+    }
 }
