@@ -1,6 +1,7 @@
 package com.ecommerce.backend.controller;
 
 import com.ecommerce.backend.dto.requests.*;
+import com.ecommerce.backend.dto.requests.admin.AdminChangePasswordRequest;
 import com.ecommerce.backend.dto.responses.LoginResponse;
 import com.ecommerce.backend.dto.responses.UserResponse;
 import com.ecommerce.backend.service.AuthService;
@@ -57,4 +58,11 @@ public class AuthController {
         authService.verifyOtp(request);
         return ResponseEntity.ok(Collections.singletonMap("message", "OTP_VALID"));
     }
+
+    @PostMapping("/change-password")
+    public ResponseEntity<?> changePassword(@RequestBody AdminChangePasswordRequest request) {
+        authService.changePassword(request);
+        return ResponseEntity.ok(Collections.singletonMap("message", "PASSWORD_CHANGED_SUCCESSFULLY"));
+    }
+
 }

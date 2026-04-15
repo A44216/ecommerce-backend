@@ -31,8 +31,15 @@ public class JwtFilter extends OncePerRequestFilter {
 
         String path = request.getServletPath();
 
-        // BỎ QUA AUTH ENDPOINT
-        if (path.startsWith("/api/auth/")) {
+        if (
+                path.equals("/api/auth/login") ||
+                        path.equals("/api/auth/register") ||
+                        path.equals("/api/auth/google") ||
+                        path.equals("/api/auth/send-register-otp") ||
+                        path.equals("/api/auth/send-forgot-password-otp") ||
+                        path.equals("/api/auth/verify-otp") ||
+                        path.equals("/api/auth/reset-password")
+        ) {
             filterChain.doFilter(request, response);
             return;
         }

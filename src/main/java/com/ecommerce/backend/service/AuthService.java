@@ -1,6 +1,7 @@
 package com.ecommerce.backend.service;
 
 import com.ecommerce.backend.dto.requests.*;
+import com.ecommerce.backend.dto.requests.admin.AdminChangePasswordRequest;
 import com.ecommerce.backend.dto.responses.LoginResponse;
 import com.ecommerce.backend.dto.responses.UserResponse;
 import com.ecommerce.backend.entity.User;
@@ -10,6 +11,7 @@ import com.ecommerce.backend.exception.ResourceNotFoundException;
 import com.ecommerce.backend.repository.UserRepository;
 import com.ecommerce.backend.security.JwtService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -25,6 +27,7 @@ import com.google.api.client.json.gson.GsonFactory;
 import com.ecommerce.backend.enums.Provider;
 import com.ecommerce.backend.enums.Role;
 import java.util.Collections;
+import java.util.Objects;
 import java.util.UUID;
 
 import org.springframework.transaction.annotation.Transactional;
@@ -356,4 +359,36 @@ public class AuthService {
             throw new BadRequestException("OTP_EXPIRED");
         }
     }
+
+    @Transactional
+    public void changePassword(AdminChangePasswordRequest request) {
+
+        User user = getCurrentUser();
+
+        if (request.getCurrentPassword() == null || request.getNewPassword() == null) {
+            throw new BadRequestException("INVALID_INPUT");
+        }
+
+        // check mật khẩu cũ
+        if (!passwordEncoder.matches(request.getCurrentPassword(), user.getPassword())) {
+            throw new BadRequestException("CURRENT_PASSWORD_INCORRECT");
+        }
+
+        // check new password
+        if (request.getNewPassword().length() < 6) {
+            throw new BadRequestException("INVALID_PASSWORD");
+        }
+
+        // update password
+        user.setPassword(passwordEncoder.encode(request.getNewPassword()));
+        userRepository.save(user);
+    }
+
+    private User getCurrentUser() {
+        String username = Objects.requireNonNull(SecurityContextHolder.getContext().getAuthentication()).getName();
+
+        return userRepository.findByUsername(username)
+                .orElseThrow(() -> new ResourceNotFoundException("USER_NOT_FOUND"));
+    }
+
 }
