@@ -4,6 +4,7 @@ import com.ecommerce.backend.dto.responses.seller.dashboard.SellerDashboardKPIRe
 import com.ecommerce.backend.dto.responses.seller.dashboard.SellerDashboardTopProductResponse;
 import com.ecommerce.backend.dto.responses.seller.dashboard.SellerRevenueChartResponse;
 import com.ecommerce.backend.enums.ChartType;
+import com.ecommerce.backend.enums.DateRange;
 import com.ecommerce.backend.service.seller.SellerDashboardService;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
@@ -30,20 +31,18 @@ public class SellerDashboardController {
     @GetMapping("/dashboard/kpi")
     public SellerDashboardKPIResponse getKPI(
             Authentication authentication,
-            @RequestParam(required = false) String startDate,
-            @RequestParam(required = false) String endDate
+            @RequestParam(defaultValue = "TODAY") DateRange range
     ) {
-        return dashboardService.getKPI(authentication, startDate, endDate);
+        return dashboardService.getKPI(authentication, range);
     }
 
     // TOP PRODUCT
     @GetMapping("/dashboard/top-products")
     public SellerDashboardTopProductResponse getTopProducts(
             Authentication authentication,
-            @RequestParam(required = false) String startDate,
-            @RequestParam(required = false) String endDate
+            @RequestParam(defaultValue = "THIS_MONTH") DateRange range
     ) {
-        return dashboardService.getTopProducts(authentication, startDate, endDate);
+        return dashboardService.getTopProducts(authentication, range);
     }
 
     // CHART

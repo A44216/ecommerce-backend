@@ -5,6 +5,7 @@ import com.ecommerce.backend.dto.responses.seller.dashboard.SellerDashboardTopPr
 import com.ecommerce.backend.dto.responses.seller.dashboard.SellerRevenueChartResponse;
 import com.ecommerce.backend.entity.Shop;
 import com.ecommerce.backend.enums.ChartType;
+import com.ecommerce.backend.enums.DateRange;
 import com.ecommerce.backend.repository.OrderItemRepository;
 import com.ecommerce.backend.repository.OrderRepository;
 import com.ecommerce.backend.repository.ShopRepository;
@@ -112,32 +113,54 @@ public class SellerDashboardService {
         return result;
     }
 
-    private LocalDateTime[] parseDateRange(String startDateStr, String endDateStr) {
+    private LocalDateTime[] getDateRange(DateRange range) {
 
-        LocalDateTime startDate;
-        LocalDateTime endDate;
+        LocalDateTime start;
+        LocalDateTime end = LocalDateTime.now();
 
-        if (startDateStr != null && endDateStr != null) {
-            startDate = LocalDate.parse(startDateStr).atStartOfDay();
-            endDate = LocalDate.parse(endDateStr).atTime(23, 59, 59);
-        } else {
-            startDate = LocalDate.now().atStartOfDay();
-            endDate = LocalDate.now().atTime(23, 59, 59);
+        switch (range) {
+            case TODAY -> {
+                start = LocalDate.now().atStartOfDay();
+            }
+            case LAST_7_DAYS -> {
+                start = LocalDate.now().minusDays(6).atStartOfDay();
+            }
+            case LAST_30_DAYS -> {
+                start = LocalDate.now().minusDays(29).atStartOfDay();
+            }
+            case THIS_MONTH -> {
+                start = LocalDate.now().withDayOfMonth(1).atStartOfDay();
+            }
+            case LAST_MONTH -> {
+                start = LocalDate.now().minusMonths(1).withDayOfMonth(1).atStartOfDay();
+                end = LocalDate.now().withDayOfMonth(1).atStartOfDay().minusSeconds(1);
+            }
+            case LAST_3_MONTHS -> {
+                start = LocalDate.now().minusMonths(3).withDayOfMonth(1).atStartOfDay();
+            }
+            case LAST_6_MONTHS -> {
+                start = LocalDate.now().minusMonths(6).withDayOfMonth(1).atStartOfDay();
+            }
+            case THIS_YEAR -> {
+                start = LocalDate.now().withDayOfYear(1).atStartOfDay();
+            }
+            default -> {
+                start = LocalDate.now().atStartOfDay();
+            }
         }
 
-        return new LocalDateTime[]{startDate, endDate};
+        return new LocalDateTime[]{start, end};
     }
 
     public SellerDashboardKPIResponse getKPI(
             Authentication authentication,
-            String startDateStr,
-            String endDateStr
+            DateRange range
     ) {
         Integer shopId = getShopId(authentication);
 
-        LocalDateTime[] range = parseDateRange(startDateStr, endDateStr);
-        LocalDateTime startDate = range[0];
-        LocalDateTime endDate = range[1];
+        LocalDateTime[] dateRange = getDateRange(range);
+        LocalDateTime startDate = dateRange[0];
+        LocalDateTime endDate = dateRange[1];
 
         BigDecimal revenue = orderRepository.sumRevenueByShopAndDate(shopId, startDate, endDate);
         Integer orders = orderRepository.countOrderByShopAndDate(shopId, startDate, endDate);
@@ -152,14 +175,13 @@ public class SellerDashboardService {
 
     public SellerDashboardTopProductResponse getTopProducts(
             Authentication authentication,
-            String startDateStr,
-            String endDateStr
+            DateRange range
     ) {
         Integer shopId = getShopId(authentication);
 
-        LocalDateTime[] range = parseDateRange(startDateStr, endDateStr);
-        LocalDateTime startDate = range[0];
-        LocalDateTime endDate = range[1];
+        LocalDateTime[] dateRange = getDateRange(range);
+        LocalDateTime startDate = dateRange[0];
+        LocalDateTime endDate = dateRange[1];
 
         return new SellerDashboardTopProductResponse(
                 orderItemRepository.findTopByRevenueByDate(
