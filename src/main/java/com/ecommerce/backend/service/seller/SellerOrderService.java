@@ -13,6 +13,7 @@ import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -52,7 +53,7 @@ public class SellerOrderService {
         );
     }
 
-    // ================= ORDER DETAIL =================
+    // ORDER DETAIL
     public SellerOrderDetailResponse getOrderDetail(Integer orderId) {
 
         Integer shopId = sellerShopService.getMyShop().getId();
@@ -69,22 +70,27 @@ public class SellerOrderService {
                 .map(this::mapItem)
                 .toList();
 
-        return new SellerOrderDetailResponse(
-                order.getId(),
-                order.getStatus(),
-                order.getPaymentMethod(),
-                order.getPaymentStatus(),
-                order.getTotalPrice(),
-                order.getCreatedAt().toString(),
-                order.getShippingName(),
-                order.getShippingPhone(),
-                order.getShippingAddress(),
-                order.getUser().getFullName(),
-                items
-        );
+        return SellerOrderDetailResponse.builder()
+                .orderId(order.getId())
+                .status(order.getStatus())
+                .paymentMethod(order.getPaymentMethod())
+                .paymentStatus(order.getPaymentStatus())
+                .totalPrice(order.getTotalPrice())
+                .subtotal(order.getSubtotal())
+                .discountAmount(order.getDiscountAmount())
+                .commissionRate(order.getCommissionRate())
+                .commissionAmount(order.getCommissionAmount())
+                .createdAt(order.getCreatedAt().toString())
+                .completedAt(order.getCompletedAt() != null ? order.getCompletedAt().toString() : null)
+                .shippingName(order.getShippingName())
+                .shippingPhone(order.getShippingPhone())
+                .shippingAddress(order.getShippingAddress())
+                .customerName(order.getUser().getFullName())
+                .items(items)
+                .build();
     }
 
-    // ================= UPDATE STATUS (OPTIMIZED) =================
+    // UPDATE STATUS
     public void updateOrderStatus(Integer orderId, OrderStatus status) {
 
         Integer shopId = sellerShopService.getMyShop().getId();
@@ -92,11 +98,19 @@ public class SellerOrderService {
         Order order = orderRepository.findByIdAndShopId(orderId, shopId)
                 .orElseThrow(() -> new RuntimeException("Order not found"));
 
+        OrderStatus oldStatus = order.getStatus();
+
         order.setStatus(status);
+
+        // chỉ set completedAt lần đầu khi chuyển sang COMPLETED
+        if (status == OrderStatus.COMPLETED && oldStatus != OrderStatus.COMPLETED) {
+            order.setCompletedAt(LocalDateTime.now());
+        }
+
         orderRepository.save(order);
     }
 
-    // ================= MAPPER =================
+    // MAPPER
     private SellerOrderResponse mapToDTO(Order order) {
 
         String image = null;

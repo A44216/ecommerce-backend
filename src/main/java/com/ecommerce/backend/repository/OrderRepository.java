@@ -10,6 +10,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -32,51 +33,51 @@ public interface OrderRepository extends JpaRepository<Order, Integer> {
         FROM Order o
         WHERE o.shop.id = :shopId
     """)
-    Integer countByShopId(@Param("shopId") Integer shopId);
+    Integer countOrderByShop(@Param("shopId") Integer shopId);
 
     @Query("""
-        SELECT COALESCE(SUM(o.totalPrice), 0)
+        SELECT COALESCE(SUM(o.totalPrice - o.commissionAmount), 0)
         FROM Order o
         WHERE o.shop.id = :shopId
-          AND o.status = com.ecommerce.backend.enums.OrderStatus.COMPLETED
-          AND o.paymentStatus = com.ecommerce.backend.enums.PaymentStatus.PAID
+            AND o.status = com.ecommerce.backend.enums.OrderStatus.COMPLETED
+            AND o.paymentStatus = com.ecommerce.backend.enums.PaymentStatus.PAID
     """)
     BigDecimal sumRevenueByShop(@Param("shopId") Integer shopId);
 
-    // ================= REVENUE REPORT =================
+    // REVENUE REPORT
     @Query(value = """
-        SELECT DATE(created_at) AS date,
-               COALESCE(SUM(total_price), 0) AS revenue
+        SELECT DATE(completed_at) AS date,
+               COALESCE(SUM(total_price - commission_amount), 0) AS revenue
         FROM orders
         WHERE shop_id = :shopId
-          AND status = 'COMPLETED'
-          AND payment_status = 'PAID'
-          AND created_at >= DATE_SUB(CURDATE(), INTERVAL 6 DAY)
-        GROUP BY DATE(created_at)
+            AND status = 'COMPLETED'
+            AND payment_status = 'PAID'
+            AND completed_at >= NOW() - INTERVAL 7 DAY
+        GROUP BY DATE(completed_at)
         ORDER BY date
     """, nativeQuery = true)
     List<Object[]> getRevenueLast7Days(@Param("shopId") Integer shopId);
 
     @Query(value = """
-        SELECT DATE_FORMAT(created_at, '%Y-%m') AS date,
-               COALESCE(SUM(total_price), 0) AS revenue
+        SELECT DATE_FORMAT(completed_at, '%Y-%m') AS date,
+               COALESCE(SUM(total_price - commission_amount), 0) AS revenue
         FROM orders
         WHERE shop_id = :shopId
-          AND status = 'COMPLETED'
-          AND payment_status = 'PAID'
-        GROUP BY DATE_FORMAT(created_at, '%Y-%m')
+            AND status = 'COMPLETED'
+            AND payment_status = 'PAID'
+        GROUP BY DATE_FORMAT(completed_at, '%Y-%m')
         ORDER BY date
     """, nativeQuery = true)
     List<Object[]> getRevenueByMonth(@Param("shopId") Integer shopId);
 
     @Query(value = """
-        SELECT YEAR(created_at) AS date,
-               COALESCE(SUM(total_price), 0) AS revenue
+        SELECT YEAR(completed_at) AS date,
+           COALESCE(SUM(total_price - commission_amount), 0) AS revenue
         FROM orders
         WHERE shop_id = :shopId
-          AND status = 'COMPLETED'
-          AND payment_status = 'PAID'
-        GROUP BY YEAR(created_at)
+            AND status = 'COMPLETED'
+            AND payment_status = 'PAID'
+        GROUP BY YEAR(completed_at)
         ORDER BY date
     """, nativeQuery = true)
     List<Object[]> getRevenueByYear(@Param("shopId") Integer shopId);
@@ -89,4 +90,33 @@ public interface OrderRepository extends JpaRepository<Order, Integer> {
         WHERE o.id = :orderId
     """)
     Optional<Order> findByIdWithItems(@Param("orderId") Integer orderId);
+
+    @Query("""
+        SELECT COALESCE(SUM(o.totalPrice - o.commissionAmount), 0)
+        FROM Order o
+        WHERE o.shop.id = :shopId
+            AND o.status = com.ecommerce.backend.enums.OrderStatus.COMPLETED
+            AND o.paymentStatus = com.ecommerce.backend.enums.PaymentStatus.PAID
+            AND o.completedAt BETWEEN :startDate AND :endDate
+    """)
+    BigDecimal sumRevenueByShopAndDate(
+            @Param("shopId") Integer shopId,
+            @Param("startDate") LocalDateTime startDate,
+            @Param("endDate") LocalDateTime endDate
+    );
+
+    @Query("""
+        SELECT COUNT(o)
+        FROM Order o
+        WHERE o.shop.id = :shopId
+            AND o.status = com.ecommerce.backend.enums.OrderStatus.COMPLETED
+            AND o.paymentStatus = com.ecommerce.backend.enums.PaymentStatus.PAID
+            AND o.completedAt BETWEEN :startDate AND :endDate
+    """)
+    Integer countOrderByShopAndDate(
+            @Param("shopId") Integer shopId,
+            @Param("startDate") LocalDateTime startDate,
+            @Param("endDate") LocalDateTime endDate
+    );
+
 }

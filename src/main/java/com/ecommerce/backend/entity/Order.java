@@ -53,6 +53,18 @@ public class Order {
     @Column(name = "total_price", nullable = false, precision = 18, scale = 2)
     private BigDecimal totalPrice = BigDecimal.ZERO;
 
+    @Column(name = "subtotal", nullable = false, precision = 18, scale = 2)
+    private BigDecimal subtotal = BigDecimal.ZERO;
+
+    @Column(name = "commission_rate", nullable = false, precision = 5, scale = 2)
+    private BigDecimal commissionRate = BigDecimal.ZERO;
+
+    @Column(name = "commission_amount", nullable = false, precision = 18, scale = 2)
+    private BigDecimal commissionAmount = BigDecimal.ZERO;
+
+    @Column(name = "discount_amount", nullable = false, precision = 18, scale = 2)
+    private BigDecimal discountAmount = BigDecimal.ZERO;
+
     @Enumerated(EnumType.STRING)
     @Column(name = "payment_method", nullable = false)
     private PaymentMethod paymentMethod;
@@ -73,6 +85,10 @@ public class Order {
     @Column(name = "created_at", insertable = false, updatable = false)
     private LocalDateTime createdAt;
 
+    @Column(name = "completed_at")
+    private LocalDateTime completedAt;
+
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL)
     private List<OrderItem> items;
+
 }

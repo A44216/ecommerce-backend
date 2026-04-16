@@ -37,7 +37,7 @@ public class OrderItem {
     private Product product;
 
     @Column(nullable = false, precision = 18, scale = 2)
-    private BigDecimal price;
+    private BigDecimal price = BigDecimal.ZERO;
 
     @Column(nullable = false)
     private Integer quantity = 1;

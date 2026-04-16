@@ -7,19 +7,22 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 public interface OrderItemRepository extends JpaRepository<OrderItem, Integer> {
 
     List<OrderItem> findByOrderId(Integer orderId);
 
-    // TOTAL SOLD QUANTITY
+    // TOTAL SOLD
     @Query("""
         SELECT COALESCE(SUM(oi.quantity), 0)
         FROM OrderItem oi
         WHERE oi.order.shop.id = :shopId
+            AND oi.order.status = com.ecommerce.backend.enums.OrderStatus.COMPLETED
+            AND oi.order.paymentStatus = com.ecommerce.backend.enums.PaymentStatus.PAID
     """)
-    Integer sumQuantityByShopId(@Param("shopId") Integer shopId);
+    Integer sumQuantityByShop(@Param("shopId") Integer shopId);
 
     // TOP PRODUCTS BY REVENUE (LIMIT được truyền từ service)
     @Query("""
@@ -34,8 +37,8 @@ public interface OrderItemRepository extends JpaRepository<OrderItem, Integer> {
         FROM OrderItem oi
         LEFT JOIN oi.product.images pi
         WHERE oi.order.shop.id = :shopId
-          AND oi.order.status = com.ecommerce.backend.enums.OrderStatus.COMPLETED
-          AND oi.order.paymentStatus = com.ecommerce.backend.enums.PaymentStatus.PAID
+            AND oi.order.status = com.ecommerce.backend.enums.OrderStatus.COMPLETED
+            AND oi.order.paymentStatus = com.ecommerce.backend.enums.PaymentStatus.PAID
         GROUP BY oi.product.id, oi.product.name
         ORDER BY SUM(oi.price * oi.quantity) DESC
     """)
@@ -67,4 +70,67 @@ public interface OrderItemRepository extends JpaRepository<OrderItem, Integer> {
             Pageable pageable
     );
 
+    @Query("""
+        SELECT COALESCE(SUM(oi.quantity), 0)
+        FROM OrderItem oi
+        WHERE oi.order.shop.id = :shopId
+            AND oi.order.status = com.ecommerce.backend.enums.OrderStatus.COMPLETED
+            AND oi.order.paymentStatus = com.ecommerce.backend.enums.PaymentStatus.PAID
+            AND oi.order.completedAt BETWEEN :startDate AND :endDate
+    """)
+    Integer sumQuantityByShopAndDate(
+            @Param("shopId") Integer shopId,
+            @Param("startDate") LocalDateTime startDate,
+            @Param("endDate") LocalDateTime endDate
+    );
+
+    @Query("""
+        SELECT new com.ecommerce.backend.dto.responses.seller.dashboard.SellerTopSellingProductResponse(
+            oi.product.id,
+            oi.product.name,
+            SUM(oi.quantity),
+            SUM(oi.price * oi.quantity),
+            MIN(pi.imageUrl),
+            MIN(oi.price)
+        )
+        FROM OrderItem oi
+        LEFT JOIN oi.product.images pi
+        WHERE oi.order.shop.id = :shopId
+            AND oi.order.status = com.ecommerce.backend.enums.OrderStatus.COMPLETED
+            AND oi.order.paymentStatus = com.ecommerce.backend.enums.PaymentStatus.PAID
+            AND oi.order.completedAt BETWEEN :startDate AND :endDate
+        GROUP BY oi.product.id, oi.product.name
+        ORDER BY SUM(oi.price * oi.quantity) DESC
+    """)
+    List<SellerTopSellingProductResponse> findTopByRevenueByDate(
+            @Param("shopId") Integer shopId,
+            @Param("startDate") LocalDateTime startDate,
+            @Param("endDate") LocalDateTime endDate,
+            Pageable pageable
+    );
+
+    @Query("""
+        SELECT new com.ecommerce.backend.dto.responses.seller.dashboard.SellerTopSellingProductResponse(
+            oi.product.id,
+            oi.product.name,
+            SUM(oi.quantity),
+            SUM(oi.price * oi.quantity),
+            MIN(pi.imageUrl),
+            MIN(oi.price)
+        )
+        FROM OrderItem oi
+        LEFT JOIN oi.product.images pi
+        WHERE oi.order.shop.id = :shopId
+            AND oi.order.status = com.ecommerce.backend.enums.OrderStatus.COMPLETED
+            AND oi.order.paymentStatus = com.ecommerce.backend.enums.PaymentStatus.PAID
+            AND oi.order.completedAt BETWEEN :startDate AND :endDate
+        GROUP BY oi.product.id, oi.product.name
+        ORDER BY SUM(oi.quantity) DESC
+    """)
+    List<SellerTopSellingProductResponse> findTopBySoldByDate(
+            @Param("shopId") Integer shopId,
+            @Param("startDate") LocalDateTime startDate,
+            @Param("endDate") LocalDateTime endDate,
+            Pageable pageable
+    );
 }

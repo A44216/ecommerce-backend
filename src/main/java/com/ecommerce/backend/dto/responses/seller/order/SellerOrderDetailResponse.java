@@ -3,14 +3,16 @@ package com.ecommerce.backend.dto.responses.seller.order;
 import com.ecommerce.backend.enums.OrderStatus;
 import com.ecommerce.backend.enums.PaymentMethod;
 import com.ecommerce.backend.enums.PaymentStatus;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 
 import java.math.BigDecimal;
 import java.util.List;
 
 @Setter
 @Getter
+@Builder
+@AllArgsConstructor
+@NoArgsConstructor
 public class SellerOrderDetailResponse {
 
     private Integer orderId;
@@ -23,6 +25,7 @@ public class SellerOrderDetailResponse {
     private BigDecimal totalPrice;
 
     private String createdAt;
+    private String completedAt;
 
     private String shippingName;
     private String shippingPhone;
@@ -30,29 +33,11 @@ public class SellerOrderDetailResponse {
 
     private String customerName;
 
+    private BigDecimal subtotal;
+    private BigDecimal discountAmount;
+    private BigDecimal commissionRate;
+    private BigDecimal commissionAmount;
+
     private List<SellerOrderItemResponse> items;
 
-    public SellerOrderDetailResponse(Integer orderId, OrderStatus status,
-                                     PaymentMethod paymentMethod,
-                                     PaymentStatus paymentStatus,
-                                     BigDecimal totalPrice,
-                                     String createdAt,
-                                     String shippingName,
-                                     String shippingPhone,
-                                     String shippingAddress,
-                                     String customerName,
-                                     List<SellerOrderItemResponse> items) {
-
-        this.orderId = orderId;
-        this.status = status;
-        this.paymentMethod = paymentMethod;
-        this.paymentStatus = paymentStatus;
-        this.totalPrice = totalPrice;
-        this.createdAt = createdAt;
-        this.shippingName = shippingName;
-        this.shippingPhone = shippingPhone;
-        this.shippingAddress = shippingAddress;
-        this.customerName = customerName;
-        this.items = items;
-    }
 }

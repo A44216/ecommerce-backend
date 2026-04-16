@@ -1,6 +1,7 @@
 package com.ecommerce.backend.service.seller;
 
-import com.ecommerce.backend.dto.responses.seller.dashboard.SellerDashboardResponse;
+import com.ecommerce.backend.dto.responses.seller.dashboard.SellerDashboardKPIResponse;
+import com.ecommerce.backend.dto.responses.seller.dashboard.SellerDashboardTopProductResponse;
 import com.ecommerce.backend.dto.responses.seller.dashboard.SellerRevenueChartResponse;
 import com.ecommerce.backend.entity.Shop;
 import com.ecommerce.backend.enums.ChartType;
@@ -15,6 +16,7 @@ import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -28,28 +30,6 @@ public class SellerDashboardService {
     private final OrderItemRepository orderItemRepository;
     private final ShopRepository shopRepository;
     private final UserRepository userRepository;
-
-    public SellerDashboardResponse getDashboard(Authentication authentication) {
-
-        Integer shopId = getShopId(authentication);
-
-        BigDecimal revenue = orderRepository.sumRevenueByShop(shopId);
-        if (revenue == null) revenue = BigDecimal.ZERO;
-
-        Integer orders = orderRepository.countByShopId(shopId);
-        if (orders == null) orders = 0;
-
-        Integer sold = orderItemRepository.sumQuantityByShopId(shopId);
-        if (sold == null) sold = 0;
-
-        return new SellerDashboardResponse(
-                revenue,
-                orders,
-                sold,
-                orderItemRepository.findTopByRevenue(shopId, PageRequest.of(0, 3)),
-                orderItemRepository.findTopBySold(shopId, PageRequest.of(0, 3))
-        );
-    }
 
     public List<SellerRevenueChartResponse> getRevenueChart(Authentication authentication, ChartType type) {
 
@@ -131,4 +111,70 @@ public class SellerDashboardService {
 
         return result;
     }
+
+    private LocalDateTime[] parseDateRange(String startDateStr, String endDateStr) {
+
+        LocalDateTime startDate;
+        LocalDateTime endDate;
+
+        if (startDateStr != null && endDateStr != null) {
+            startDate = LocalDate.parse(startDateStr).atStartOfDay();
+            endDate = LocalDate.parse(endDateStr).atTime(23, 59, 59);
+        } else {
+            startDate = LocalDate.now().atStartOfDay();
+            endDate = LocalDate.now().atTime(23, 59, 59);
+        }
+
+        return new LocalDateTime[]{startDate, endDate};
+    }
+
+    public SellerDashboardKPIResponse getKPI(
+            Authentication authentication,
+            String startDateStr,
+            String endDateStr
+    ) {
+        Integer shopId = getShopId(authentication);
+
+        LocalDateTime[] range = parseDateRange(startDateStr, endDateStr);
+        LocalDateTime startDate = range[0];
+        LocalDateTime endDate = range[1];
+
+        BigDecimal revenue = orderRepository.sumRevenueByShopAndDate(shopId, startDate, endDate);
+        Integer orders = orderRepository.countOrderByShopAndDate(shopId, startDate, endDate);
+        Integer sold = orderItemRepository.sumQuantityByShopAndDate(shopId, startDate, endDate);
+
+        return new SellerDashboardKPIResponse(
+                revenue != null ? revenue : BigDecimal.ZERO,
+                orders != null ? orders : 0,
+                sold != null ? sold : 0
+        );
+    }
+
+    public SellerDashboardTopProductResponse getTopProducts(
+            Authentication authentication,
+            String startDateStr,
+            String endDateStr
+    ) {
+        Integer shopId = getShopId(authentication);
+
+        LocalDateTime[] range = parseDateRange(startDateStr, endDateStr);
+        LocalDateTime startDate = range[0];
+        LocalDateTime endDate = range[1];
+
+        return new SellerDashboardTopProductResponse(
+                orderItemRepository.findTopByRevenueByDate(
+                        shopId,
+                        startDate,
+                        endDate,
+                        PageRequest.of(0, 3)
+                ),
+                orderItemRepository.findTopBySoldByDate(
+                        shopId,
+                        startDate,
+                        endDate,
+                        PageRequest.of(0, 3)
+                )
+        );
+    }
+
 }
