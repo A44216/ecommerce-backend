@@ -6,7 +6,6 @@ import com.ecommerce.backend.dto.responses.seller.order.SellerOrderResponse;
 import com.ecommerce.backend.enums.OrderStatus;
 import com.ecommerce.backend.service.seller.SellerOrderService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 

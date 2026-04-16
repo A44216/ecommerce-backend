@@ -1,6 +1,6 @@
 package com.ecommerce.backend.service.admin;
 
-import com.ecommerce.backend.dto.requests.CategoryRequest;
+import com.ecommerce.backend.dto.requests.admin.category.AdminCategoryRequest;
 import com.ecommerce.backend.dto.responses.admin.profile.CategoryAdminResponse;
 import com.ecommerce.backend.entity.Category;
 import com.ecommerce.backend.exception.BadRequestException;
@@ -52,7 +52,7 @@ public class AdminCategoryService {
 
     // CREATE
     @Transactional
-    public CategoryAdminResponse createCategory(CategoryRequest request) {
+    public CategoryAdminResponse createCategory(AdminCategoryRequest request) {
 
         String name = Objects.requireNonNull(request.getName()).trim();
 
@@ -75,7 +75,7 @@ public class AdminCategoryService {
 
     // UPDATE
     @Transactional
-    public CategoryAdminResponse updateCategory(Integer id, CategoryRequest request) {
+    public CategoryAdminResponse updateCategory(Integer id, AdminCategoryRequest request) {
 
         Category category = getCategoryOrThrow(id);
 

@@ -1,4 +1,4 @@
-package com.ecommerce.backend.dto.requests;
+package com.ecommerce.backend.dto.requests.admin.category;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
@@ -7,7 +7,7 @@ import lombok.Setter;
 
 @Getter
 @Setter
-public class CategoryRequest {
+public class AdminCategoryRequest {
 
     @NotBlank(message = "Category name is required")
     @Size(max = 100, message = "Category name must be less than 100 characters")

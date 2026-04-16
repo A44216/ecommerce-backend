@@ -1,6 +1,6 @@
 package com.ecommerce.backend.controller.admin;
 
-import com.ecommerce.backend.dto.requests.CategoryRequest;
+import com.ecommerce.backend.dto.requests.admin.category.AdminCategoryRequest;
 import com.ecommerce.backend.dto.responses.admin.profile.CategoryAdminResponse;
 import com.ecommerce.backend.service.admin.AdminCategoryService;
 import jakarta.validation.Valid;
@@ -32,14 +32,14 @@ public class AdminCategoryController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public CategoryAdminResponse create(@Valid @RequestBody CategoryRequest request) {
+    public CategoryAdminResponse create(@Valid @RequestBody AdminCategoryRequest request) {
         return adminCategoryService.createCategory(request);
     }
 
     @PutMapping("/{id}")
     public CategoryAdminResponse update(
             @PathVariable Integer id,
-            @Valid @RequestBody CategoryRequest request
+            @Valid @RequestBody AdminCategoryRequest request
     ) {
         return adminCategoryService.updateCategory(id, request);
     }

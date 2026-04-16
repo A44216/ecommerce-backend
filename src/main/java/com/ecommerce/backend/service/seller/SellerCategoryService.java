@@ -1,6 +1,6 @@
-package com.ecommerce.backend.service;
+package com.ecommerce.backend.service.seller;
 
-import com.ecommerce.backend.dto.responses.CategoryResponse;
+import com.ecommerce.backend.dto.responses.seller.category.SellerCategoryResponse;
 import com.ecommerce.backend.entity.Category;
 import com.ecommerce.backend.exception.ResourceNotFoundException;
 import com.ecommerce.backend.repository.CategoryRepository;
@@ -10,23 +10,23 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 
 @Service
-public class CategoryService {
+public class SellerCategoryService {
 
     private final CategoryRepository categoryRepository;
 
-    public CategoryService(CategoryRepository categoryRepository) {
+    public SellerCategoryService(CategoryRepository categoryRepository) {
         this.categoryRepository = categoryRepository;
     }
 
-    private CategoryResponse mapToDTO(Category category) {
-        return new CategoryResponse(
+    private SellerCategoryResponse mapToDTO(Category category) {
+        return new SellerCategoryResponse(
                 category.getId(),
                 category.getName()
         );
     }
 
     @Transactional(readOnly = true)
-    public List<CategoryResponse> getCategories(String keyword) {
+    public List<SellerCategoryResponse> getCategories(String keyword) {
 
         List<Category> categories;
 
@@ -41,7 +41,7 @@ public class CategoryService {
     }
 
     @Transactional(readOnly = true)
-    public CategoryResponse getCategoryById(Integer id) {
+    public SellerCategoryResponse getCategoryById(Integer id) {
 
         Category category = categoryRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("CATEGORY_NOT_FOUND"));
