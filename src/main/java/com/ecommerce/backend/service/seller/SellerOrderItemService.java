@@ -1,10 +1,11 @@
-package com.ecommerce.backend.service;
+package com.ecommerce.backend.service.seller;
 
 import com.ecommerce.backend.dto.responses.seller.order.SellerOrderItemResponse;
 import com.ecommerce.backend.entity.Order;
 import com.ecommerce.backend.entity.OrderItem;
 import com.ecommerce.backend.repository.OrderRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -12,11 +13,14 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
-public class OrderItemService {
+public class SellerOrderItemService {
 
     private final OrderRepository orderRepository;
+    private final SellerShopService sellerShopService;
 
-    public List<SellerOrderItemResponse> getItemsByOrder(Integer orderId, Integer shopId) {
+    public List<SellerOrderItemResponse> getItemsByOrder(Integer orderId) {
+
+        Integer shopId = sellerShopService.getMyShop().getId();
 
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new RuntimeException("Order not found"));
