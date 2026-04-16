@@ -6,6 +6,7 @@ import com.ecommerce.backend.enums.PaymentStatus;
 import lombok.*;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Setter
@@ -24,8 +25,8 @@ public class SellerOrderDetailResponse {
 
     private BigDecimal totalPrice;
 
-    private String createdAt;
-    private String completedAt;
+    private LocalDateTime createdAt;
+    private LocalDateTime completedAt;
 
     private String shippingName;
     private String shippingPhone;

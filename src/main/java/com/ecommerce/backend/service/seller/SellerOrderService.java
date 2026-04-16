@@ -80,8 +80,8 @@ public class SellerOrderService {
                 .discountAmount(order.getDiscountAmount())
                 .commissionRate(order.getCommissionRate())
                 .commissionAmount(order.getCommissionAmount())
-                .createdAt(order.getCreatedAt().toString())
-                .completedAt(order.getCompletedAt() != null ? order.getCompletedAt().toString() : null)
+                .createdAt(order.getCreatedAt())
+                .completedAt(order.getCompletedAt())
                 .shippingName(order.getShippingName())
                 .shippingPhone(order.getShippingPhone())
                 .shippingAddress(order.getShippingAddress())
@@ -124,9 +124,8 @@ public class SellerOrderService {
                 .status(order.getStatus())
                 .customerName(order.getUser().getFullName())
                 .totalPrice(order.getTotalPrice())
-                .createdAt(order.getCreatedAt().toString())
-                .paymentMethod(order.getPaymentMethod().name())
-                .paymentStatus(order.getPaymentStatus().name())
+                .createdAt(order.getCreatedAt())
+                .paymentStatus(order.getPaymentStatus())
                 .imageOrder(image)
                 .build();
     }
