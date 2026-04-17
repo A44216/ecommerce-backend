@@ -56,11 +56,11 @@ public class Order {
     @Column(name = "subtotal", nullable = false, precision = 18, scale = 2)
     private BigDecimal subtotal = BigDecimal.ZERO;
 
-    @Column(name = "commission_rate", nullable = false, precision = 5, scale = 2)
-    private BigDecimal commissionRate = BigDecimal.ZERO;
+    @Column(name = "platform_fee_rate", nullable = false, precision = 5, scale = 2)
+    private BigDecimal platformFeeRate = BigDecimal.ZERO;
 
-    @Column(name = "commission_amount", nullable = false, precision = 18, scale = 2)
-    private BigDecimal commissionAmount = BigDecimal.ZERO;
+    @Column(name = "platform_fee_amount", nullable = false, precision = 18, scale = 2)
+    private BigDecimal platformFeeAmount = BigDecimal.ZERO;
 
     @Column(name = "discount_amount", nullable = false, precision = 18, scale = 2)
     private BigDecimal discountAmount = BigDecimal.ZERO;

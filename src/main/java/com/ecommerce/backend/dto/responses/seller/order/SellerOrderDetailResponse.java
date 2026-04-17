@@ -40,8 +40,8 @@ public class SellerOrderDetailResponse {
     private String discountDescription;
     private BigDecimal discountAmount;
 
-    private BigDecimal commissionRate;
-    private BigDecimal commissionAmount;
+    private BigDecimal platformFeeRate;
+    private BigDecimal platformFeeAmount;
 
     private List<SellerOrderItemResponse> items;
 
