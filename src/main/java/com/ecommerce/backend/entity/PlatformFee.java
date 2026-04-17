@@ -9,8 +9,8 @@ import java.math.BigDecimal;
 @Entity
 @Getter
 @Setter
-@Table(name = "commission")
-public class Commission {
+@Table(name = "platform_fees")
+public class PlatformFee {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;

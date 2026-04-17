@@ -36,7 +36,7 @@ public interface OrderRepository extends JpaRepository<Order, Integer> {
     Integer countOrderByShop(@Param("shopId") Integer shopId);
 
     @Query("""
-        SELECT COALESCE(SUM(o.totalPrice - o.commissionAmount), 0)
+        SELECT COALESCE(SUM(o.totalPrice - o.platformFeeAmount), 0)
         FROM Order o
         WHERE o.shop.id = :shopId
             AND o.status = com.ecommerce.backend.enums.OrderStatus.COMPLETED
@@ -47,7 +47,7 @@ public interface OrderRepository extends JpaRepository<Order, Integer> {
     // REVENUE REPORT
     @Query(value = """
         SELECT DATE(completed_at) AS date,
-               COALESCE(SUM(total_price - commission_amount), 0) AS revenue
+               COALESCE(SUM(total_price - platform_fee_amount), 0) AS revenue
         FROM orders
         WHERE shop_id = :shopId
             AND status = 'COMPLETED'
@@ -60,7 +60,7 @@ public interface OrderRepository extends JpaRepository<Order, Integer> {
 
     @Query(value = """
         SELECT DATE_FORMAT(completed_at, '%Y-%m') AS date,
-               COALESCE(SUM(total_price - commission_amount), 0) AS revenue
+               COALESCE(SUM(total_price - platform_fee_amount), 0) AS revenue
         FROM orders
         WHERE shop_id = :shopId
             AND status = 'COMPLETED'
@@ -72,7 +72,7 @@ public interface OrderRepository extends JpaRepository<Order, Integer> {
 
     @Query(value = """
         SELECT YEAR(completed_at) AS date,
-           COALESCE(SUM(total_price - commission_amount), 0) AS revenue
+           COALESCE(SUM(total_price - platform_fee_amount), 0) AS revenue
         FROM orders
         WHERE shop_id = :shopId
             AND status = 'COMPLETED'
@@ -94,7 +94,7 @@ public interface OrderRepository extends JpaRepository<Order, Integer> {
     Optional<Order> findByIdWithItems(@Param("orderId") Integer orderId);
 
     @Query("""
-        SELECT COALESCE(SUM(o.totalPrice - o.commissionAmount), 0)
+        SELECT COALESCE(SUM(o.totalPrice - o.platformFeeAmount), 0)
         FROM Order o
         WHERE o.shop.id = :shopId
             AND o.status = com.ecommerce.backend.enums.OrderStatus.COMPLETED
