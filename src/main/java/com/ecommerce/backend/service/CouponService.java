@@ -9,6 +9,7 @@ import com.ecommerce.backend.exception.ResourceNotFoundException;
 import com.ecommerce.backend.repository.CouponRepository;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 @Service
@@ -76,8 +77,9 @@ public class CouponService {
 
         Coupon coupon = new Coupon();
         mapRequestToCoupon(coupon, request);
+        validateCoupon(coupon);
         coupon.setStatus(CouponStatus.ACTIVE);
-        coupon.setUsedCount(0); // Mã mới chưa có ai dùng
+        coupon.setUsedCount(0);
 
         return mapToDTO(couponRepository.save(coupon));
     }
@@ -93,6 +95,8 @@ public class CouponService {
         }
 
         mapRequestToCoupon(coupon, request);
+        validateCoupon(coupon);
+
         return mapToDTO(couponRepository.save(coupon));
     }
 
@@ -103,4 +107,33 @@ public class CouponService {
         }
         couponRepository.deleteById(id);
     }
+
+    private void validateCoupon(Coupon coupon) {
+
+        // 1. check discount type
+        if (coupon.getDiscountPercent() == null && coupon.getDiscountAmount() == null) {
+            throw new BadRequestException("Coupon must have discount value");
+        }
+
+        if (coupon.getDiscountPercent() != null && coupon.getDiscountAmount() != null) {
+            throw new BadRequestException("Coupon cannot have both percent and amount");
+        }
+
+        // 2. min order value
+        if (coupon.getMinOrderValue() != null && coupon.getMinOrderValue().compareTo(BigDecimal.ZERO) < 0) {
+            throw new BadRequestException("minOrderValue must be >= 0");
+        }
+
+        // 3. max discount
+        if (coupon.getMaxDiscountAmount() != null && coupon.getMaxDiscountAmount().compareTo(BigDecimal.ZERO) < 0) {
+            throw new BadRequestException("maxDiscountAmount must be >= 0");
+        }
+
+        // 4. date logic
+        if (coupon.getStartDate() != null && coupon.getEndDate() != null &&
+                coupon.getEndDate().isBefore(coupon.getStartDate())) {
+            throw new BadRequestException("endDate must be after startDate");
+        }
+    }
+
 }

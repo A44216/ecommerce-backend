@@ -35,6 +35,9 @@ public class Coupon {
     @Column(name = "min_order_value", precision = 18, scale = 2, nullable = false)
     private BigDecimal minOrderValue = BigDecimal.ZERO;
 
+    @Column(name = "max_discount_amount", precision = 18, scale = 2)
+    private BigDecimal maxDiscountAmount;
+
     @Column(name = "start_date")
     private LocalDateTime startDate;
 

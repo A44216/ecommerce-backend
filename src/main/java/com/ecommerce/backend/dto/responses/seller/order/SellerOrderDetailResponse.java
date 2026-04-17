@@ -35,7 +35,11 @@ public class SellerOrderDetailResponse {
     private String customerName;
 
     private BigDecimal subtotal;
+
+    private String couponCode;
+    private String discountDescription;
     private BigDecimal discountAmount;
+
     private BigDecimal commissionRate;
     private BigDecimal commissionAmount;
 

@@ -84,9 +84,11 @@ public interface OrderRepository extends JpaRepository<Order, Integer> {
 
     @Query("""
         SELECT o FROM Order o
-        LEFT JOIN FETCH o.items
+        LEFT JOIN FETCH o.items i
+        LEFT JOIN FETCH i.product
         LEFT JOIN FETCH o.user
         LEFT JOIN FETCH o.shop
+        LEFT JOIN FETCH o.coupon
         WHERE o.id = :orderId
     """)
     Optional<Order> findByIdWithItems(@Param("orderId") Integer orderId);

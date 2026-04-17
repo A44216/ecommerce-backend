@@ -70,6 +70,9 @@ public class SellerOrderService {
                 .map(this::mapItem)
                 .toList();
 
+        String couponCode = order.getCoupon() != null ? order.getCoupon().getCode() : null;
+        String discountDescription = buildDiscountDescription(order);
+
         return SellerOrderDetailResponse.builder()
                 .orderId(order.getId())
                 .status(order.getStatus())
@@ -78,6 +81,8 @@ public class SellerOrderService {
                 .totalPrice(order.getTotalPrice())
                 .subtotal(order.getSubtotal())
                 .discountAmount(order.getDiscountAmount())
+                .couponCode(couponCode)
+                .discountDescription(discountDescription)
                 .commissionRate(order.getCommissionRate())
                 .commissionAmount(order.getCommissionAmount())
                 .createdAt(order.getCreatedAt())
@@ -141,4 +146,38 @@ public class SellerOrderService {
                         .multiply(BigDecimal.valueOf(item.getQuantity())))
                 .build();
     }
+
+    private String buildDiscountDescription(Order order) {
+
+        if (order.getCoupon() == null) return null;
+
+        var coupon = order.getCoupon();
+
+        StringBuilder desc = new StringBuilder();
+
+        if (coupon.getDiscountPercent() != null) {
+            desc.append("Giảm ")
+                    .append(coupon.getDiscountPercent())
+                    .append("%");
+        } else if (coupon.getDiscountAmount() != null) {
+            desc.append("Giảm ")
+                    .append(coupon.getDiscountAmount())
+                    .append("đ");
+        }
+
+        if (coupon.getMaxDiscountAmount() != null) {
+            desc.append(" (tối đa ")
+                    .append(coupon.getMaxDiscountAmount())
+                    .append("đ)");
+        }
+
+        if (coupon.getMinOrderValue() != null && coupon.getMinOrderValue().compareTo(BigDecimal.ZERO) > 0) {
+            desc.append(", áp dụng từ đơn ")
+                    .append(coupon.getMinOrderValue())
+                    .append("đ");
+        }
+
+        return desc.toString();
+    }
+
 }
