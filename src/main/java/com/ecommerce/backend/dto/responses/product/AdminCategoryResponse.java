@@ -1,11 +1,11 @@
-package com.ecommerce.backend.dto.responses.admin.profile;
+package com.ecommerce.backend.dto.responses.product;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
 @Getter
 @AllArgsConstructor
-public class CategoryAdminResponse {
+public class AdminCategoryResponse {
 
     private Integer id;
     private String name;

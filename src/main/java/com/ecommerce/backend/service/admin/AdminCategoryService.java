@@ -1,7 +1,7 @@
 package com.ecommerce.backend.service.admin;
 
-import com.ecommerce.backend.dto.requests.admin.category.AdminCategoryRequest;
-import com.ecommerce.backend.dto.responses.admin.profile.CategoryAdminResponse;
+import com.ecommerce.backend.dto.requests.admin.product.AdminCategoryRequest;
+import com.ecommerce.backend.dto.responses.product.AdminCategoryResponse;
 import com.ecommerce.backend.entity.Category;
 import com.ecommerce.backend.exception.BadRequestException;
 import com.ecommerce.backend.exception.ResourceNotFoundException;
@@ -22,8 +22,8 @@ public class AdminCategoryService {
     }
 
     // MAP
-    private CategoryAdminResponse mapToAdminDTO(Category category) {
-        return new CategoryAdminResponse(
+    private AdminCategoryResponse mapToAdminDTO(Category category) {
+        return new AdminCategoryResponse(
                 category.getId(),
                 category.getName(),
                 category.getIsDeleted()
@@ -37,7 +37,7 @@ public class AdminCategoryService {
 
     // (FILTER + SEARCH)
     @Transactional(readOnly = true)
-    public List<CategoryAdminResponse> getCategories(Boolean isDeleted, String keyword) {
+    public List<AdminCategoryResponse> getCategories(Boolean isDeleted, String keyword) {
 
         boolean deleted = Boolean.TRUE.equals(isDeleted);
         String k = (keyword == null) ? "" : keyword.trim();
@@ -52,7 +52,7 @@ public class AdminCategoryService {
 
     // CREATE
     @Transactional
-    public CategoryAdminResponse createCategory(AdminCategoryRequest request) {
+    public AdminCategoryResponse createCategory(AdminCategoryRequest request) {
 
         String name = Objects.requireNonNull(request.getName()).trim();
 
@@ -75,7 +75,7 @@ public class AdminCategoryService {
 
     // UPDATE
     @Transactional
-    public CategoryAdminResponse updateCategory(Integer id, AdminCategoryRequest request) {
+    public AdminCategoryResponse updateCategory(Integer id, AdminCategoryRequest request) {
 
         Category category = getCategoryOrThrow(id);
 

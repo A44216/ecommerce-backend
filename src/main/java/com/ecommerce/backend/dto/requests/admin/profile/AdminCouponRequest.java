@@ -1,4 +1,4 @@
-package com.ecommerce.backend.dto.requests;
+package com.ecommerce.backend.dto.requests.admin.profile;
 
 import jakarta.validation.constraints.*;
 import lombok.Getter;
@@ -9,7 +9,7 @@ import java.time.LocalDateTime;
 
 @Getter
 @Setter
-public class CouponRequest {
+public class AdminCouponRequest {
 
     @NotBlank(message = "Coupon code is required")
     @Size(max = 50, message = "Coupon code must be less than 50 characters")
@@ -33,14 +33,6 @@ public class CouponRequest {
     @Min(value = 1, message = "Max usage must be at least 1")
     private Integer maxUsage;
 
-    @AssertTrue(message = "Either discountPercent or discountAmount must be provided, not both")
-    public boolean isValidDiscount() {
-        return (discountPercent != null && discountAmount == null)
-                || (discountPercent == null && discountAmount != null);
-    }
-    @AssertTrue(message = "End date must be after start date")
-    public boolean isValidDateRange() {
-        if(startDate == null || endDate == null) return true;
-        return endDate.isAfter(startDate);
-    }
+    private BigDecimal maxDiscountAmount;
+
 }

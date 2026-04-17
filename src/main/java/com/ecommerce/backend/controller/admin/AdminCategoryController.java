@@ -1,7 +1,7 @@
 package com.ecommerce.backend.controller.admin;
 
-import com.ecommerce.backend.dto.requests.admin.category.AdminCategoryRequest;
-import com.ecommerce.backend.dto.responses.admin.profile.CategoryAdminResponse;
+import com.ecommerce.backend.dto.requests.admin.product.AdminCategoryRequest;
+import com.ecommerce.backend.dto.responses.product.AdminCategoryResponse;
 import com.ecommerce.backend.service.admin.AdminCategoryService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -23,7 +23,7 @@ public class AdminCategoryController {
     }
 
     @GetMapping
-    public List<CategoryAdminResponse> getCategories(
+    public List<AdminCategoryResponse> getCategories(
             @RequestParam(required = false) Boolean isDeleted,
             @RequestParam(required = false) String keyword
     ) {
@@ -32,12 +32,12 @@ public class AdminCategoryController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public CategoryAdminResponse create(@Valid @RequestBody AdminCategoryRequest request) {
+    public AdminCategoryResponse create(@Valid @RequestBody AdminCategoryRequest request) {
         return adminCategoryService.createCategory(request);
     }
 
     @PutMapping("/{id}")
-    public CategoryAdminResponse update(
+    public AdminCategoryResponse update(
             @PathVariable Integer id,
             @Valid @RequestBody AdminCategoryRequest request
     ) {
