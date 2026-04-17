@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -77,10 +78,8 @@ public class SellerOrderService {
                 .status(order.getStatus())
                 .paymentMethod(order.getPaymentMethod())
                 .paymentStatus(order.getPaymentStatus())
-                .totalPrice(order.getTotalPrice())
+                .sellerRevenue(Optional.ofNullable(order.getSubtotal()).orElse(BigDecimal.ZERO).subtract(Optional.ofNullable(order.getPlatformFeeAmount()).orElse(BigDecimal.ZERO)))
                 .subtotal(order.getSubtotal())
-                .discountAmount(order.getDiscountAmount())
-                .couponCode(couponCode)
                 .platformFeeRate(order.getPlatformFeeRate())
                 .platformFeeAmount(order.getPlatformFeeAmount())
                 .createdAt(order.getCreatedAt())
@@ -126,7 +125,7 @@ public class SellerOrderService {
                 .orderId(order.getId())
                 .status(order.getStatus())
                 .customerName(order.getUser().getFullName())
-                .totalPrice(order.getTotalPrice())
+                .sellerRevenue(Optional.ofNullable(order.getSubtotal()).orElse(BigDecimal.ZERO).subtract(Optional.ofNullable(order.getPlatformFeeAmount()).orElse(BigDecimal.ZERO)))
                 .createdAt(order.getCreatedAt())
                 .paymentStatus(order.getPaymentStatus())
                 .imageOrder(image)
@@ -138,9 +137,9 @@ public class SellerOrderService {
                 .productId(item.getProduct().getId())
                 .productName(item.getProductName())
                 .productImage(item.getProductImage())
-                .price(item.getPrice())
+                .unitPrice(item.getPrice())
                 .quantity(item.getQuantity())
-                .subtotal(item.getPrice()
+                .totalPrice(item.getPrice()
                         .multiply(BigDecimal.valueOf(item.getQuantity())))
                 .build();
     }

@@ -5,7 +5,6 @@ import com.ecommerce.backend.entity.Order;
 import com.ecommerce.backend.entity.OrderItem;
 import com.ecommerce.backend.repository.OrderRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -39,9 +38,9 @@ public class SellerOrderItemService {
                 .productId(item.getProduct().getId())
                 .productName(item.getProductName())
                 .productImage(item.getProductImage())
-                .price(item.getPrice())
+                .unitPrice(item.getPrice())
                 .quantity(item.getQuantity())
-                .subtotal(item.getPrice()
+                .totalPrice(item.getPrice()
                         .multiply(BigDecimal.valueOf(item.getQuantity())))
                 .build();
     }

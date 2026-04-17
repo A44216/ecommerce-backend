@@ -23,7 +23,7 @@ public class SellerOrderDetailResponse {
     private PaymentMethod paymentMethod;
     private PaymentStatus paymentStatus;
 
-    private BigDecimal totalPrice;
+    private BigDecimal sellerRevenue;
 
     private LocalDateTime createdAt;
     private LocalDateTime completedAt;
@@ -35,9 +35,6 @@ public class SellerOrderDetailResponse {
     private String customerName;
 
     private BigDecimal subtotal;
-
-    private String couponCode;
-    private BigDecimal discountAmount;
 
     private BigDecimal platformFeeRate;
     private BigDecimal platformFeeAmount;

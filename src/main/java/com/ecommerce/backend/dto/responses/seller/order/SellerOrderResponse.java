@@ -17,7 +17,7 @@ public class SellerOrderResponse {
     private Integer orderId;
     private OrderStatus status;
     private String customerName;
-    private BigDecimal totalPrice;
+    private BigDecimal sellerRevenue;
     private LocalDateTime createdAt;
 
     private PaymentStatus paymentStatus;
