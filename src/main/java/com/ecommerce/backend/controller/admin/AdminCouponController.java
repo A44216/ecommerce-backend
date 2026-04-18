@@ -36,8 +36,10 @@ public class AdminCouponController {
 
     // DETAIL
     @GetMapping("/{id}")
-    public ResponseEntity<AdminCouponResponse> getById(@PathVariable Integer id) {
-        return ResponseEntity.ok(couponService.getCouponById(id));
+    public ResponseEntity<AdminCouponResponse> getById(
+            @PathVariable Integer id,
+            @RequestParam(defaultValue = "false") Boolean isDeleted) {
+        return ResponseEntity.ok(couponService.getCouponById(id, isDeleted));
     }
 
     // CREATE

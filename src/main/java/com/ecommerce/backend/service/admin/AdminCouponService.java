@@ -32,8 +32,7 @@ public class AdminCouponService {
             int size,
             CouponStatus status,
             String keyword,
-            Boolean isDeleted
-    ) {
+            Boolean isDeleted) {
         if (isDeleted == null) {
             isDeleted = false;
         }
@@ -44,8 +43,7 @@ public class AdminCouponService {
 
         if (status != null && keyword != null && !keyword.isEmpty()) {
             coupons = couponRepository.findByStatusAndCodeContainingIgnoreCaseAndIsDeleted(
-                    status, keyword, isDeleted, pageable
-            );
+                    status, keyword, isDeleted, pageable);
 
         } else if (status != null) {
             coupons = couponRepository.findByStatusAndIsDeleted(status, isDeleted, pageable);
@@ -62,15 +60,18 @@ public class AdminCouponService {
                 coupons.getNumber(),
                 coupons.getSize(),
                 coupons.getTotalElements(),
-                coupons.getTotalPages()
-        );
+                coupons.getTotalPages());
     }
 
     // GET BY ID
-    public AdminCouponResponse getCouponById(Integer id) {
+    public AdminCouponResponse getCouponById(Integer id, Boolean isDeleted) {
+        if (isDeleted == null) {
+            isDeleted = false;
+        }
 
+        final boolean finalIsDeleted = isDeleted;
         Coupon coupon = couponRepository.findById(id)
-                .filter(c -> !Boolean.TRUE.equals(c.getIsDeleted()))
+                .filter(c -> Boolean.TRUE.equals(c.getIsDeleted()) == finalIsDeleted)
                 .orElseThrow(() -> new ResourceNotFoundException("Coupon not found"));
 
         return mapToDTO(coupon);
