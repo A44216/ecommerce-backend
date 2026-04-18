@@ -13,12 +13,32 @@ import java.util.List;
 @Table(
         name = "products",
         indexes = {
-                @Index(name = "idx_products_name", columnList = "name"),
-                @Index(name = "idx_products_shop", columnList = "shop_id"),
-                @Index(name = "idx_products_price", columnList = "price"),
+
+                // shop_id, is_deleted, status
+                @Index(name = "idx_products_shop_filter", columnList = "shop_id, is_deleted, status"),
+
+                // shop_id, status
+                @Index(name = "idx_products_shop_status", columnList = "shop_id, status"),
+
+                // shop_id, category
+                @Index( name = "idx_products_shop_category", columnList = "shop_id, category_id, is_deleted"),
+
+                // category_id
                 @Index(name = "idx_products_category", columnList = "category_id"),
-                @Index(name = "idx_products_search", columnList = "name, price"),
+
+                // category_id, name
+                @Index(name = "idx_products_category_name", columnList = "category_id, name"),
+
+                // sold_count
                 @Index(name = "idx_products_sold", columnList = "sold_count"),
+
+                // created_at
+                @Index(name = "idx_products_created", columnList = "created_at"),
+
+                // name
+                @Index(name = "idx_products_name", columnList = "name"),
+
+                // status
                 @Index(name = "idx_products_status", columnList = "status")
         }
 )

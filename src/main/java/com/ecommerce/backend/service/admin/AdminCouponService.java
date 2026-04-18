@@ -26,7 +26,158 @@ public class AdminCouponService {
         this.couponRepository = couponRepository;
     }
 
-    // MAPPER ENTITY -> DTO
+    // LIST
+    public PageResponse<AdminCouponResponse> getCoupons(
+            int page,
+            int size,
+            CouponStatus status,
+            String keyword
+    ) {
+
+        Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
+
+        Page<Coupon> coupons;
+
+        if (status != null && keyword != null && !keyword.isEmpty()) {
+            coupons = couponRepository.findByStatusAndCodeContainingIgnoreCaseAndIsDeletedFalse(
+                    status, keyword, pageable
+            );
+
+        } else if (status != null) {
+            coupons = couponRepository.findByStatusAndIsDeletedFalse(status, pageable);
+
+        } else if (keyword != null && !keyword.isEmpty()) {
+            coupons = couponRepository.findByCodeContainingIgnoreCaseAndIsDeletedFalse(keyword, pageable);
+
+        } else {
+            coupons = couponRepository.findByIsDeletedFalse(pageable);
+        }
+
+        return new PageResponse<>(
+                coupons.getContent().stream().map(this::mapToDTO).toList(),
+                coupons.getNumber(),
+                coupons.getSize(),
+                coupons.getTotalElements(),
+                coupons.getTotalPages()
+        );
+    }
+
+    // GET BY ID
+    public AdminCouponResponse getCouponById(Integer id) {
+
+        Coupon coupon = couponRepository.findById(id)
+                .filter(c -> !Boolean.TRUE.equals(c.getIsDeleted()))
+                .orElseThrow(() -> new ResourceNotFoundException("Coupon not found"));
+
+        return mapToDTO(coupon);
+    }
+
+    // CREATE
+    public AdminCouponResponse createCoupon(AdminCouponRequest request) {
+
+        if (couponRepository.existsByCodeAndIsDeletedFalse(request.getCode())) {
+            throw new BadRequestException("Coupon code already exists");
+        }
+
+        Coupon coupon = new Coupon();
+        applyRequest(coupon, request);
+        validateCoupon(coupon);
+
+        coupon.setStatus(CouponStatus.ACTIVE);
+        coupon.setUsedCount(0);
+        coupon.setIsDeleted(false);
+        coupon.setCreatedAt(LocalDateTime.now());
+        coupon.setUpdatedAt(LocalDateTime.now());
+
+        return mapToDTO(couponRepository.save(coupon));
+    }
+
+    // UPDATE
+    public AdminCouponResponse updateCoupon(Integer id, AdminCouponRequest request) {
+
+        Coupon coupon = couponRepository.findById(id)
+                .filter(c -> !Boolean.TRUE.equals(c.getIsDeleted()))
+                .orElseThrow(() -> new ResourceNotFoundException("Coupon not found"));
+
+        if (!coupon.getCode().equals(request.getCode())
+                && couponRepository.existsByCodeAndIsDeletedFalse(request.getCode())) {
+            throw new BadRequestException("Coupon code already exists");
+        }
+
+        applyRequest(coupon, request);
+        validateCoupon(coupon);
+
+        coupon.setUpdatedAt(LocalDateTime.now());
+
+        return mapToDTO(couponRepository.save(coupon));
+    }
+
+    // SOFT DELETE
+    public void deleteCoupon(Integer id) {
+
+        Coupon coupon = couponRepository.findById(id)
+                .filter(c -> !Boolean.TRUE.equals(c.getIsDeleted()))
+                .orElseThrow(() -> new ResourceNotFoundException("Coupon not found"));
+
+        coupon.setIsDeleted(true);
+        coupon.setUpdatedAt(LocalDateTime.now());
+
+        couponRepository.save(coupon);
+    }
+
+    // ENABLE
+    public void enableCoupon(Integer id) {
+
+        Coupon coupon = couponRepository.findById(id)
+                .filter(c -> !Boolean.TRUE.equals(c.getIsDeleted()))
+                .orElseThrow(() -> new ResourceNotFoundException("Coupon not found"));
+
+        coupon.setStatus(CouponStatus.ACTIVE);
+        coupon.setUpdatedAt(LocalDateTime.now());
+
+        couponRepository.save(coupon);
+    }
+
+    // DISABLE
+    public void disableCoupon(Integer id) {
+
+        Coupon coupon = couponRepository.findById(id)
+                .filter(c -> !Boolean.TRUE.equals(c.getIsDeleted()))
+                .orElseThrow(() -> new ResourceNotFoundException("Coupon not found"));
+
+        coupon.setStatus(CouponStatus.DISABLED);
+        coupon.setUpdatedAt(LocalDateTime.now());
+
+        couponRepository.save(coupon);
+    }
+
+    // VALIDATION
+    private void validateCoupon(Coupon coupon) {
+
+        if (coupon.getDiscountPercent() == null && coupon.getDiscountAmount() == null) {
+            throw new BadRequestException("Coupon must have discount value");
+        }
+
+        if (coupon.getDiscountPercent() != null && coupon.getDiscountAmount() != null) {
+            throw new BadRequestException("Coupon cannot have both percent and amount");
+        }
+
+        if (coupon.getMinOrderValue().compareTo(BigDecimal.ZERO) < 0) {
+            throw new BadRequestException("minOrderValue must be >= 0");
+        }
+
+        if (coupon.getMaxDiscountAmount() != null
+                && coupon.getMaxDiscountAmount().compareTo(BigDecimal.ZERO) < 0) {
+            throw new BadRequestException("maxDiscountAmount must be >= 0");
+        }
+
+        if (coupon.getStartDate() != null && coupon.getEndDate() != null
+                && coupon.getEndDate().isBefore(coupon.getStartDate())) {
+            throw new BadRequestException("endDate must be after startDate");
+        }
+    }
+
+    // MAPPER
     private AdminCouponResponse mapToDTO(Coupon coupon) {
         return AdminCouponResponse.builder()
                 .id(coupon.getId())
@@ -45,153 +196,12 @@ public class AdminCouponService {
                 .build();
     }
 
-    // LIST + FILTER + PAGING
-    public PageResponse<AdminCouponResponse> getCoupons(
-            int page,
-            int size,
-            CouponStatus status,
-            String keyword
-    ) {
-        Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
-
-        Page<Coupon> coupons;
-
-        if (status != null && keyword != null && !keyword.isEmpty()) {
-            coupons = couponRepository.findByStatusAndCodeContainingIgnoreCase(status, keyword, pageable);
-        } else if (status != null) {
-            coupons = couponRepository.findByStatus(status, pageable);
-        } else if (keyword != null && !keyword.isEmpty()) {
-            coupons = couponRepository.findByCodeContainingIgnoreCase(keyword, pageable);
-        } else {
-            coupons = couponRepository.findAll(pageable);
-        }
-
-        return new PageResponse<>(
-                coupons.getContent().stream().map(this::mapToDTO).toList(),
-                coupons.getNumber(),
-                coupons.getSize(),
-                coupons.getTotalElements(),
-                coupons.getTotalPages()
-        );
-    }
-
-    // GET BY ID
-    public AdminCouponResponse getCouponById(Integer id) {
-        Coupon coupon = couponRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Coupon not found"));
-
-        return mapToDTO(coupon);
-    }
-
-    // CREATE
-    public AdminCouponResponse createCoupon(AdminCouponRequest request) {
-
-        if (couponRepository.existsByCode(request.getCode())) {
-            throw new BadRequestException("Coupon code already exists");
-        }
-
-        Coupon coupon = new Coupon();
-        applyRequest(coupon, request);
-
-        validateCoupon(coupon);
-
-        coupon.setStatus(CouponStatus.ACTIVE);
-        coupon.setUsedCount(0);
-        coupon.setCreatedAt(LocalDateTime.now());
-        coupon.setUpdatedAt(LocalDateTime.now());
-
-        return mapToDTO(couponRepository.save(coupon));
-    }
-
-    // UPDATE
-    public AdminCouponResponse updateCoupon(Integer id, AdminCouponRequest request) {
-
-        Coupon coupon = couponRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Coupon not found"));
-
-        if (!coupon.getCode().equals(request.getCode())
-                && couponRepository.existsByCode(request.getCode())) {
-            throw new BadRequestException("Coupon code already exists");
-        }
-
-        applyRequest(coupon, request);
-        validateCoupon(coupon);
-
-        coupon.setUpdatedAt(LocalDateTime.now());
-
-        return mapToDTO(couponRepository.save(coupon));
-    }
-
-    // DELETE
-    public void deleteCoupon(Integer id) {
-        if (!couponRepository.existsById(id)) {
-            throw new ResourceNotFoundException("Coupon not found");
-        }
-        couponRepository.deleteById(id);
-    }
-
-    // DISABLE
-    public void disableCoupon(Integer id) {
-        Coupon coupon = couponRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Coupon not found"));
-
-        coupon.setStatus(CouponStatus.DISABLED);
-        coupon.setUpdatedAt(LocalDateTime.now());
-
-        couponRepository.save(coupon);
-    }
-
-    // ENABLE
-    public void enableCoupon(Integer id) {
-        Coupon coupon = couponRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Coupon not found"));
-
-        coupon.setStatus(CouponStatus.ACTIVE);
-        coupon.setUpdatedAt(LocalDateTime.now());
-
-        couponRepository.save(coupon);
-    }
-
-    // APPLY REQUEST -> ENTITY
-    private void applyRequest(Coupon coupon, AdminCouponRequest request) {
-        coupon.setCode(request.getCode());
-        coupon.setDiscountPercent(request.getDiscountPercent());
-        coupon.setDiscountAmount(request.getDiscountAmount());
-        coupon.setMinOrderValue(request.getMinOrderValue());
-        coupon.setMaxDiscountAmount(request.getMaxDiscountAmount());
-        coupon.setStartDate(request.getStartDate());
-        coupon.setEndDate(request.getEndDate());
-        coupon.setMaxUsage(request.getMaxUsage());
-    }
-
-    // VALIDATION BUSINESS
-    private void validateCoupon(Coupon coupon) {
-
-        if (coupon.getDiscountPercent() == null && coupon.getDiscountAmount() == null) {
-            throw new BadRequestException("Coupon must have discount value");
-        }
-
-        if (coupon.getDiscountPercent() != null && coupon.getDiscountAmount() != null) {
-            throw new BadRequestException("Coupon cannot have both percent and amount");
-        }
-
-        if (coupon.getMinOrderValue() != null
-                && coupon.getMinOrderValue().compareTo(BigDecimal.ZERO) < 0) {
-            throw new BadRequestException("minOrderValue must be >= 0");
-        }
-
-        if (coupon.getMaxDiscountAmount() != null
-                && coupon.getMaxDiscountAmount().compareTo(BigDecimal.ZERO) < 0) {
-            throw new BadRequestException("maxDiscountAmount must be >= 0");
-        }
-
-        if (coupon.getStartDate() != null && coupon.getEndDate() != null
-                && coupon.getEndDate().isBefore(coupon.getStartDate())) {
-            throw new BadRequestException("endDate must be after startDate");
-        }
-    }
-
+    // STATUS LOGIC
     private CouponStatus resolveStatus(Coupon coupon) {
+
+        if (Boolean.TRUE.equals(coupon.getIsDeleted())) {
+            return CouponStatus.DISABLED;
+        }
 
         if (coupon.getStatus() == CouponStatus.DISABLED) {
             return CouponStatus.DISABLED;
@@ -205,4 +215,15 @@ public class AdminCouponService {
         return CouponStatus.ACTIVE;
     }
 
+    // APPLY REQUEST
+    private void applyRequest(Coupon coupon, AdminCouponRequest request) {
+        coupon.setCode(request.getCode());
+        coupon.setDiscountPercent(request.getDiscountPercent());
+        coupon.setDiscountAmount(request.getDiscountAmount());
+        coupon.setMinOrderValue(request.getMinOrderValue());
+        coupon.setMaxDiscountAmount(request.getMaxDiscountAmount());
+        coupon.setStartDate(request.getStartDate());
+        coupon.setEndDate(request.getEndDate());
+        coupon.setMaxUsage(request.getMaxUsage());
+    }
 }

@@ -17,31 +17,27 @@ public interface ProductRepository extends JpaRepository<Product, Integer> {
     Optional<Product> findByIdAndIsDeletedFalse(Integer id);
 
     @EntityGraph(attributePaths = {"images", "category", "shop"})
-    Page<Product> findByShopIdAndIsDeletedFalse(Integer shopId, Pageable pageable);
-
-    @EntityGraph(attributePaths = {"images", "category", "shop"})
     Page<Product> findByShopIdAndCategoryIdAndIsDeletedFalse(
-            Integer shopId, Integer categoryId, Pageable pageable);
+            Integer shopId, Integer categoryId, Pageable pageable
+    );
 
-    @EntityGraph(attributePaths = {"images", "category", "shop"})
-    Page<Product> findByShopIdAndIsDeletedTrue(Integer shopId, Pageable pageable);
-
-    @EntityGraph(attributePaths = {"images", "category", "shop"})
-        @Query("""
+    @Query("""
         SELECT p FROM Product p
         LEFT JOIN p.category c
         WHERE p.shop.id = :shopId
-        AND p.isDeleted = false
+        AND (:isDeleted IS NULL OR p.isDeleted = :isDeleted)
         AND (:status IS NULL OR p.status = :status)
-        AND (:keyword IS NULL OR 
-             LOWER(p.name) LIKE LOWER(CONCAT('%', :keyword, '%')) OR
-             LOWER(c.name) LIKE LOWER(CONCAT('%', :keyword, '%')))
+        AND (
+            :keyword IS NULL OR
+            LOWER(p.name) LIKE LOWER(CONCAT('%', :keyword, '%')) OR
+            LOWER(c.name) LIKE LOWER(CONCAT('%', :keyword, '%'))
+        )
     """)
     Page<Product> filterProducts(
             @Param("shopId") Integer shopId,
+            @Param("isDeleted") Boolean isDeleted,
             @Param("status") ProductStatus status,
             @Param("keyword") String keyword,
             Pageable pageable
     );
-
 }

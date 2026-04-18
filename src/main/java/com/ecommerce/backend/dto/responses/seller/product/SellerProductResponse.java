@@ -28,6 +28,7 @@ public class SellerProductResponse {
     private int soldCount;
 
     private ProductStatus status;
+    private Boolean isDeleted;
 
     private List<ProductImageResponse> images;
 

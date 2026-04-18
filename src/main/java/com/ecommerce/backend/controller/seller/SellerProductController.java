@@ -28,12 +28,13 @@ public class SellerProductController {
     @GetMapping
     public ResponseEntity<PageResponse<SellerProductResponse>> getProducts(
             @RequestParam(required = false) ProductStatus status,
+            @RequestParam(required = false) Boolean isDeleted,
             @RequestParam(required = false) String keyword,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size
     ) {
         return ResponseEntity.ok(
-                productService.filterProducts(status, keyword, page, size)
+                productService.filterProducts(status, isDeleted, keyword, page, size)
         );
     }
 
@@ -88,16 +89,6 @@ public class SellerProductController {
     public ResponseEntity<Void> restoreProduct(@PathVariable Integer id) {
         productService.restoreProduct(id);
         return ResponseEntity.noContent().build();
-    }
-
-    @GetMapping("/deleted")
-    public ResponseEntity<PageResponse<SellerProductResponse>> getDeletedProducts(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size
-    ) {
-        return ResponseEntity.ok(
-                productService.getDeletedProducts(page, size)
-        );
     }
 
     @PutMapping("/submit/{id}")

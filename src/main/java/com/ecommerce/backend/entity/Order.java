@@ -19,7 +19,10 @@ import java.util.List;
                 @Index(name = "idx_orders_user_created", columnList = "user_id, created_at"),
                 @Index(name = "idx_orders_address", columnList = "address_id"),
                 @Index(name = "idx_orders_coupon", columnList = "coupon_id"),
-                @Index(name = "idx_orders_shop_status", columnList = "shop_id, status")
+                @Index(name = "idx_orders_shop_status", columnList = "shop_id, status"),
+                @Index(name = "idx_orders_shop_status_payment", columnList = "shop_id, status, payment_status"),
+                @Index(name = "idx_orders_completed_at", columnList = "completed_at"),
+                @Index(name = "idx_orders_shop_status_payment_date", columnList = "shop_id, status, payment_status, completed_at")
         }
 )
 @Getter

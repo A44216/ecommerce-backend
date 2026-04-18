@@ -5,24 +5,24 @@ import com.ecommerce.backend.enums.CouponStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
 
-@Repository
 public interface CouponRepository extends JpaRepository<Coupon, Integer> {
 
-    Optional<Coupon> findByCode(String code);
+    Optional<Coupon> findByCodeAndIsDeletedFalse(String code);
 
-    boolean existsByCode(String code);
+    boolean existsByCodeAndIsDeletedFalse(String code);
 
-    Page<Coupon> findByStatus(CouponStatus status, Pageable pageable);
+    Page<Coupon> findByStatusAndIsDeletedFalse(CouponStatus status, Pageable pageable);
 
-    Page<Coupon> findByCodeContainingIgnoreCase(String keyword, Pageable pageable);
+    Page<Coupon> findByCodeContainingIgnoreCaseAndIsDeletedFalse(String keyword, Pageable pageable);
 
-    Page<Coupon> findByStatusAndCodeContainingIgnoreCase(
+    Page<Coupon> findByStatusAndCodeContainingIgnoreCaseAndIsDeletedFalse(
             CouponStatus status,
             String keyword,
             Pageable pageable
     );
+
+    Page<Coupon> findByIsDeletedFalse(Pageable pageable);
 }

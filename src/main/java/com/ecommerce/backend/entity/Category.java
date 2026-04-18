@@ -7,6 +7,9 @@ import lombok.Setter;
 @Entity
 @Table(
         name = "categories",
+        indexes = {
+                @Index(name = "idx_categories_not_deleted_name", columnList = "is_deleted, name")
+        },
         uniqueConstraints = {
                 @UniqueConstraint(name = "unique_categories_name", columnNames = "name")
         }
