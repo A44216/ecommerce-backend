@@ -100,4 +100,10 @@ public class SellerProductController {
         );
     }
 
+    @PutMapping("/submit/{id}")
+    public ResponseEntity<Void> submitProduct(@PathVariable Integer id) {
+        productService.submitProduct(id);
+        return ResponseEntity.noContent().build();
+    }
+
 }

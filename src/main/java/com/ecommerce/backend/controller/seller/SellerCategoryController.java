@@ -1,6 +1,6 @@
 package com.ecommerce.backend.controller.seller;
 
-import com.ecommerce.backend.dto.responses.seller.category.SellerCategoryResponse;
+import com.ecommerce.backend.dto.responses.seller.product.SellerCategoryResponse;
 import com.ecommerce.backend.service.seller.SellerCategoryService;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;

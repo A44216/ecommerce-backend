@@ -255,4 +255,26 @@ public class SellerProductService {
         );
     }
 
+    public void submitProduct(Integer id) {
+
+        Integer shopId = sellerShopService.getMyShop().getId();
+
+        Product product = productRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Product not found"));
+
+        if (!product.getShop().getId().equals(shopId)) {
+            throw new RuntimeException("Access denied");
+        }
+
+        // CHỈ CHO SUBMIT LẠI KHI REJECTED hoặc DRAFT
+        if (product.getStatus() != ProductStatus.REJECTED
+                && product.getStatus() != ProductStatus.PENDING) {
+            throw new RuntimeException("Product cannot be submitted");
+        }
+
+        product.setStatus(ProductStatus.PENDING);
+
+        productRepository.save(product);
+    }
+
 }

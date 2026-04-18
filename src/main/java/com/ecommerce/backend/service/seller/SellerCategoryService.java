@@ -1,6 +1,6 @@
 package com.ecommerce.backend.service.seller;
 
-import com.ecommerce.backend.dto.responses.seller.category.SellerCategoryResponse;
+import com.ecommerce.backend.dto.responses.seller.product.SellerCategoryResponse;
 import com.ecommerce.backend.entity.Category;
 import com.ecommerce.backend.exception.ResourceNotFoundException;
 import com.ecommerce.backend.repository.CategoryRepository;
