@@ -14,15 +14,16 @@ public interface CouponRepository extends JpaRepository<Coupon, Integer> {
 
     boolean existsByCodeAndIsDeletedFalse(String code);
 
-    Page<Coupon> findByStatusAndIsDeletedFalse(CouponStatus status, Pageable pageable);
+    Page<Coupon> findByStatusAndIsDeleted(CouponStatus status, Boolean isDeleted, Pageable pageable);
 
-    Page<Coupon> findByCodeContainingIgnoreCaseAndIsDeletedFalse(String keyword, Pageable pageable);
+    Page<Coupon> findByCodeContainingIgnoreCaseAndIsDeleted(String keyword, Boolean isDeleted, Pageable pageable);
 
-    Page<Coupon> findByStatusAndCodeContainingIgnoreCaseAndIsDeletedFalse(
+    Page<Coupon> findByStatusAndCodeContainingIgnoreCaseAndIsDeleted(
             CouponStatus status,
             String keyword,
+            Boolean isDeleted,
             Pageable pageable
     );
 
-    Page<Coupon> findByIsDeletedFalse(Pageable pageable);
+    Page<Coupon> findByIsDeleted(Boolean isDeleted, Pageable pageable);
 }

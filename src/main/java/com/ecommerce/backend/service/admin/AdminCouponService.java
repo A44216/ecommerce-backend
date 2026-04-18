@@ -31,26 +31,30 @@ public class AdminCouponService {
             int page,
             int size,
             CouponStatus status,
-            String keyword
+            String keyword,
+            Boolean isDeleted
     ) {
+        if (isDeleted == null) {
+            isDeleted = false;
+        }
 
         Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
 
         Page<Coupon> coupons;
 
         if (status != null && keyword != null && !keyword.isEmpty()) {
-            coupons = couponRepository.findByStatusAndCodeContainingIgnoreCaseAndIsDeletedFalse(
-                    status, keyword, pageable
+            coupons = couponRepository.findByStatusAndCodeContainingIgnoreCaseAndIsDeleted(
+                    status, keyword, isDeleted, pageable
             );
 
         } else if (status != null) {
-            coupons = couponRepository.findByStatusAndIsDeletedFalse(status, pageable);
+            coupons = couponRepository.findByStatusAndIsDeleted(status, isDeleted, pageable);
 
         } else if (keyword != null && !keyword.isEmpty()) {
-            coupons = couponRepository.findByCodeContainingIgnoreCaseAndIsDeletedFalse(keyword, pageable);
+            coupons = couponRepository.findByCodeContainingIgnoreCaseAndIsDeleted(keyword, isDeleted, pageable);
 
         } else {
-            coupons = couponRepository.findByIsDeletedFalse(pageable);
+            coupons = couponRepository.findByIsDeleted(isDeleted, pageable);
         }
 
         return new PageResponse<>(
@@ -120,6 +124,19 @@ public class AdminCouponService {
                 .orElseThrow(() -> new ResourceNotFoundException("Coupon not found"));
 
         coupon.setIsDeleted(true);
+        coupon.setUpdatedAt(LocalDateTime.now());
+
+        couponRepository.save(coupon);
+    }
+
+    // RESTORE
+    public void restoreCoupon(Integer id) {
+
+        Coupon coupon = couponRepository.findById(id)
+                .filter(c -> Boolean.TRUE.equals(c.getIsDeleted()))
+                .orElseThrow(() -> new ResourceNotFoundException("Deleted coupon not found"));
+
+        coupon.setIsDeleted(false);
         coupon.setUpdatedAt(LocalDateTime.now());
 
         couponRepository.save(coupon);

@@ -28,11 +28,10 @@ public class AdminCouponController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(required = false) CouponStatus status,
-            @RequestParam(required = false) String keyword
-    ) {
+            @RequestParam(required = false) String keyword,
+            @RequestParam(defaultValue = "false") Boolean isDeleted) {
         return ResponseEntity.ok(
-                couponService.getCoupons(page, size, status, keyword)
-        );
+                couponService.getCoupons(page, size, status, keyword, isDeleted));
     }
 
     // DETAIL
@@ -44,29 +43,32 @@ public class AdminCouponController {
     // CREATE
     @PostMapping
     public ResponseEntity<AdminCouponResponse> create(
-            @Valid @RequestBody AdminCouponRequest request
-    ) {
+            @Valid @RequestBody AdminCouponRequest request) {
         return new ResponseEntity<>(
                 couponService.createCoupon(request),
-                HttpStatus.CREATED
-        );
+                HttpStatus.CREATED);
     }
 
     // UPDATE
     @PutMapping("/{id}")
     public ResponseEntity<AdminCouponResponse> update(
             @PathVariable Integer id,
-            @Valid @RequestBody AdminCouponRequest request
-    ) {
+            @Valid @RequestBody AdminCouponRequest request) {
         return ResponseEntity.ok(
-                couponService.updateCoupon(id, request)
-        );
+                couponService.updateCoupon(id, request));
     }
 
     // DELETE
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable Integer id) {
         couponService.deleteCoupon(id);
+        return ResponseEntity.noContent().build();
+    }
+
+    // RESTORE (khôi phục coupon đã xóa)
+    @PatchMapping("/{id}/restore")
+    public ResponseEntity<Void> restore(@PathVariable Integer id) {
+        couponService.restoreCoupon(id);
         return ResponseEntity.noContent().build();
     }
 
