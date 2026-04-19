@@ -88,7 +88,12 @@ public class AdminCouponService {
         applyRequest(coupon, request);
         validateCoupon(coupon);
 
-        coupon.setStatus(CouponStatus.ACTIVE);
+        if (coupon.getEndDate() != null && coupon.getEndDate().isBefore(LocalDateTime.now())) {
+            coupon.setStatus(CouponStatus.EXPIRED);
+        } else {
+            coupon.setStatus(CouponStatus.ACTIVE);
+        }
+
         coupon.setUsedCount(0);
         coupon.setIsDeleted(false);
         coupon.setCreatedAt(LocalDateTime.now());
@@ -109,8 +114,19 @@ public class AdminCouponService {
             throw new BadRequestException("Coupon code already exists");
         }
 
+        boolean wasExpiredByDate = coupon.getEndDate() != null && coupon.getEndDate().isBefore(LocalDateTime.now());
+        boolean wasStatusExpired = coupon.getStatus() == CouponStatus.EXPIRED;
+
         applyRequest(coupon, request);
         validateCoupon(coupon);
+
+        boolean isNowExpiredByDate = coupon.getEndDate() != null && coupon.getEndDate().isBefore(LocalDateTime.now());
+
+        if (isNowExpiredByDate) {
+            coupon.setStatus(CouponStatus.EXPIRED);
+        } else if (wasStatusExpired || wasExpiredByDate) {
+            coupon.setStatus(CouponStatus.ACTIVE);
+        }
 
         coupon.setUpdatedAt(LocalDateTime.now());
 
@@ -150,6 +166,10 @@ public class AdminCouponService {
                 .filter(c -> !Boolean.TRUE.equals(c.getIsDeleted()))
                 .orElseThrow(() -> new ResourceNotFoundException("Coupon not found"));
 
+        if (coupon.getEndDate() != null && coupon.getEndDate().isBefore(LocalDateTime.now())) {
+            throw new BadRequestException("Cannot enable an expired coupon");
+        }
+
         coupon.setStatus(CouponStatus.ACTIVE);
         coupon.setUpdatedAt(LocalDateTime.now());
 
@@ -162,6 +182,10 @@ public class AdminCouponService {
         Coupon coupon = couponRepository.findById(id)
                 .filter(c -> !Boolean.TRUE.equals(c.getIsDeleted()))
                 .orElseThrow(() -> new ResourceNotFoundException("Coupon not found"));
+
+        if (coupon.getEndDate() != null && coupon.getEndDate().isBefore(LocalDateTime.now())) {
+            throw new BadRequestException("Cannot disable an expired coupon");
+        }
 
         coupon.setStatus(CouponStatus.DISABLED);
         coupon.setUpdatedAt(LocalDateTime.now());
