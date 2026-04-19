@@ -245,14 +245,15 @@ public class AdminCouponService {
             return CouponStatus.DISABLED;
         }
 
-        if (coupon.getStatus() == CouponStatus.DISABLED) {
-            return CouponStatus.DISABLED;
-        }
-
         if (coupon.getEndDate() != null
                 && coupon.getEndDate().isBefore(LocalDateTime.now())) {
             return CouponStatus.EXPIRED;
         }
+
+        if (coupon.getStatus() == CouponStatus.DISABLED) {
+            return CouponStatus.DISABLED;
+        }
+
 
         return CouponStatus.ACTIVE;
     }
