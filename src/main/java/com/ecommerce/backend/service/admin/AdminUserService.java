@@ -32,12 +32,13 @@ public class AdminUserService {
     public PageResponse<AdminUserResponse> getUsers(
             int page,
             int size,
+            Role role,
             UserStatus status,
             String keyword) {
 
         Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
 
-        Page<User> users = userRepository.searchUsers(status, keyword, pageable);
+        Page<User> users = userRepository.searchUsers(role, status, keyword, pageable);
 
         return new PageResponse<>(
                 users.getContent().stream().map(this::mapToDTO).toList(),

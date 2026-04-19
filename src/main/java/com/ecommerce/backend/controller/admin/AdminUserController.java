@@ -26,10 +26,11 @@ public class AdminUserController {
     public ResponseEntity<PageResponse<AdminUserResponse>> getUsers(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
+            @RequestParam(required = false) Role role,
             @RequestParam(required = false) UserStatus status,
             @RequestParam(required = false) String keyword) {
         return ResponseEntity.ok(
-                adminUserService.getUsers(page, size, status, keyword));
+                adminUserService.getUsers(page, size, role, status, keyword));
     }
 
     // DETAIL

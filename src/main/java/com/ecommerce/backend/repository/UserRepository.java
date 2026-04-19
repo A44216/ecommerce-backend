@@ -1,6 +1,7 @@
 package com.ecommerce.backend.repository;
 
 import com.ecommerce.backend.entity.User;
+import com.ecommerce.backend.enums.Role;
 import com.ecommerce.backend.enums.UserStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -25,11 +26,12 @@ public interface UserRepository extends JpaRepository<User, Integer> {
     boolean existsByPhone(String phone);
 
     @Query("SELECT u FROM User u WHERE " +
+           "(:role IS NULL OR u.role = :role) AND " +
            "(:status IS NULL OR u.status = :status) AND " +
            "(:keyword IS NULL OR " +
            "LOWER(u.username) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
            "LOWER(u.fullName) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
            "LOWER(u.email) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
            "LOWER(u.phone) LIKE LOWER(CONCAT('%', :keyword, '%')))")
-    Page<User> searchUsers(@Param("status") UserStatus status, @Param("keyword") String keyword, Pageable pageable);
+    Page<User> searchUsers(@Param("role") Role role, @Param("status") UserStatus status, @Param("keyword") String keyword, Pageable pageable);
 }
