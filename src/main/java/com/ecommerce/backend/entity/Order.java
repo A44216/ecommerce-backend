@@ -73,13 +73,13 @@ public class Order {
     @Column(name = "payment_status", nullable = false)
     private PaymentStatus paymentStatus = PaymentStatus.UNPAID;
 
-    @Column(name = "shipping_name", length = 100)
+    @Column(name = "shipping_name", nullable = false, length = 100)
     private String shippingName;
 
-    @Column(name = "shipping_phone", length = 20)
+    @Column(name = "shipping_phone", nullable = false, length = 20)
     private String shippingPhone;
 
-    @Column(name = "shipping_address", length = 255)
+    @Column(name = "shipping_address", nullable = false, length = 255)
     private String shippingAddress;
 
     @Column(name = "created_at", insertable = false, updatable = false)

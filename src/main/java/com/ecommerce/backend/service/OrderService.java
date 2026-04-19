@@ -111,11 +111,11 @@ public class OrderService {
                 .paymentMethod(order.getPaymentMethod())
                 .paymentStatus(order.getPaymentStatus())
                 .createdAt(order.getCreatedAt())
-                .shippingName(address.getFullName())
-                .shippingPhone(address.getPhone())
-
-                // --- TRUYỀN CHUỖI ĐỊA CHỈ ĐÃ GỘP ĐẦY ĐỦ VÀO ĐÂY ---
-                .addressLine(fullAddress)
+                
+                // Sử dụng thông tin snapshot từ bảng orders nếu có, nếu không thì fallback về bảng addresses
+                .shippingName(order.getShippingName() != null ? order.getShippingName() : address.getFullName())
+                .shippingPhone(order.getShippingPhone() != null ? order.getShippingPhone() : address.getPhone())
+                .addressLine(order.getShippingAddress() != null ? order.getShippingAddress() : fullAddress)
 
                 .city(address.getCity())
                 .district(address.getDistrict())
@@ -181,6 +181,22 @@ public class OrderService {
         order.setAddress(address);
         order.setShop(shop);
         order.setPaymentMethod(request.getPaymentMethod());
+
+        // Snapshot thông tin vận chuyển tại thời điểm đặt hàng
+        order.setShippingName(address.getFullName());
+        order.setShippingPhone(address.getPhone());
+
+        String fullAddress = address.getAddressLine() != null ? address.getAddressLine() : "";
+        if (address.getWard() != null && !address.getWard().isEmpty()) {
+            fullAddress += ", " + address.getWard();
+        }
+        if (address.getDistrict() != null && !address.getDistrict().isEmpty()) {
+            fullAddress += ", " + address.getDistrict();
+        }
+        if (address.getCity() != null && !address.getCity().isEmpty()) {
+            fullAddress += ", " + address.getCity();
+        }
+        order.setShippingAddress(fullAddress);
         order.setTotalPrice(request.getTotalPrice());
         order.setSubtotal(request.getSubtotal());
         order.setDiscountAmount(request.getDiscountAmount());
