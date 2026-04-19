@@ -28,14 +28,14 @@ public class CategoryService {
     }
 
     private Category getCategoryOrThrow(Integer id) {
-        return categoryRepository.findById(id)
+        return categoryRepository.findActiveById(id)
                 .orElseThrow(() ->
-                        new ResourceNotFoundException("Category not found with id: " + id));
+                        new ResourceNotFoundException("Category not found or deleted with id: " + id));
     }
 
     @Transactional(readOnly = true)
     public List<CategoryResponse> getAllCategories() {
-        return categoryRepository.findAll()
+        return categoryRepository.findAllActive()
                 .stream()
                 .map(this::mapToDTO)
                 .toList();

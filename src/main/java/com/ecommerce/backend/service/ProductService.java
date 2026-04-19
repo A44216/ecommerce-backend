@@ -94,6 +94,54 @@ public class ProductService {
         return products.stream().map(this::mapToDTO).toList();
     }
 
+    public com.ecommerce.backend.dto.responses.PageResponse<ProductResponse> getAllProductsPaginated(int page, int size) {
+        org.springframework.data.domain.Pageable pageable = org.springframework.data.domain.PageRequest.of(page, size);
+        org.springframework.data.domain.Page<Product> productPage = productRepository.findByStatusAndIsDeletedFalse(ProductStatus.APPROVED, pageable);
+        
+        List<ProductResponse> content = productPage.getContent().stream().map(this::mapToDTO).toList();
+        
+        return new com.ecommerce.backend.dto.responses.PageResponse<>(
+                content,
+                productPage.getNumber(),
+                productPage.getSize(),
+                productPage.getTotalElements(),
+                productPage.getTotalPages(),
+                productPage.isLast()
+        );
+    }
+
+    public com.ecommerce.backend.dto.responses.PageResponse<ProductResponse> searchProductsPaginated(String keyword, int page, int size) {
+        org.springframework.data.domain.Pageable pageable = org.springframework.data.domain.PageRequest.of(page, size);
+        org.springframework.data.domain.Page<Product> productPage = productRepository.findByNameContainingIgnoreCaseAndStatusAndIsDeletedFalse(keyword, ProductStatus.APPROVED, pageable);
+
+        List<ProductResponse> content = productPage.getContent().stream().map(this::mapToDTO).toList();
+
+        return new com.ecommerce.backend.dto.responses.PageResponse<>(
+                content,
+                productPage.getNumber(),
+                productPage.getSize(),
+                productPage.getTotalElements(),
+                productPage.getTotalPages(),
+                productPage.isLast()
+        );
+    }
+
+    public com.ecommerce.backend.dto.responses.PageResponse<ProductResponse> getProductsByCategoryPaginated(Integer categoryId, int page, int size) {
+        org.springframework.data.domain.Pageable pageable = org.springframework.data.domain.PageRequest.of(page, size);
+        org.springframework.data.domain.Page<Product> productPage = productRepository.findByCategoryIdAndStatusAndIsDeletedFalse(categoryId, ProductStatus.APPROVED, pageable);
+
+        List<ProductResponse> content = productPage.getContent().stream().map(this::mapToDTO).toList();
+
+        return new com.ecommerce.backend.dto.responses.PageResponse<>(
+                content,
+                productPage.getNumber(),
+                productPage.getSize(),
+                productPage.getTotalElements(),
+                productPage.getTotalPages(),
+                productPage.isLast()
+        );
+    }
+
     public ProductResponse getProductById(Integer id) {
         // Khách hàng chỉ xem được chi tiết nếu sản phẩm đó APPROVED
         Product product = productRepository.findByIdAndStatusAndIsDeletedFalse(id, ProductStatus.APPROVED)
@@ -103,6 +151,19 @@ public class ProductService {
 
     public List<ProductResponse> searchProducts(String keyword) {
         List<Product> products = productRepository.findByNameContainingIgnoreCaseAndStatusAndIsDeletedFalse(keyword, ProductStatus.APPROVED);
+        return products.stream().map(this::mapToDTO).toList();
+    }
+
+    public List<String> suggestProductNames(String keyword) {
+        List<Product> products = productRepository.findTop10ByNameContainingIgnoreCaseAndStatusAndIsDeletedFalse(keyword, ProductStatus.APPROVED);
+        return products.stream()
+                .map(Product::getName)
+                .distinct()
+                .toList();
+    }
+
+    public List<ProductResponse> getTrendingProducts() {
+        List<Product> products = productRepository.findTop10ByStatusAndIsDeletedFalseOrderBySoldCountDesc(ProductStatus.APPROVED);
         return products.stream().map(this::mapToDTO).toList();
     }
 

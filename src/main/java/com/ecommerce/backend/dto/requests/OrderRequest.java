@@ -26,6 +26,10 @@ public class OrderRequest {
     @NotNull(message = "Total price is required")
     private java.math.BigDecimal totalPrice;
 
+    private java.math.BigDecimal subtotal;
+
+    private java.math.BigDecimal discountAmount;
+
     @NotNull(message = "Shop id is required")
     private Integer shopId;
 

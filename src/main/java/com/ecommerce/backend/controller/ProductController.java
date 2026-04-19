@@ -28,6 +28,30 @@ public class ProductController {
         return ResponseEntity.ok(productService.getAllProducts());
     }
 
+    // API: GET /api/products/page?page=0&size=10
+    @GetMapping("/page")
+    public ResponseEntity<com.ecommerce.backend.dto.responses.PageResponse<ProductResponse>> getProductsPaginated(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        return ResponseEntity.ok(productService.getAllProductsPaginated(page, size));
+    }
+
+    @GetMapping("/search/page")
+    public ResponseEntity<com.ecommerce.backend.dto.responses.PageResponse<ProductResponse>> searchProductsPaginated(
+            @RequestParam String keyword,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        return ResponseEntity.ok(productService.searchProductsPaginated(keyword, page, size));
+    }
+
+    @GetMapping("/category/{categoryId}/page")
+    public ResponseEntity<com.ecommerce.backend.dto.responses.PageResponse<ProductResponse>> getProductsByCategoryPaginated(
+            @PathVariable Integer categoryId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        return ResponseEntity.ok(productService.getProductsByCategoryPaginated(categoryId, page, size));
+    }
+
     // lấy thông tin chi tiết một sản phẩm theo ID
     // API: GET /api/products/{id}
     @GetMapping("/{id}")
@@ -107,6 +131,16 @@ public class ProductController {
         return ResponseEntity.ok(
                 productService.searchProducts(keyword, shopId)
         );
+    }
+
+    @GetMapping("/suggest")
+    public ResponseEntity<List<String>> suggestProducts(@RequestParam String keyword) {
+        return ResponseEntity.ok(productService.suggestProductNames(keyword));
+    }
+
+    @GetMapping("/trending")
+    public ResponseEntity<List<ProductResponse>> getTrendingProducts() {
+        return ResponseEntity.ok(productService.getTrendingProducts());
     }
 
 }

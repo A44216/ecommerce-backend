@@ -57,4 +57,16 @@ public class AuthController {
         authService.verifyOtp(request);
         return ResponseEntity.ok(Collections.singletonMap("message", "OTP_VALID"));
     }
+
+    @PostMapping("/send-unlink-email-otp")
+    public ResponseEntity<?> sendUnlinkEmailOtp(@RequestBody SendOtpRequest request) {
+        authService.sendUnlinkEmailOtp(request);
+        return ResponseEntity.ok(Collections.singletonMap("message", "OTP_SENT_SUCCESSFULLY"));
+    }
+
+    @PostMapping("/send-verify-new-email-otp")
+    public ResponseEntity<?> sendVerifyNewEmailOtp(@RequestBody SendOtpRequest request) {
+        authService.sendVerifyNewEmailOtp(request);
+        return ResponseEntity.ok(Collections.singletonMap("message", "OTP_SENT_SUCCESSFULLY"));
+    }
 }

@@ -98,4 +98,10 @@ public class UserController {
         userService.setPasswordForGoogleAccount(id, request.getNewPassword());
         return ResponseEntity.ok().body("Thiết lập mật khẩu thành công!");
     }
+
+    @PutMapping("/{id}/change-email")
+    public ResponseEntity<?> changeEmail(@PathVariable Integer id, @RequestBody ChangeEmailRequest request) {
+        userService.changeEmail(id, request);
+        return ResponseEntity.ok(Collections.singletonMap("message", "EMAIL_CHANGED"));
+    }
 }

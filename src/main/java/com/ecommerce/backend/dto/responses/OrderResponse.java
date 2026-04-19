@@ -26,6 +26,16 @@ public class OrderResponse {
 
     private BigDecimal totalPrice;
 
+    private BigDecimal subtotal;
+
+    private BigDecimal discountAmount;
+
+    private BigDecimal platformFeeRate;
+
+    private BigDecimal platformFeeAmount;
+
+    private Integer couponId;
+
     private PaymentMethod paymentMethod;
 
     private PaymentStatus paymentStatus;

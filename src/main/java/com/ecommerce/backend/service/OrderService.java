@@ -31,13 +31,16 @@ public class OrderService {
     private final com.ecommerce.backend.repository.ProductRepository productRepository;
     private final com.ecommerce.backend.repository.OrderItemRepository orderItemRepository;
     private final NotificationService notificationService;
+    private final com.ecommerce.backend.repository.CouponRepository couponRepository;
 
     public OrderService(OrderRepository repository,
                         UserRepository userRepository,
                         AddressRepository addressRepository,
                         ShopRepository shopRepository,
                         com.ecommerce.backend.repository.ProductRepository productRepository,
-                        com.ecommerce.backend.repository.OrderItemRepository orderItemRepository, NotificationService notificationService) {
+                        com.ecommerce.backend.repository.OrderItemRepository orderItemRepository, 
+                        NotificationService notificationService,
+                        com.ecommerce.backend.repository.CouponRepository couponRepository) {
         this.repository = repository;
         this.userRepository = userRepository;
         this.addressRepository = addressRepository;
@@ -45,6 +48,7 @@ public class OrderService {
         this.productRepository = productRepository;
         this.orderItemRepository = orderItemRepository;
         this.notificationService = notificationService;
+        this.couponRepository = couponRepository;
     }
 
     private OrderResponse mapToDTO(Order order) {
@@ -99,6 +103,11 @@ public class OrderService {
                 .shopId(order.getShop() != null ? order.getShop().getId() : null)
                 .status(order.getStatus())
                 .totalPrice(order.getTotalPrice())
+                .subtotal(order.getSubtotal())
+                .discountAmount(order.getDiscountAmount())
+                .platformFeeRate(order.getPlatformFeeRate())
+                .platformFeeAmount(order.getPlatformFeeAmount())
+                .couponId(order.getCoupon() != null ? order.getCoupon().getId() : null)
                 .paymentMethod(order.getPaymentMethod())
                 .paymentStatus(order.getPaymentStatus())
                 .createdAt(order.getCreatedAt())
@@ -173,7 +182,25 @@ public class OrderService {
         order.setShop(shop);
         order.setPaymentMethod(request.getPaymentMethod());
         order.setTotalPrice(request.getTotalPrice());
+        order.setSubtotal(request.getSubtotal());
+        order.setDiscountAmount(request.getDiscountAmount());
         order.setStatus(OrderStatus.PENDING);
+
+        // Xử lý Platform Fee (Mặc định 5%)
+        java.math.BigDecimal platformFeeRate = new java.math.BigDecimal("5.00");
+        order.setPlatformFeeRate(platformFeeRate);
+        if (request.getSubtotal() != null) {
+            order.setPlatformFeeAmount(request.getSubtotal().multiply(platformFeeRate).divide(new java.math.BigDecimal("100")));
+        } else {
+            order.setPlatformFeeAmount(java.math.BigDecimal.ZERO);
+        }
+
+        // Xử lý Coupon
+        if (request.getCouponId() != null) {
+            com.ecommerce.backend.entity.Coupon coupon = couponRepository.findById(request.getCouponId())
+                    .orElseThrow(() -> new BadRequestException("Mã giảm giá không hợp lệ"));
+            order.setCoupon(coupon);
+        }
 
         // Biến savedOrder đã được khai báo ở đây
         Order savedOrder = repository.save(order);

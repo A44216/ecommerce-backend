@@ -53,6 +53,18 @@ public class Order {
     @Column(name = "total_price", nullable = false, precision = 18, scale = 2)
     private BigDecimal totalPrice = BigDecimal.ZERO;
 
+    @Column(name = "subtotal", precision = 18, scale = 2)
+    private BigDecimal subtotal;
+
+    @Column(name = "discount_amount", precision = 18, scale = 2)
+    private BigDecimal discountAmount;
+
+    @Column(name = "platform_fee_rate", precision = 5, scale = 2)
+    private BigDecimal platformFeeRate;
+
+    @Column(name = "platform_fee_amount", precision = 18, scale = 2)
+    private BigDecimal platformFeeAmount;
+
     @Enumerated(EnumType.STRING)
     @Column(name = "payment_method", nullable = false)
     private PaymentMethod paymentMethod;

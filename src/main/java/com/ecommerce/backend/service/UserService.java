@@ -1,8 +1,6 @@
 package com.ecommerce.backend.service;
 
-import com.ecommerce.backend.dto.requests.LoginRequest;
-import com.ecommerce.backend.dto.requests.UserRequest;
-import com.ecommerce.backend.dto.requests.GoogleLoginRequest;
+import com.ecommerce.backend.dto.requests.*;
 import com.ecommerce.backend.entity.User;
 import com.ecommerce.backend.enums.Provider;
 import com.ecommerce.backend.enums.UserStatus;
@@ -10,12 +8,10 @@ import com.ecommerce.backend.exception.BadRequestException;
 import com.ecommerce.backend.exception.ResourceNotFoundException;
 import com.ecommerce.backend.repository.UserRepository;
 import com.ecommerce.backend.dto.responses.UserResponse;
-import com.ecommerce.backend.dto.requests.UpdateProfileRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import com.ecommerce.backend.dto.requests.ChangePasswordRequest;
 import org.springframework.transaction.annotation.Transactional;
 import com.ecommerce.backend.entity.OtpToken;
 import java.time.LocalDateTime;
@@ -186,5 +182,43 @@ public class UserService {
         User user = userRepository.findById(userId).orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy người dùng"));
         user.setPassword(passwordEncoder.encode(newPassword));
         userRepository.save(user);
+    }
+
+    @Transactional
+    public void changeEmail(Integer userId, ChangeEmailRequest request) {
+        User user = userRepository.findById(userId).orElseThrow(() -> new ResourceNotFoundException("User not found"));
+        
+        if (user.getProvider() == Provider.GOOGLE) {
+            throw new BadRequestException("Tài khoản Google không thể thay đổi Email!");
+        }
+        
+        String newEmail = request.getNewEmail().trim().toLowerCase();
+        if (userRepository.findByEmail(newEmail).isPresent()) {
+            throw new BadRequestException("Email đã tồn tại!");
+        }
+
+        // Kiểm tra OTP email cũ
+        OtpToken oldOtp = otpTokenRepository.findByEmailAndOtp(user.getEmail(), request.getOldEmailOtp().trim())
+                .orElseThrow(() -> new BadRequestException("Mã OTP xác thực email cũ không chính xác"));
+        if (oldOtp.getExpiryDate().isBefore(LocalDateTime.now())) {
+            otpTokenRepository.delete(oldOtp);
+            throw new BadRequestException("Mã OTP email cũ đã hết hạn");
+        }
+
+        // Kiểm tra OTP email mới
+        OtpToken newOtp = otpTokenRepository.findByEmailAndOtp(newEmail, request.getNewEmailOtp().trim())
+                .orElseThrow(() -> new BadRequestException("Mã OTP xác thực email mới không chính xác"));
+        if (newOtp.getExpiryDate().isBefore(LocalDateTime.now())) {
+            otpTokenRepository.delete(newOtp);
+            throw new BadRequestException("Mã OTP email mới đã hết hạn");
+        }
+
+        // Cập nhật
+        user.setEmail(newEmail);
+        userRepository.save(user);
+
+        // Xóa OTP
+        otpTokenRepository.delete(oldOtp);
+        otpTokenRepository.delete(newOtp);
     }
 }

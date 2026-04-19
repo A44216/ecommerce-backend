@@ -14,4 +14,7 @@ public class MessageRequest {
     @NotBlank(message = "Message content is required")
     @Size(max = 2000, message = "Message must be less than 2000 characters")
     private String message;
+
+    @NotNull(message = "Sender id is required")
+    private Integer senderId;
 }

@@ -22,6 +22,16 @@ public interface ProductRepository extends JpaRepository<Product, Integer> {
 
     List<Product> findByStatusAndIsDeletedFalse(ProductStatus status);
 
+    org.springframework.data.domain.Page<Product> findByStatusAndIsDeletedFalse(ProductStatus status, org.springframework.data.domain.Pageable pageable);
+
+    org.springframework.data.domain.Page<Product> findByNameContainingIgnoreCaseAndStatusAndIsDeletedFalse(String keyword, ProductStatus status, org.springframework.data.domain.Pageable pageable);
+
+    org.springframework.data.domain.Page<Product> findByCategoryIdAndStatusAndIsDeletedFalse(Integer categoryId, ProductStatus status, org.springframework.data.domain.Pageable pageable);
+
+    List<Product> findTop10ByNameContainingIgnoreCaseAndStatusAndIsDeletedFalse(String keyword, ProductStatus status);
+
+    List<Product> findTop10ByStatusAndIsDeletedFalseOrderBySoldCountDesc(ProductStatus status);
+
     Optional<Product> findByIdAndStatusAndIsDeletedFalse(Integer id, ProductStatus status);
 
     List<Product> findByNameContainingIgnoreCaseAndStatusAndIsDeletedFalse(String keyword, ProductStatus status);

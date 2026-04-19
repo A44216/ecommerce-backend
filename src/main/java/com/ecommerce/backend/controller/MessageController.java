@@ -1,6 +1,7 @@
 package com.ecommerce.backend.controller;
 
 import com.ecommerce.backend.dto.responses.MessageResponse;
+import com.ecommerce.backend.dto.requests.MessageRequest;
 import com.ecommerce.backend.entity.Message;
 import com.ecommerce.backend.service.MessageService;
 import org.springframework.web.bind.annotation.*;
@@ -26,8 +27,8 @@ public class MessageController {
 
     // gửi tin nhắn
     @PostMapping
-    public Message sendMessage(@RequestBody Message message) {
-        return service.sendMessage(message);
+    public MessageResponse sendMessage(@RequestBody MessageRequest request) {
+        return service.sendMessage(request);
     }
 
     // xoá tin nhắn

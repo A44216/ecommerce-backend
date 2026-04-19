@@ -356,4 +356,50 @@ public class AuthService {
             throw new BadRequestException("OTP_EXPIRED");
         }
     }
+
+    @Transactional
+    public void sendUnlinkEmailOtp(SendOtpRequest request) {
+        String input = request.getEmail().trim().toLowerCase();
+
+        User user;
+        if (input.contains("@")) {
+            user = userRepository.findByEmail(input).orElseThrow(() -> new ResourceNotFoundException("USER_NOT_FOUND"));
+        } else {
+            user = userRepository.findByUsername(input).orElseThrow(() -> new ResourceNotFoundException("USER_NOT_FOUND"));
+        }
+
+        if (user.getPassword() == null) {
+            throw new BadRequestException("GOOGLE_ACCOUNT_NO_PASSWORD");
+        }
+
+        String targetEmail = user.getEmail();
+        otpTokenRepository.deleteByEmail(targetEmail);
+
+        String otpCode = String.format("%06d", new Random().nextInt(999999));
+        OtpToken otpToken = new OtpToken(targetEmail, otpCode, LocalDateTime.now().plusMinutes(5));
+        otpTokenRepository.save(otpToken);
+
+        emailService.sendUnlinkEmailOtp(targetEmail, otpCode);
+    }
+
+    @Transactional
+    public void sendVerifyNewEmailOtp(SendOtpRequest request) {
+        String email = request.getEmail();
+        if (email == null || email.trim().isEmpty()) {
+            throw new BadRequestException("INVALID_EMAIL");
+        }
+        email = email.trim().toLowerCase();
+
+        if (userRepository.existsByEmail(email)) {
+            throw new BadRequestException("EMAIL_ALREADY_EXISTS");
+        }
+
+        otpTokenRepository.deleteByEmail(email);
+
+        String otpCode = String.format("%06d", new Random().nextInt(999999));
+        OtpToken otpToken = new OtpToken(email, otpCode, LocalDateTime.now().plusMinutes(5));
+        otpTokenRepository.save(otpToken);
+
+        emailService.sendVerifyNewEmailOtp(email, otpCode);
+    }
 }
