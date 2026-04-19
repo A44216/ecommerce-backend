@@ -1,9 +1,9 @@
 package com.ecommerce.backend.service.admin;
 
 import com.ecommerce.backend.dto.responses.seller.PageResponse;
-import com.ecommerce.backend.dto.responses.user.AdminUserDetailResponse;
-import com.ecommerce.backend.dto.responses.user.AdminUserResponse;
-import com.ecommerce.backend.dto.responses.user.AdminUserShopInfoResponse;
+import com.ecommerce.backend.dto.responses.admin.user.AdminUserDetailResponse;
+import com.ecommerce.backend.dto.responses.admin.user.AdminUserResponse;
+import com.ecommerce.backend.dto.responses.admin.user.AdminUserShopInfoResponse;
 import com.ecommerce.backend.entity.Shop;
 import com.ecommerce.backend.entity.User;
 import com.ecommerce.backend.enums.Role;

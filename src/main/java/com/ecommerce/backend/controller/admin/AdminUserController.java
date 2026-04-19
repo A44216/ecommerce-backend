@@ -1,8 +1,8 @@
 package com.ecommerce.backend.controller.admin;
 
 import com.ecommerce.backend.dto.responses.seller.PageResponse;
-import com.ecommerce.backend.dto.responses.user.AdminUserDetailResponse;
-import com.ecommerce.backend.dto.responses.user.AdminUserResponse;
+import com.ecommerce.backend.dto.responses.admin.user.AdminUserDetailResponse;
+import com.ecommerce.backend.dto.responses.admin.user.AdminUserResponse;
 import com.ecommerce.backend.enums.Role;
 import com.ecommerce.backend.enums.UserStatus;
 import com.ecommerce.backend.service.admin.AdminUserService;

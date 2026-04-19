@@ -1,4 +1,4 @@
-package com.ecommerce.backend.dto.responses.user;
+package com.ecommerce.backend.dto.responses.admin.user;
 
 import com.ecommerce.backend.enums.ShopStatus;
 import lombok.*;
