@@ -13,6 +13,9 @@ import java.time.LocalDateTime;
         name = "coupons",
         uniqueConstraints = {
                 @UniqueConstraint(name = "unique_coupons_code", columnNames = "code")
+        },
+        indexes = {
+                @Index(name = "idx_coupons_status_end_date", columnList = "status, end_date")
         }
 )
 @Getter

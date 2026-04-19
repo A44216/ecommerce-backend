@@ -22,7 +22,8 @@ import java.util.List;
                 @Index(name = "idx_orders_shop_status", columnList = "shop_id, status"),
                 @Index(name = "idx_orders_shop_status_payment", columnList = "shop_id, status, payment_status"),
                 @Index(name = "idx_orders_completed_at", columnList = "completed_at"),
-                @Index(name = "idx_orders_shop_status_payment_date", columnList = "shop_id, status, payment_status, completed_at")
+                @Index(name = "idx_orders_shop_status_payment_date", columnList = "shop_id, status, payment_status, completed_at"),
+                @Index(name = "idx_orders_cron_cancel", columnList = "status, payment_method, payment_status, created_at")
         }
 )
 @Getter

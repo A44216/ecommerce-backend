@@ -121,4 +121,15 @@ public interface OrderRepository extends JpaRepository<Order, Integer> {
             @Param("endDate") LocalDateTime endDate
     );
 
+    @org.springframework.data.jpa.repository.Modifying
+    @Query("""
+        UPDATE Order o
+        SET o.status = com.ecommerce.backend.enums.OrderStatus.CANCELED
+        WHERE o.status = com.ecommerce.backend.enums.OrderStatus.PENDING
+            AND o.paymentMethod = com.ecommerce.backend.enums.PaymentMethod.QR
+            AND o.paymentStatus = com.ecommerce.backend.enums.PaymentStatus.UNPAID
+            AND o.createdAt <= :threshold
+    """)
+    int cancelUnpaidQROrders(@Param("threshold") LocalDateTime threshold);
+
 }
