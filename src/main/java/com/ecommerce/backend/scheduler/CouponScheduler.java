@@ -1,6 +1,5 @@
 package com.ecommerce.backend.scheduler;
 
-import com.ecommerce.backend.entity.Coupon;
 import com.ecommerce.backend.enums.CouponStatus;
 import com.ecommerce.backend.repository.CouponRepository;
 import lombok.RequiredArgsConstructor;

@@ -6,11 +6,16 @@ import com.ecommerce.backend.dto.responses.seller.order.SellerOrderItemResponse;
 import com.ecommerce.backend.dto.responses.seller.order.SellerOrderResponse;
 import com.ecommerce.backend.entity.Order;
 import com.ecommerce.backend.entity.OrderItem;
+import com.ecommerce.backend.entity.Product;
+import com.ecommerce.backend.entity.Shop;
 import com.ecommerce.backend.enums.OrderStatus;
+import com.ecommerce.backend.enums.PaymentMethod;
+import com.ecommerce.backend.enums.PaymentStatus;
 import com.ecommerce.backend.repository.OrderRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -93,6 +98,7 @@ public class SellerOrderService {
     }
 
     // UPDATE STATUS
+    @Transactional
     public void updateOrderStatus(Integer orderId, OrderStatus status) {
 
         Integer shopId = sellerShopService.getMyShop().getId();
@@ -102,11 +108,44 @@ public class SellerOrderService {
 
         OrderStatus oldStatus = order.getStatus();
 
+        // Chặn CONFIRMED nếu chưa PAID (QR)
+        if (status == OrderStatus.CONFIRMED
+                && order.getPaymentMethod() == PaymentMethod.QR
+                && order.getPaymentStatus() != PaymentStatus.PAID) {
+
+            throw new RuntimeException("Cannot confirm unpaid order");
+        }
+
         order.setStatus(status);
 
         // chỉ set completedAt lần đầu khi chuyển sang COMPLETED
         if (status == OrderStatus.COMPLETED && oldStatus != OrderStatus.COMPLETED) {
             order.setCompletedAt(LocalDateTime.now());
+
+            if (order.getPaymentMethod() == PaymentMethod.COD) {
+                order.setPaymentStatus(PaymentStatus.PAID);
+            }
+
+            if (order.getPaymentStatus() == PaymentStatus.PAID) {
+
+                Shop shop = order.getShop();
+                if (shop != null) {
+                    shop.setTotalOrders(shop.getTotalOrders() + 1);
+
+                    BigDecimal sellerRevenue = Optional.ofNullable(order.getSubtotal()).orElse(BigDecimal.ZERO)
+                            .subtract(Optional.ofNullable(order.getPlatformFeeAmount()).orElse(BigDecimal.ZERO));
+                    shop.setTotalRevenue(shop.getTotalRevenue().add(sellerRevenue));
+                }
+
+                if (order.getItems() != null) {
+                    for (OrderItem item : order.getItems()) {
+                        Product product = item.getProduct();
+                        if (product != null) {
+                            product.setSoldCount(product.getSoldCount() + item.getQuantity());
+                        }
+                    }
+                }
+            }
         }
 
         orderRepository.save(order);
