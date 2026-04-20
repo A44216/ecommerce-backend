@@ -16,6 +16,8 @@ public interface ProductRepository extends JpaRepository<Product, Integer> {
     @EntityGraph(attributePaths = {"images", "category", "shop"})
     Optional<Product> findByIdAndIsDeletedFalse(Integer id);
 
+    Integer countByShopIdAndIsDeletedFalse(Integer shopId);
+
     @EntityGraph(attributePaths = {"images", "category", "shop"})
     Page<Product> findByShopIdAndCategoryIdAndIsDeletedFalse(
             Integer shopId, Integer categoryId, Pageable pageable
@@ -41,19 +43,34 @@ public interface ProductRepository extends JpaRepository<Product, Integer> {
             Pageable pageable
     );
 
-    @Query("""
-        SELECT p FROM Product p
-        LEFT JOIN p.category c
-        LEFT JOIN p.shop s
-        WHERE (:shopId IS NULL OR s.id = :shopId)
-        AND (:categoryId IS NULL OR c.id = :categoryId)
-        AND (:status IS NULL OR p.status = :status)
-        AND (
-            :keyword IS NULL OR
-            LOWER(p.name) LIKE LOWER(CONCAT('%', :keyword, '%')) OR
-            LOWER(s.shopName) LIKE LOWER(CONCAT('%', :keyword, '%'))
-        )
-    """)
+    @Query(
+        value = """
+            SELECT p FROM Product p
+            LEFT JOIN FETCH p.category c
+            LEFT JOIN FETCH p.shop s
+            WHERE (:shopId IS NULL OR s.id = :shopId)
+            AND (:categoryId IS NULL OR c.id = :categoryId)
+            AND (:status IS NULL OR p.status = :status)
+            AND (
+                :keyword IS NULL OR
+                LOWER(p.name) LIKE LOWER(CONCAT('%', :keyword, '%')) OR
+                LOWER(s.shopName) LIKE LOWER(CONCAT('%', :keyword, '%'))
+            )
+        """,
+        countQuery = """
+            SELECT COUNT(p) FROM Product p
+            LEFT JOIN p.category c
+            LEFT JOIN p.shop s
+            WHERE (:shopId IS NULL OR s.id = :shopId)
+            AND (:categoryId IS NULL OR c.id = :categoryId)
+            AND (:status IS NULL OR p.status = :status)
+            AND (
+                :keyword IS NULL OR
+                LOWER(p.name) LIKE LOWER(CONCAT('%', :keyword, '%')) OR
+                LOWER(s.shopName) LIKE LOWER(CONCAT('%', :keyword, '%'))
+            )
+        """
+    )
     Page<Product> adminSearchProducts(
             @Param("shopId") Integer shopId,
             @Param("categoryId") Integer categoryId,

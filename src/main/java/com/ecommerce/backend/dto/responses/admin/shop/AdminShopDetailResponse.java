@@ -21,6 +21,7 @@ public class AdminShopDetailResponse {
     private String avatar;
     private BigDecimal ratingAvg;
     private Integer ratingCount;
+    private Integer totalProducts;
     private Integer totalOrders;
     private BigDecimal totalRevenue;
     private LocalDateTime createdAt;

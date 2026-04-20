@@ -1,7 +1,7 @@
 package com.ecommerce.backend.service.admin;
 
-import com.ecommerce.backend.dto.requests.admin.product.AdminCategoryRequest;
-import com.ecommerce.backend.dto.responses.product.AdminCategoryResponse;
+import com.ecommerce.backend.dto.requests.admin.category.AdminCategoryRequest;
+import com.ecommerce.backend.dto.responses.admin.category.AdminCategoryResponse;
 import com.ecommerce.backend.entity.Category;
 import com.ecommerce.backend.exception.BadRequestException;
 import com.ecommerce.backend.exception.ResourceNotFoundException;

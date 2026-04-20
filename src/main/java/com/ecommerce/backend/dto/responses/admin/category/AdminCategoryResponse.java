@@ -1,4 +1,4 @@
-package com.ecommerce.backend.dto.responses.product;
+package com.ecommerce.backend.dto.responses.admin.category;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

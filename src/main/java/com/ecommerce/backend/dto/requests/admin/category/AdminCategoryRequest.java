@@ -1,4 +1,4 @@
-package com.ecommerce.backend.dto.requests.admin.product;
+package com.ecommerce.backend.dto.requests.admin.category;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;

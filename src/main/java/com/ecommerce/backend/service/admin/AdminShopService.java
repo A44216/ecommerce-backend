@@ -8,6 +8,7 @@ import com.ecommerce.backend.entity.Shop;
 import com.ecommerce.backend.entity.User;
 import com.ecommerce.backend.enums.ShopStatus;
 import com.ecommerce.backend.exception.ResourceNotFoundException;
+import com.ecommerce.backend.repository.ProductRepository;
 import com.ecommerce.backend.repository.ShopRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -23,6 +24,7 @@ import java.math.BigDecimal;
 public class AdminShopService {
 
     private final ShopRepository shopRepository;
+    private final ProductRepository productRepository;
 
     public PageResponse<AdminShopResponse> getShops(int page, int size, ShopStatus status, String keyword) {
         Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
@@ -40,7 +42,8 @@ public class AdminShopService {
     public AdminShopDetailResponse getShopById(Integer id) {
         Shop shop = shopRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Shop not found"));
-        return mapToDetailDTO(shop);
+        Integer totalProducts = productRepository.countByShopIdAndIsDeletedFalse(id);
+        return mapToDetailDTO(shop, totalProducts);
     }
 
     public void updateShopStatus(Integer id, ShopStatus status) {
@@ -65,7 +68,7 @@ public class AdminShopService {
                 .build();
     }
 
-    private AdminShopDetailResponse mapToDetailDTO(Shop shop) {
+    private AdminShopDetailResponse mapToDetailDTO(Shop shop, Integer totalProducts) {
         return AdminShopDetailResponse.builder()
                 .id(shop.getId())
                 .shopName(shop.getShopName())
@@ -77,6 +80,7 @@ public class AdminShopService {
                 .avatar(shop.getAvatar())
                 .ratingAvg(shop.getRatingAvg() != null ? shop.getRatingAvg() : BigDecimal.ZERO)
                 .ratingCount(shop.getRatingCount() != null ? shop.getRatingCount() : 0)
+                .totalProducts(totalProducts != null ? totalProducts : 0)
                 .totalOrders(shop.getTotalOrders() != null ? shop.getTotalOrders() : 0)
                 .totalRevenue(shop.getTotalRevenue() != null ? shop.getTotalRevenue() : BigDecimal.ZERO)
                 .createdAt(shop.getCreatedAt())

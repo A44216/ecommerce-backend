@@ -1,6 +1,7 @@
 package com.ecommerce.backend.repository;
 
 import com.ecommerce.backend.entity.Complaint;
+import com.ecommerce.backend.enums.ComplaintStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -15,11 +16,12 @@ public interface ComplaintRepository extends JpaRepository<Complaint, Integer> {
 
     List<Complaint> findByUserId(Integer userId);
 
-    Long countByStatus(com.ecommerce.backend.enums.ComplaintStatus status);
+    Long countByStatus(ComplaintStatus status);
 
     List<Complaint> findByOrderId(Integer orderId);
 
-    @Query("SELECT c FROM Complaint c WHERE (:status IS NULL OR c.status = :status)")
-    Page<Complaint> adminSearchComplaints(@Param("status") com.ecommerce.backend.enums.ComplaintStatus status, Pageable pageable);
+    @Query(value = "SELECT c FROM Complaint c LEFT JOIN FETCH c.user LEFT JOIN FETCH c.order WHERE (:status IS NULL OR c.status = :status)",
+           countQuery = "SELECT COUNT(c) FROM Complaint c WHERE (:status IS NULL OR c.status = :status)")
+    Page<Complaint> adminSearchComplaints(@Param("status") ComplaintStatus status, Pageable pageable);
 
 }
