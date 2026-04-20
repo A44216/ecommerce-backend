@@ -23,8 +23,6 @@ public class SellerShopResponse {
     private String address;
     private BigDecimal ratingAvg;
     private Integer ratingCount;
-    private Integer totalOrders;
-    private BigDecimal  totalRevenue;
     private String phone;
     private String email;
 }

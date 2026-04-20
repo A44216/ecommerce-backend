@@ -103,8 +103,6 @@ public class SellerShopService {
                 .address(shop.getAddress())
                 .ratingAvg(shop.getRatingAvg())
                 .ratingCount(shop.getRatingCount())
-                .totalOrders(shop.getTotalOrders())
-                .totalRevenue(shop.getTotalRevenue())
                 .phone(shop.getPhone())
                 .email(shop.getEmail())
                 .build();
