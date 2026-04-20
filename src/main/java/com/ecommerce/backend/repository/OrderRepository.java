@@ -132,4 +132,65 @@ public interface OrderRepository extends JpaRepository<Order, Integer> {
     """)
     int cancelUnpaidQROrders(@Param("threshold") LocalDateTime threshold);
 
+    @Query("""
+        SELECT COALESCE(SUM(o.platformFeeAmount), 0)
+        FROM Order o
+        WHERE o.status = com.ecommerce.backend.enums.OrderStatus.COMPLETED
+            AND o.paymentStatus = com.ecommerce.backend.enums.PaymentStatus.PAID
+            AND o.completedAt BETWEEN :startDate AND :endDate
+    """)
+    BigDecimal sumPlatformRevenueByDate(
+            @Param("startDate") LocalDateTime startDate,
+            @Param("endDate") LocalDateTime endDate
+    );
+
+    @Query(value = """
+        SELECT DATE(completed_at) AS date,
+               COALESCE(SUM(platform_fee_amount), 0) AS revenue
+        FROM orders
+        WHERE status = 'COMPLETED'
+            AND payment_status = 'PAID'
+            AND completed_at >= NOW() - INTERVAL 7 DAY
+        GROUP BY DATE(completed_at)
+        ORDER BY date
+    """, nativeQuery = true)
+    List<Object[]> getPlatformRevenueLast7Days();
+
+    @Query(value = """
+        SELECT DATE_FORMAT(completed_at, '%Y-%m') AS date,
+               COALESCE(SUM(platform_fee_amount), 0) AS revenue
+        FROM orders
+        WHERE status = 'COMPLETED'
+            AND payment_status = 'PAID'
+        GROUP BY DATE_FORMAT(completed_at, '%Y-%m')
+        ORDER BY date
+    """, nativeQuery = true)
+    List<Object[]> getPlatformRevenueByMonth();
+
+    @Query(value = """
+        SELECT YEAR(completed_at) AS date,
+           COALESCE(SUM(platform_fee_amount), 0) AS revenue
+        FROM orders
+        WHERE status = 'COMPLETED'
+            AND payment_status = 'PAID'
+        GROUP BY YEAR(completed_at)
+        ORDER BY date
+    """, nativeQuery = true)
+    List<Object[]> getPlatformRevenueByYear();
+
+    @Query("""
+        SELECT o FROM Order o
+        LEFT JOIN o.shop s
+        LEFT JOIN o.user u
+        WHERE (:status IS NULL OR o.status = :status)
+        AND (:paymentMethod IS NULL OR o.paymentMethod = :paymentMethod)
+        AND (:paymentStatus IS NULL OR o.paymentStatus = :paymentStatus)
+    """)
+    Page<Order> adminSearchOrders(
+            @Param("status") com.ecommerce.backend.enums.OrderStatus status,
+            @Param("paymentMethod") com.ecommerce.backend.enums.PaymentMethod paymentMethod,
+            @Param("paymentStatus") com.ecommerce.backend.enums.PaymentStatus paymentStatus,
+            Pageable pageable
+    );
+
 }

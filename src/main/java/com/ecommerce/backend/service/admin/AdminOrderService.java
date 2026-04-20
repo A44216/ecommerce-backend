@@ -1,0 +1,98 @@
+package com.ecommerce.backend.service.admin;
+
+import com.ecommerce.backend.dto.responses.admin.order.AdminOrderDetailResponse;
+import com.ecommerce.backend.dto.responses.admin.order.AdminOrderItemResponse;
+import com.ecommerce.backend.dto.responses.admin.order.AdminOrderResponse;
+import com.ecommerce.backend.dto.responses.seller.PageResponse;
+import com.ecommerce.backend.entity.Order;
+import com.ecommerce.backend.entity.OrderItem;
+import com.ecommerce.backend.enums.OrderStatus;
+import com.ecommerce.backend.enums.PaymentMethod;
+import com.ecommerce.backend.enums.PaymentStatus;
+import com.ecommerce.backend.exception.ResourceNotFoundException;
+import com.ecommerce.backend.repository.OrderRepository;
+import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.stereotype.Service;
+
+@Service
+@RequiredArgsConstructor
+public class AdminOrderService {
+
+    private final OrderRepository orderRepository;
+
+    public PageResponse<AdminOrderResponse> getOrders(
+            int page, int size, OrderStatus status, PaymentMethod paymentMethod, PaymentStatus paymentStatus) {
+        
+        Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
+        Page<Order> orders = orderRepository.adminSearchOrders(status, paymentMethod, paymentStatus, pageable);
+
+        return new PageResponse<>(
+                orders.getContent().stream().map(this::mapToDTO).toList(),
+                orders.getNumber(),
+                orders.getSize(),
+                orders.getTotalElements(),
+                orders.getTotalPages()
+        );
+    }
+
+    public AdminOrderDetailResponse getOrderById(Integer id) {
+        Order order = orderRepository.findByIdWithItems(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Order not found"));
+        return mapToDetailDTO(order);
+    }
+
+    private AdminOrderResponse mapToDTO(Order order) {
+        return AdminOrderResponse.builder()
+                .id(order.getId())
+                .userId(order.getUser() != null ? order.getUser().getId() : null)
+                .username(order.getUser() != null ? order.getUser().getUsername() : null)
+                .shopId(order.getShop() != null ? order.getShop().getId() : null)
+                .shopName(order.getShop() != null ? order.getShop().getShopName() : null)
+                .status(order.getStatus())
+                .paymentMethod(order.getPaymentMethod())
+                .paymentStatus(order.getPaymentStatus())
+                .totalPrice(order.getTotalPrice())
+                .platformFeeAmount(order.getPlatformFeeAmount())
+                .createdAt(order.getCreatedAt())
+                .build();
+    }
+
+    private AdminOrderDetailResponse mapToDetailDTO(Order order) {
+        return AdminOrderDetailResponse.builder()
+                .id(order.getId())
+                .userId(order.getUser() != null ? order.getUser().getId() : null)
+                .username(order.getUser() != null ? order.getUser().getUsername() : null)
+                .shopId(order.getShop() != null ? order.getShop().getId() : null)
+                .shopName(order.getShop() != null ? order.getShop().getShopName() : null)
+                .status(order.getStatus())
+                .paymentMethod(order.getPaymentMethod())
+                .paymentStatus(order.getPaymentStatus())
+                .subtotal(order.getSubtotal())
+                .discountAmount(order.getDiscountAmount())
+                .platformFeeRate(order.getPlatformFeeRate())
+                .platformFeeAmount(order.getPlatformFeeAmount())
+                .totalPrice(order.getTotalPrice())
+                .shippingName(order.getShippingName())
+                .shippingPhone(order.getShippingPhone())
+                .shippingAddress(order.getShippingAddress())
+                .createdAt(order.getCreatedAt())
+                .completedAt(order.getCompletedAt())
+                .items(order.getItems() != null ? order.getItems().stream().map(this::mapItemToDTO).toList() : null)
+                .build();
+    }
+
+    private AdminOrderItemResponse mapItemToDTO(OrderItem item) {
+        return AdminOrderItemResponse.builder()
+                .id(item.getId())
+                .productId(item.getProduct().getId())
+                .productName(item.getProductName())
+                .productImage(item.getProductImage())
+                .price(item.getPrice())
+                .quantity(item.getQuantity())
+                .build();
+    }
+}
