@@ -36,7 +36,7 @@ public class AdminDashboardService {
         LocalDateTime endDate = dateRange[1];
 
         Long totalUsers = userRepository.count();
-        Long totalShops = shopRepository.countByStatus(ShopStatus.ACTIVE);
+        Long totalShops = shopRepository.countByStatus(ShopStatus.APPROVED);
         BigDecimal platformRevenue = orderRepository.sumPlatformRevenueByDate(startDate, endDate);
         Long pendingComplaints = complaintRepository.countByStatus(ComplaintStatus.PENDING);
 

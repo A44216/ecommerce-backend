@@ -4,6 +4,7 @@ import com.ecommerce.backend.dto.requests.seller.shop.SellerShopRequest;
 import com.ecommerce.backend.dto.responses.seller.shop.SellerShopResponse;
 import com.ecommerce.backend.entity.Shop;
 import com.ecommerce.backend.entity.User;
+import com.ecommerce.backend.enums.ShopStatus;
 import com.ecommerce.backend.exception.BadRequestException;
 import com.ecommerce.backend.repository.ShopRepository;
 import com.ecommerce.backend.repository.UserRepository;
@@ -57,6 +58,8 @@ public class SellerShopService {
 
         Shop shop = new Shop();
         mapRequest(shop, request, user);
+
+        shop.setStatus(ShopStatus.PENDING);
 
         return mapToDTO(shopRepository.save(shop));
     }

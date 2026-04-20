@@ -1,6 +1,8 @@
 package com.ecommerce.backend.enums;
 
 public enum ShopStatus {
-    ACTIVE,
-    BLOCKED
+    PENDING,    // chờ duyệt
+    APPROVED,   // đã duyệt
+    REJECTED,   // bị từ chối
+    BLOCKED     // bị admin khóa
 }
