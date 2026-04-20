@@ -26,6 +26,7 @@ public interface UserRepository extends JpaRepository<User, Integer> {
     boolean existsByPhone(String phone);
 
     @Query("SELECT u FROM User u WHERE " +
+           "u.role <> 'ADMIN' AND " +
            "(:role IS NULL OR u.role = :role) AND " +
            "(:status IS NULL OR u.status = :status) AND " +
            "(:keyword IS NULL OR " +
