@@ -27,4 +27,6 @@ public interface ShopRepository extends JpaRepository<Shop, Integer> {
             @Param("status") ShopStatus status,
             @Param("keyword") String keyword,
             org.springframework.data.domain.Pageable pageable);
+
+    java.util.List<Shop> findTop3ByOrderByTotalRevenueDesc();
 }

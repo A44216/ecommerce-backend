@@ -133,4 +133,52 @@ public interface OrderItemRepository extends JpaRepository<OrderItem, Integer> {
             @Param("endDate") LocalDateTime endDate,
             Pageable pageable
     );
+
+    @Query("""
+        SELECT new com.ecommerce.backend.dto.responses.admin.dashboard.AdminTopProductResponse(
+            oi.product.id,
+            oi.product.name,
+            MIN(pi.imageUrl),
+            oi.product.shop.shopName,
+            SUM(oi.quantity),
+            SUM(oi.price * oi.quantity),
+            MIN(oi.price)
+        )
+        FROM OrderItem oi
+        LEFT JOIN oi.product.images pi
+        WHERE oi.order.status = com.ecommerce.backend.enums.OrderStatus.COMPLETED
+            AND oi.order.paymentStatus = com.ecommerce.backend.enums.PaymentStatus.PAID
+            AND oi.order.completedAt BETWEEN :startDate AND :endDate
+        GROUP BY oi.product.id, oi.product.name, oi.product.shop.shopName
+        ORDER BY SUM(oi.price * oi.quantity) DESC
+    """)
+    List<com.ecommerce.backend.dto.responses.admin.dashboard.AdminTopProductResponse> adminFindTopByRevenueByDate(
+            @Param("startDate") LocalDateTime startDate,
+            @Param("endDate") LocalDateTime endDate,
+            Pageable pageable
+    );
+
+    @Query("""
+        SELECT new com.ecommerce.backend.dto.responses.admin.dashboard.AdminTopProductResponse(
+            oi.product.id,
+            oi.product.name,
+            MIN(pi.imageUrl),
+            oi.product.shop.shopName,
+            SUM(oi.quantity),
+            SUM(oi.price * oi.quantity),
+            MIN(oi.price)
+        )
+        FROM OrderItem oi
+        LEFT JOIN oi.product.images pi
+        WHERE oi.order.status = com.ecommerce.backend.enums.OrderStatus.COMPLETED
+            AND oi.order.paymentStatus = com.ecommerce.backend.enums.PaymentStatus.PAID
+            AND oi.order.completedAt BETWEEN :startDate AND :endDate
+        GROUP BY oi.product.id, oi.product.name, oi.product.shop.shopName
+        ORDER BY SUM(oi.quantity) DESC
+    """)
+    List<com.ecommerce.backend.dto.responses.admin.dashboard.AdminTopProductResponse> adminFindTopBySoldByDate(
+            @Param("startDate") LocalDateTime startDate,
+            @Param("endDate") LocalDateTime endDate,
+            Pageable pageable
+    );
 }

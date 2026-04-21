@@ -12,4 +12,9 @@ public class AdminDashboardKPIResponse {
     private Long totalShops;
     private BigDecimal totalPlatformRevenue;
     private Long pendingComplaints;
+    private Long pendingShops;
+    private Long pendingProducts;
+    private BigDecimal totalGMV;
+    private Long totalOrders;
+    private Long activeCoupons;
 }

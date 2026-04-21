@@ -78,4 +78,9 @@ public interface ProductRepository extends JpaRepository<Product, Integer> {
             @Param("keyword") String keyword,
             Pageable pageable
     );
+
+    Long countByStatus(ProductStatus status);
+
+    @org.springframework.data.jpa.repository.EntityGraph(attributePaths = {"shop", "images"})
+    java.util.List<Product> findTop3ByOrderBySoldCountDesc();
 }

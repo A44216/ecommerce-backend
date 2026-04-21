@@ -198,4 +198,61 @@ public interface OrderRepository extends JpaRepository<Order, Integer> {
             @Param("paymentStatus") PaymentStatus paymentStatus,
             Pageable pageable);
 
+    @Query("""
+            SELECT COALESCE(SUM(o.subtotal - o.platformFeeAmount), 0)
+            FROM Order o
+            WHERE o.status = com.ecommerce.backend.enums.OrderStatus.COMPLETED
+                AND o.paymentStatus = com.ecommerce.backend.enums.PaymentStatus.PAID
+                AND o.completedAt BETWEEN :startDate AND :endDate
+        """)
+    BigDecimal sumGMVByDate(
+            @Param("startDate") LocalDateTime startDate,
+            @Param("endDate") LocalDateTime endDate);
+
+    Integer countByCreatedAtBetween(LocalDateTime startDate, LocalDateTime endDate);
+
+    @Query("""
+            SELECT o.status, COUNT(o)
+            FROM Order o
+            WHERE o.createdAt BETWEEN :startDate AND :endDate
+            GROUP BY o.status
+        """)
+    List<Object[]> countOrdersByStatusAndDate(
+            @Param("startDate") LocalDateTime startDate,
+            @Param("endDate") LocalDateTime endDate);
+
+    @Query(value = """
+            SELECT c.name AS categoryName, COALESCE(SUM(oi.price * oi.quantity), 0) AS totalSales
+            FROM orders o
+            JOIN order_items oi ON o.id = oi.order_id
+            JOIN products p ON oi.product_id = p.id
+            JOIN categories c ON p.category_id = c.id
+            WHERE o.status = 'COMPLETED' AND o.payment_status = 'PAID'
+            AND o.completed_at BETWEEN :startDate AND :endDate
+            GROUP BY c.id, c.name
+            ORDER BY totalSales DESC
+        """, nativeQuery = true)
+    List<Object[]> getCategorySalesByDate(
+            @Param("startDate") LocalDateTime startDate,
+            @Param("endDate") LocalDateTime endDate);
+
+    @Query("""
+            SELECT new com.ecommerce.backend.dto.responses.admin.dashboard.AdminTopShopResponse(
+                o.shop.id,
+                o.shop.shopName,
+                o.shop.avatar,
+                SUM(o.subtotal - o.platformFeeAmount),
+                COUNT(o.id)
+            )
+            FROM Order o
+            WHERE o.status = com.ecommerce.backend.enums.OrderStatus.COMPLETED
+                AND o.paymentStatus = com.ecommerce.backend.enums.PaymentStatus.PAID
+                AND o.completedAt BETWEEN :startDate AND :endDate
+            GROUP BY o.shop.id, o.shop.shopName, o.shop.avatar
+            ORDER BY SUM(o.subtotal - o.platformFeeAmount) DESC
+        """)
+    List<com.ecommerce.backend.dto.responses.admin.dashboard.AdminTopShopResponse> adminFindTopShopsByRevenueByDate(
+            @Param("startDate") LocalDateTime startDate,
+            @Param("endDate") LocalDateTime endDate,
+            Pageable pageable);
 }

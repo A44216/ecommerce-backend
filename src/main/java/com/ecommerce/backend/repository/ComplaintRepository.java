@@ -23,5 +23,4 @@ public interface ComplaintRepository extends JpaRepository<Complaint, Integer> {
     @Query(value = "SELECT c FROM Complaint c LEFT JOIN FETCH c.user LEFT JOIN FETCH c.order WHERE (:status IS NULL OR c.status = :status)",
            countQuery = "SELECT COUNT(c) FROM Complaint c WHERE (:status IS NULL OR c.status = :status)")
     Page<Complaint> adminSearchComplaints(@Param("status") ComplaintStatus status, Pageable pageable);
-
 }

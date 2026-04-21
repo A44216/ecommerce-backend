@@ -34,4 +34,6 @@ public interface CouponRepository extends JpaRepository<Coupon, Integer> {
                         Pageable pageable);
 
         Page<Coupon> findByIsDeleted(Boolean isDeleted, Pageable pageable);
+
+        Long countByStatusAndIsDeletedFalse(CouponStatus status);
 }

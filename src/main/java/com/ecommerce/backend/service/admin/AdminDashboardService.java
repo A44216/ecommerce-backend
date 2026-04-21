@@ -2,15 +2,23 @@ package com.ecommerce.backend.service.admin;
 
 import com.ecommerce.backend.dto.responses.admin.dashboard.AdminDashboardKPIResponse;
 import com.ecommerce.backend.dto.responses.admin.dashboard.AdminRevenueChartResponse;
+import com.ecommerce.backend.dto.responses.admin.dashboard.AdminOrderStatusChartResponse;
+import com.ecommerce.backend.dto.responses.admin.dashboard.AdminCategorySalesChartResponse;
+import com.ecommerce.backend.dto.responses.admin.dashboard.AdminTopShopResponse;
+import com.ecommerce.backend.dto.responses.admin.dashboard.AdminDashboardTopProductResponse;
 import com.ecommerce.backend.enums.ChartType;
 import com.ecommerce.backend.enums.ComplaintStatus;
 import com.ecommerce.backend.enums.DateRange;
 import com.ecommerce.backend.enums.ShopStatus;
 import com.ecommerce.backend.repository.ComplaintRepository;
+import com.ecommerce.backend.repository.OrderItemRepository;
 import com.ecommerce.backend.repository.OrderRepository;
+import com.ecommerce.backend.repository.ProductRepository;
 import com.ecommerce.backend.repository.ShopRepository;
 import com.ecommerce.backend.repository.UserRepository;
+import com.ecommerce.backend.repository.CouponRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -29,6 +37,9 @@ public class AdminDashboardService {
     private final ShopRepository shopRepository;
     private final OrderRepository orderRepository;
     private final ComplaintRepository complaintRepository;
+    private final ProductRepository productRepository;
+    private final CouponRepository couponRepository;
+    private final OrderItemRepository orderItemRepository;
 
     public AdminDashboardKPIResponse getKPI(DateRange range) {
         LocalDateTime[] dateRange = getDateRange(range);
@@ -40,11 +51,23 @@ public class AdminDashboardService {
         BigDecimal platformRevenue = orderRepository.sumPlatformRevenueByDate(startDate, endDate);
         Long pendingComplaints = complaintRepository.countByStatus(ComplaintStatus.PENDING);
 
+        Long pendingShops = shopRepository.countByStatus(ShopStatus.PENDING);
+        Long pendingProducts = productRepository.countByStatus(com.ecommerce.backend.enums.ProductStatus.PENDING);
+        BigDecimal totalGMV = orderRepository.sumGMVByDate(startDate, endDate);
+        Long totalOrders = (long) orderRepository.countByCreatedAtBetween(startDate, endDate);
+        Long activeCoupons = couponRepository
+                .countByStatusAndIsDeletedFalse(com.ecommerce.backend.enums.CouponStatus.ACTIVE);
+
         return AdminDashboardKPIResponse.builder()
                 .totalUsers(totalUsers)
                 .totalShops(totalShops)
                 .totalPlatformRevenue(platformRevenue != null ? platformRevenue : BigDecimal.ZERO)
                 .pendingComplaints(pendingComplaints)
+                .pendingShops(pendingShops)
+                .pendingProducts(pendingProducts)
+                .totalGMV(totalGMV != null ? totalGMV : BigDecimal.ZERO)
+                .totalOrders(totalOrders)
+                .activeCoupons(activeCoupons)
                 .build();
     }
 
@@ -115,6 +138,37 @@ public class AdminDashboardService {
             default -> start = LocalDate.now().atStartOfDay();
         }
 
-        return new LocalDateTime[]{start, end};
+        return new LocalDateTime[] { start, end };
+    }
+
+    public List<AdminOrderStatusChartResponse> getOrderStatusChart(DateRange range) {
+        LocalDateTime[] dateRange = getDateRange(range);
+        return orderRepository.countOrdersByStatusAndDate(dateRange[0], dateRange[1]).stream()
+                .map(row -> new AdminOrderStatusChartResponse(row[0].toString(), (Long) row[1]))
+                .collect(java.util.stream.Collectors.toList());
+    }
+
+    public List<AdminCategorySalesChartResponse> getCategorySalesChart(DateRange range) {
+        LocalDateTime[] dateRange = getDateRange(range);
+        return orderRepository.getCategorySalesByDate(dateRange[0], dateRange[1]).stream()
+                .map(row -> new AdminCategorySalesChartResponse(row[0].toString(), new BigDecimal(row[1].toString())))
+                .collect(java.util.stream.Collectors.toList());
+    }
+
+    public List<AdminTopShopResponse> getTopSellingShops(DateRange range) {
+        LocalDateTime[] dateRange = getDateRange(range);
+        return orderRepository.adminFindTopShopsByRevenueByDate(
+                dateRange[0], dateRange[1], PageRequest.of(0, 3)
+        );
+    }
+
+    public AdminDashboardTopProductResponse getTopSellingProducts(DateRange range) {
+        LocalDateTime[] dateRange = getDateRange(range);
+        return AdminDashboardTopProductResponse.builder()
+                .topByRevenue(orderItemRepository.adminFindTopByRevenueByDate(
+                        dateRange[0], dateRange[1], PageRequest.of(0, 3)))
+                .topBySold(orderItemRepository.adminFindTopBySoldByDate(
+                        dateRange[0], dateRange[1], PageRequest.of(0, 3)))
+                .build();
     }
 }

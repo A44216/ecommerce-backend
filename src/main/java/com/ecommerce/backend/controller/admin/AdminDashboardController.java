@@ -36,4 +36,28 @@ public class AdminDashboardController {
             @RequestParam(defaultValue = "DAY") ChartType type) {
         return ResponseEntity.ok(adminDashboardService.getRevenueChart(type));
     }
+
+    @GetMapping("/order-status-chart")
+    public ResponseEntity<List<com.ecommerce.backend.dto.responses.admin.dashboard.AdminOrderStatusChartResponse>> getOrderStatusChart(
+            @RequestParam(defaultValue = "TODAY") DateRange range) {
+        return ResponseEntity.ok(adminDashboardService.getOrderStatusChart(range));
+    }
+
+    @GetMapping("/category-sales-chart")
+    public ResponseEntity<List<com.ecommerce.backend.dto.responses.admin.dashboard.AdminCategorySalesChartResponse>> getCategorySalesChart(
+            @RequestParam(defaultValue = "TODAY") DateRange range) {
+        return ResponseEntity.ok(adminDashboardService.getCategorySalesChart(range));
+    }
+
+    @GetMapping("/top-selling-shops")
+    public ResponseEntity<List<com.ecommerce.backend.dto.responses.admin.dashboard.AdminTopShopResponse>> getTopSellingShops(
+            @RequestParam(defaultValue = "TODAY") DateRange range) {
+        return ResponseEntity.ok(adminDashboardService.getTopSellingShops(range));
+    }
+
+    @GetMapping("/top-selling-products")
+    public ResponseEntity<com.ecommerce.backend.dto.responses.admin.dashboard.AdminDashboardTopProductResponse> getTopSellingProducts(
+            @RequestParam(defaultValue = "TODAY") DateRange range) {
+        return ResponseEntity.ok(adminDashboardService.getTopSellingProducts(range));
+    }
 }
