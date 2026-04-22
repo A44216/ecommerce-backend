@@ -23,8 +23,10 @@ public class AdminShopController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(required = false) ShopStatus status,
-            @RequestParam(required = false) String keyword) {
-        return ResponseEntity.ok(adminShopService.getShops(page, size, status, keyword));
+            @RequestParam(required = false) String keyword,
+            @RequestParam(defaultValue = "createdAt") String sortBy,
+            @RequestParam(defaultValue = "desc") String sortDir) {
+        return ResponseEntity.ok(adminShopService.getShops(page, size, status, keyword, sortBy, sortDir));
     }
 
     @GetMapping("/{id}")

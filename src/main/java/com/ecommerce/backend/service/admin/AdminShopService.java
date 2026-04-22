@@ -26,8 +26,10 @@ public class AdminShopService {
     private final ShopRepository shopRepository;
     private final ProductRepository productRepository;
 
-    public PageResponse<AdminShopResponse> getShops(int page, int size, ShopStatus status, String keyword) {
-        Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
+    public PageResponse<AdminShopResponse> getShops(int page, int size, ShopStatus status, String keyword,
+            String sortBy, String sortDir) {
+        Sort.Direction direction = sortDir.equalsIgnoreCase("asc") ? Sort.Direction.ASC : Sort.Direction.DESC;
+        Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sortBy));
         Page<Shop> shops = shopRepository.searchShops(status, keyword, pageable);
 
         return new PageResponse<>(
@@ -35,8 +37,7 @@ public class AdminShopService {
                 shops.getNumber(),
                 shops.getSize(),
                 shops.getTotalElements(),
-                shops.getTotalPages()
-        );
+                shops.getTotalPages());
     }
 
     public AdminShopDetailResponse getShopById(Integer id) {
@@ -89,7 +90,8 @@ public class AdminShopService {
     }
 
     private AdminUserResponse mapUserToDTO(User user) {
-        if (user == null) return null;
+        if (user == null)
+            return null;
         return AdminUserResponse.builder()
                 .id(user.getId())
                 .fullName(user.getFullName())
