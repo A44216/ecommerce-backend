@@ -12,6 +12,7 @@ import com.ecommerce.backend.repository.OrderRepository;
 import com.ecommerce.backend.repository.UserRepository;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -32,10 +33,11 @@ public class ComplaintService {
         return ComplaintResponse.builder()
                 .id(complaint.getId())
                 .userId(complaint.getUser().getId())
-                .orderId(complaint.getOrder().getId())
+                .orderId(complaint.getOrder() != null ? complaint.getOrder().getId() : null)
                 .content(complaint.getContent())
                 .status(complaint.getStatus())
                 .createdAt(complaint.getCreatedAt())
+                .resolvedAt(complaint.getResolvedAt())
                 .build();
     }
 

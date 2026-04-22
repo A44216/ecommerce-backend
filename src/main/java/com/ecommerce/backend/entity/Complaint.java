@@ -41,4 +41,8 @@ public class Complaint {
 
     @Column(name = "created_at", insertable = false, updatable = false)
     private LocalDateTime createdAt;
+
+    @Column(name = "resolved_at")
+    private LocalDateTime resolvedAt;
+
 }

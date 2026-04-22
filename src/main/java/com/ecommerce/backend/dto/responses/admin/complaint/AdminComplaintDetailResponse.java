@@ -15,6 +15,7 @@ public class AdminComplaintDetailResponse {
     private String content;
     private ComplaintStatus status;
     private LocalDateTime createdAt;
+    private LocalDateTime resolvedAt;
 
     private AdminUserResponse user;
     

@@ -44,7 +44,13 @@ public class AdminComplaintService {
     public void updateComplaintStatus(Integer id, ComplaintStatus status) {
         Complaint complaint = complaintRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Complaint not found"));
+
         complaint.setStatus(status);
+
+        if (status == ComplaintStatus.RESOLVED || status == ComplaintStatus.REJECTED) {
+            complaint.setResolvedAt(java.time.LocalDateTime.now());
+        }
+
         complaintRepository.save(complaint);
     }
 
@@ -66,6 +72,7 @@ public class AdminComplaintService {
                 .content(complaint.getContent())
                 .status(complaint.getStatus())
                 .createdAt(complaint.getCreatedAt())
+                .resolvedAt(complaint.getResolvedAt())
                 .user(mapUserToDTO(complaint.getUser()))
                 .orderId(complaint.getOrder() != null ? complaint.getOrder().getId() : null)
                 .orderTotal(complaint.getOrder() != null ? complaint.getOrder().getTotalPrice() : null)
