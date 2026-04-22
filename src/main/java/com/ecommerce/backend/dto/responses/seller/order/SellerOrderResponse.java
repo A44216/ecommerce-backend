@@ -15,6 +15,8 @@ import java.time.LocalDateTime;
 public class SellerOrderResponse {
 
     private Integer orderId;
+    private String orderCode;
+
     private OrderStatus status;
     private String customerName;
     private BigDecimal sellerRevenue;

@@ -13,6 +13,7 @@ import java.time.LocalDateTime;
 @Builder
 public class AdminOrderResponse {
     private Integer id;
+    private String orderCode;
     private Integer userId;
     private String username;
     private Integer shopId;

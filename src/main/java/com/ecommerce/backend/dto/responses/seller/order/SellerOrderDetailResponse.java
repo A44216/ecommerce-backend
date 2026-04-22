@@ -17,6 +17,7 @@ import java.util.List;
 public class SellerOrderDetailResponse {
 
     private Integer orderId;
+    private String orderCode;
 
     private OrderStatus status;
 

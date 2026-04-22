@@ -80,6 +80,7 @@ public class SellerOrderService {
 
         return SellerOrderDetailResponse.builder()
                 .orderId(order.getId())
+                .orderCode(order.getOrderCode())
                 .status(order.getStatus())
                 .paymentMethod(order.getPaymentMethod())
                 .paymentStatus(order.getPaymentStatus())
@@ -162,6 +163,7 @@ public class SellerOrderService {
 
         return SellerOrderResponse.builder()
                 .orderId(order.getId())
+                .orderCode(order.getOrderCode())
                 .status(order.getStatus())
                 .customerName(order.getUser().getFullName())
                 .sellerRevenue(Optional.ofNullable(order.getSubtotal()).orElse(BigDecimal.ZERO).subtract(Optional.ofNullable(order.getPlatformFeeAmount()).orElse(BigDecimal.ZERO)))

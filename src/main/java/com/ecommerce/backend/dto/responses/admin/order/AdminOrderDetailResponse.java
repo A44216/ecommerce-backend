@@ -14,6 +14,7 @@ import java.util.List;
 @Builder
 public class AdminOrderDetailResponse {
     private Integer id;
+    private String orderCode;
     private Integer userId;
     private String username;
     private Integer shopId;

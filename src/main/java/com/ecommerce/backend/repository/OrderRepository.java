@@ -1,5 +1,6 @@
 package com.ecommerce.backend.repository;
 
+import com.ecommerce.backend.dto.responses.admin.dashboard.AdminTopShopResponse;
 import com.ecommerce.backend.entity.Order;
 import com.ecommerce.backend.enums.OrderStatus;
 import com.ecommerce.backend.enums.PaymentMethod;
@@ -247,11 +248,12 @@ public interface OrderRepository extends JpaRepository<Order, Integer> {
             FROM Order o
             WHERE o.status = com.ecommerce.backend.enums.OrderStatus.COMPLETED
                 AND o.paymentStatus = com.ecommerce.backend.enums.PaymentStatus.PAID
+                AND o.shop.status = com.ecommerce.backend.enums.ShopStatus.APPROVED
                 AND o.completedAt BETWEEN :startDate AND :endDate
             GROUP BY o.shop.id, o.shop.shopName, o.shop.avatar
             ORDER BY SUM(o.subtotal - o.platformFeeAmount) DESC
         """)
-    List<com.ecommerce.backend.dto.responses.admin.dashboard.AdminTopShopResponse> adminFindTopShopsByRevenueByDate(
+    List<AdminTopShopResponse> adminFindTopShopsByRevenueByDate(
             @Param("startDate") LocalDateTime startDate,
             @Param("endDate") LocalDateTime endDate,
             Pageable pageable);

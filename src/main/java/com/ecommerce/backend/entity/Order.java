@@ -23,7 +23,9 @@ import java.util.List;
                 @Index(name = "idx_orders_shop_status_payment", columnList = "shop_id, status, payment_status"),
                 @Index(name = "idx_orders_completed_at", columnList = "completed_at"),
                 @Index(name = "idx_orders_shop_status_payment_date", columnList = "shop_id, status, payment_status, completed_at"),
-                @Index(name = "idx_orders_cron_cancel", columnList = "status, payment_method, payment_status, created_at")
+                @Index(name = "idx_orders_cron_cancel", columnList = "status, payment_method, payment_status, created_at"),
+                @Index(name = "idx_orders_order_code", columnList = "order_code"),
+                @Index(name = "idx_orders_shop_order_code", columnList = "shop_id, order_code")
         }
 )
 @Getter
@@ -33,6 +35,9 @@ public class Order {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
+
+    @Column(name = "order_code", nullable = false, unique = true, length = 30)
+    private String orderCode;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)

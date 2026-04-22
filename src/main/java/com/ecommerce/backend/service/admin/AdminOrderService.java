@@ -48,6 +48,7 @@ public class AdminOrderService {
     private AdminOrderResponse mapToDTO(Order order) {
         return AdminOrderResponse.builder()
                 .id(order.getId())
+                .orderCode(order.getOrderCode())
                 .userId(order.getUser() != null ? order.getUser().getId() : null)
                 .username(order.getUser() != null ? order.getUser().getUsername() : null)
                 .shopId(order.getShop() != null ? order.getShop().getId() : null)
@@ -64,6 +65,7 @@ public class AdminOrderService {
     private AdminOrderDetailResponse mapToDetailDTO(Order order) {
         return AdminOrderDetailResponse.builder()
                 .id(order.getId())
+                .orderCode(order.getOrderCode())
                 .userId(order.getUser() != null ? order.getUser().getId() : null)
                 .username(order.getUser() != null ? order.getUser().getUsername() : null)
                 .shopId(order.getShop() != null ? order.getShop().getId() : null)
