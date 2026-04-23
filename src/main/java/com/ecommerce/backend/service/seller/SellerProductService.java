@@ -89,7 +89,7 @@ public class SellerProductService {
 
         Integer shopId = sellerShopService.getMyShop().getId();
 
-        Product product = productRepository.findByIdAndIsDeletedFalse(id)
+        Product product = productRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Product not found"));
 
         if (!product.getShop().getId().equals(shopId)) {

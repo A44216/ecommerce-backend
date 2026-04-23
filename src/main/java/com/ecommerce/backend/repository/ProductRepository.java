@@ -9,6 +9,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.util.List;
 import java.util.Optional;
 
 public interface ProductRepository extends JpaRepository<Product, Integer> {
@@ -81,6 +82,10 @@ public interface ProductRepository extends JpaRepository<Product, Integer> {
 
     Long countByStatus(ProductStatus status);
 
-    @org.springframework.data.jpa.repository.EntityGraph(attributePaths = {"shop", "images"})
-    java.util.List<Product> findTop3ByOrderBySoldCountDesc();
+    @EntityGraph(attributePaths = {"shop", "images"})
+    List<Product> findTop3ByOrderBySoldCountDesc();
+
+    @EntityGraph(attributePaths = {"images", "category", "shop"})
+    Optional<Product> findById(Integer id);
+
 }
