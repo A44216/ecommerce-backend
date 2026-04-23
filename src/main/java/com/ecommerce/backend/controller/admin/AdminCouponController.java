@@ -11,6 +11,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @PreAuthorize("hasRole('ADMIN')")
 @RestController
 @RequestMapping("/api/admin/coupons")
@@ -87,4 +89,11 @@ public class AdminCouponController {
         couponService.enableCoupon(id);
         return ResponseEntity.noContent().build();
     }
+
+    @GetMapping("/autocomplete")
+    public ResponseEntity<List<String>> autocomplete(
+            @RequestParam String keyword) {
+        return ResponseEntity.ok(couponService.autocomplete(keyword));
+    }
+
 }

@@ -16,6 +16,7 @@ import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Service
 public class AdminCouponService {
@@ -269,4 +270,17 @@ public class AdminCouponService {
         coupon.setEndDate(request.getEndDate());
         coupon.setMaxUsage(request.getMaxUsage());
     }
+
+    public List<String> autocomplete(String keyword) {
+        if (keyword == null || keyword.trim().isEmpty()) {
+            return List.of();
+        }
+
+        return couponRepository
+                .findTop5ByCodeContainingIgnoreCaseOrderByCodeAsc(keyword.trim())
+                .stream()
+                .map(Coupon::getCode)
+                .toList();
+    }
+
 }
