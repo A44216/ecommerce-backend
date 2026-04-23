@@ -21,4 +21,7 @@ public interface CategoryRepository extends JpaRepository<Category, Integer> {
             Boolean isDeleted,
             String name
     );
+
+    // ADMIN AUTOCOMPLETE
+    List<Category> findTop5ByNameContainingIgnoreCaseOrderByNameAsc(String name);
 }

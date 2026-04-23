@@ -50,6 +50,19 @@ public class AdminCategoryService {
                 .toList();
     }
 
+    // AUTOCOMPLETE
+    @Transactional(readOnly = true)
+    public List<AdminCategoryResponse> autocompleteCategories(String keyword) {
+        String k = (keyword == null) ? "" : keyword.trim();
+        if (k.isEmpty()) {
+            return List.of();
+        }
+        return categoryRepository.findTop5ByNameContainingIgnoreCaseOrderByNameAsc(k)
+                .stream()
+                .map(this::mapToAdminDTO)
+                .toList();
+    }
+
     // CREATE
     @Transactional
     public AdminCategoryResponse createCategory(AdminCategoryRequest request) {

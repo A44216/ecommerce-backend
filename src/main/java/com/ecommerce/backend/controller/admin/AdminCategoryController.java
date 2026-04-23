@@ -25,9 +25,14 @@ public class AdminCategoryController {
     @GetMapping
     public List<AdminCategoryResponse> getCategories(
             @RequestParam(required = false) Boolean isDeleted,
-            @RequestParam(required = false) String keyword
-    ) {
+            @RequestParam(required = false) String keyword) {
         return adminCategoryService.getCategories(isDeleted, keyword);
+    }
+
+    @GetMapping("/autocomplete")
+    public List<AdminCategoryResponse> autocomplete(
+            @RequestParam(required = false) String keyword) {
+        return adminCategoryService.autocompleteCategories(keyword);
     }
 
     @PostMapping
@@ -39,8 +44,7 @@ public class AdminCategoryController {
     @PutMapping("/{id}")
     public AdminCategoryResponse update(
             @PathVariable Integer id,
-            @Valid @RequestBody AdminCategoryRequest request
-    ) {
+            @Valid @RequestBody AdminCategoryRequest request) {
         return adminCategoryService.updateCategory(id, request);
     }
 
