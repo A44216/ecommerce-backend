@@ -98,6 +98,7 @@ public class OrderService {
 
         return OrderResponse.builder()
                 .id(order.getId())
+                .orderCode(order.getOrderCode())
                 .userId(order.getUser().getId())
                 .username(order.getUser().getUsername())
                 .shopId(order.getShop() != null ? order.getShop().getId() : null)
@@ -177,6 +178,11 @@ public class OrderService {
 
         // 1. Tạo vỏ Đơn hàng
         Order order = new Order();
+        
+        // Phát sinh mã đơn hàng duy nhất
+        String orderCode = "ORD-" + System.currentTimeMillis() + "-" + java.util.UUID.randomUUID().toString().substring(0, 4).toUpperCase();
+        order.setOrderCode(orderCode);
+        
         order.setUser(user);
         order.setAddress(address);
         order.setShop(shop);

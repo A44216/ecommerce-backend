@@ -17,6 +17,7 @@ import java.util.List;
 public class OrderResponse {
 
     private Integer id;
+    private String orderCode;
     private Integer userId;
     private String username;
 

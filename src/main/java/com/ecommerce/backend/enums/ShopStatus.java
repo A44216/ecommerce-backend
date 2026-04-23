@@ -1,6 +1,8 @@
 package com.ecommerce.backend.enums;
 
 public enum ShopStatus {
-    ACTIVE,
+    PENDING,
+    REJECTED,
+    APPROVED,
     BLOCKED
 }

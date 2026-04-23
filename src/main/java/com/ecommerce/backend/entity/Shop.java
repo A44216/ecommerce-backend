@@ -34,7 +34,7 @@ public class Shop {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private ShopStatus status = ShopStatus.ACTIVE;
+    private ShopStatus status = ShopStatus.PENDING;
 
     @Column(name = "created_at", insertable = false, updatable = false)
     private LocalDateTime createdAt;
