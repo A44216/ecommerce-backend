@@ -17,6 +17,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 @Service
 public class AdminUserService {
 
@@ -130,4 +132,18 @@ public class AdminUserService {
                 .totalRevenue(shop.getTotalRevenue() != null ? shop.getTotalRevenue() : java.math.BigDecimal.ZERO)
                 .build();
     }
+
+    public List<String> autocompleteUsers(String keyword) {
+        String k = (keyword == null) ? "" : keyword.trim();
+
+        if (k.isEmpty()) {
+            return List.of();
+        }
+
+        return userRepository.autocompleteUsers(k)
+                .stream()
+                .limit(5)
+                .toList();
+    }
+
 }

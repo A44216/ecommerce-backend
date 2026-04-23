@@ -10,6 +10,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @PreAuthorize("hasRole('ADMIN')")
 @RestController
 @RequestMapping("/api/admin/shops")
@@ -41,4 +43,10 @@ public class AdminShopController {
         adminShopService.updateShopStatus(id, status);
         return ResponseEntity.noContent().build();
     }
+
+    @GetMapping("/autocomplete")
+    public List<String> autocomplete(@RequestParam(required = false) String keyword) {
+        return adminShopService.autocompleteShops(keyword);
+    }
+
 }

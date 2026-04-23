@@ -18,6 +18,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -102,4 +103,18 @@ public class AdminShopService {
                 .avatar(user.getAvatar())
                 .build();
     }
+
+    public List<String> autocompleteShops(String keyword) {
+        String k = (keyword == null) ? "" : keyword.trim();
+
+        if (k.isEmpty()) {
+            return List.of();
+        }
+
+        return shopRepository.autocompleteShops(k)
+                .stream()
+                .limit(5)
+                .toList();
+    }
+
 }
