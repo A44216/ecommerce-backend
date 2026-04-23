@@ -36,18 +36,29 @@ public interface ShopRepository extends JpaRepository<Shop, Integer> {
 
     List<Shop> findTop3ByOrderByTotalRevenueDesc();
 
-    @Query("SELECT s.shopName FROM Shop s WHERE " +
-            "(:keyword IS NULL OR :keyword = '' OR " +
-            "LOWER(s.shopName) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
-            "LOWER(s.email) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
-            "s.phone LIKE CONCAT('%', :keyword, '%')) " +
-            "ORDER BY " +
-            "CASE " +
-            "WHEN LOWER(s.shopName) LIKE LOWER(CONCAT('%', :keyword, '%')) THEN 1 " +
-            "WHEN LOWER(s.email) LIKE LOWER(CONCAT('%', :keyword, '%')) THEN 2 " +
-            "WHEN s.phone LIKE CONCAT('%', :keyword, '%') THEN 3 " +
-            "ELSE 4 END, " +
-            "s.shopName ASC")
+    @Query("""
+    SELECT\s
+    CASE\s
+        WHEN LOWER(s.shopName) LIKE LOWER(CONCAT('%', :keyword, '%')) THEN s.shopName
+        WHEN LOWER(s.email) LIKE LOWER(CONCAT('%', :keyword, '%')) THEN s.email
+        WHEN s.phone LIKE CONCAT('%', :keyword, '%') THEN s.phone
+        ELSE s.shopName
+    END
+    FROM Shop s
+    WHERE (:keyword IS NULL OR :keyword = '' OR
+        LOWER(s.shopName) LIKE LOWER(CONCAT('%', :keyword, '%')) OR
+        LOWER(s.email) LIKE LOWER(CONCAT('%', :keyword, '%')) OR
+        s.phone LIKE CONCAT('%', :keyword, '%')
+    )
+    ORDER BY
+    CASE
+        WHEN LOWER(s.shopName) LIKE LOWER(CONCAT('%', :keyword, '%')) THEN 1
+        WHEN LOWER(s.email) LIKE LOWER(CONCAT('%', :keyword, '%')) THEN 2
+        WHEN s.phone LIKE CONCAT('%', :keyword, '%') THEN 3
+        ELSE 4
+    END,
+    s.shopName ASC
+   \s""")
     List<String> autocompleteShops(@Param("keyword") String keyword);
 
 }

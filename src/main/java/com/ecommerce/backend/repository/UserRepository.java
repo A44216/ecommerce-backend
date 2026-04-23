@@ -37,21 +37,33 @@ public interface UserRepository extends JpaRepository<User, Integer> {
            "LOWER(u.phone) LIKE LOWER(CONCAT('%', :keyword, '%')))")
     Page<User> searchUsers(@Param("role") Role role, @Param("status") UserStatus status, @Param("keyword") String keyword, Pageable pageable);
 
-    @Query("SELECT u.fullName FROM User u WHERE " +
-            "u.role <> 'ADMIN' AND " +
-            "(:keyword IS NULL OR :keyword = '' OR " +
-            "LOWER(u.fullName) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
-            "LOWER(u.username) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
-            "LOWER(u.email) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
-            "u.phone LIKE CONCAT('%', :keyword, '%')) " +
-            "ORDER BY " +
-            "CASE " +
-            "WHEN LOWER(u.fullName) LIKE LOWER(CONCAT('%', :keyword, '%')) THEN 1 " +
-            "WHEN LOWER(u.username) LIKE LOWER(CONCAT('%', :keyword, '%')) THEN 2 " +
-            "WHEN LOWER(u.email) LIKE LOWER(CONCAT('%', :keyword, '%')) THEN 3 " +
-            "WHEN u.phone LIKE CONCAT('%', :keyword, '%') THEN 4 " +
-            "ELSE 5 END, " +
-            "u.fullName ASC")
+    @Query("""
+        SELECT\s
+        CASE\s
+            WHEN LOWER(u.email) LIKE LOWER(CONCAT('%', :keyword, '%')) THEN u.email
+            WHEN LOWER(u.username) LIKE LOWER(CONCAT('%', :keyword, '%')) THEN u.username
+            WHEN u.phone LIKE CONCAT('%', :keyword, '%') THEN u.phone
+            ELSE u.fullName
+        END
+        FROM User u
+        WHERE u.role <> 'ADMIN'
+        AND (
+            :keyword IS NULL OR :keyword = '' OR
+            LOWER(u.fullName) LIKE LOWER(CONCAT('%', :keyword, '%')) OR
+            LOWER(u.username) LIKE LOWER(CONCAT('%', :keyword, '%')) OR
+            LOWER(u.email) LIKE LOWER(CONCAT('%', :keyword, '%')) OR
+            u.phone LIKE CONCAT('%', :keyword, '%')
+        )
+        ORDER BY
+        CASE
+            WHEN LOWER(u.email) LIKE LOWER(CONCAT('%', :keyword, '%')) THEN 1
+            WHEN LOWER(u.username) LIKE LOWER(CONCAT('%', :keyword, '%')) THEN 2
+            WHEN u.phone LIKE CONCAT('%', :keyword, '%') THEN 3
+            WHEN LOWER(u.fullName) LIKE LOWER(CONCAT('%', :keyword, '%')) THEN 4
+            ELSE 5
+        END,
+        u.fullName ASC
+   \s""")
     List<String> autocompleteUsers(@Param("keyword") String keyword);
 
 }
