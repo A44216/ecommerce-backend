@@ -4,10 +4,14 @@ import com.ecommerce.backend.dto.responses.seller.PageResponse;
 import com.ecommerce.backend.dto.responses.seller.order.SellerOrderDetailResponse;
 import com.ecommerce.backend.dto.responses.seller.order.SellerOrderResponse;
 import com.ecommerce.backend.enums.OrderStatus;
+import com.ecommerce.backend.enums.PaymentMethod;
+import com.ecommerce.backend.enums.PaymentStatus;
 import com.ecommerce.backend.service.seller.SellerOrderService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @PreAuthorize("hasRole('SELLER')")
 @RestController
@@ -20,10 +24,13 @@ public class SellerOrderController {
     @GetMapping
     public PageResponse<SellerOrderResponse> getOrders(
             @RequestParam(required = false) OrderStatus status,
+            @RequestParam(required = false) PaymentMethod paymentMethod,
+            @RequestParam(required = false) PaymentStatus paymentStatus,
+            @RequestParam(required = false) String keyword,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size
     ) {
-        return service.getOrders(status, page, size);
+        return service.getOrders(status, paymentMethod, paymentStatus, keyword, page, size);
     }
 
     @GetMapping("/{id}")
@@ -38,4 +45,10 @@ public class SellerOrderController {
     ) {
         service.updateOrderStatus(id, status);
     }
+
+    @GetMapping("/autocomplete")
+    public List<String> autocomplete(@RequestParam(required = false) String keyword) {
+        return service.autocompleteOrders(keyword);
+    }
+
 }

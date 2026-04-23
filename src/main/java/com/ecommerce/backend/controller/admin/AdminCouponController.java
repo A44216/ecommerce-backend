@@ -92,7 +92,7 @@ public class AdminCouponController {
 
     @GetMapping("/autocomplete")
     public ResponseEntity<List<String>> autocomplete(
-            @RequestParam String keyword) {
+            @RequestParam(required = false) String keyword) {
         return ResponseEntity.ok(couponService.autocomplete(keyword));
     }
 

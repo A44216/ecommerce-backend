@@ -31,6 +31,9 @@ public class SellerOrderService {
 
     public PageResponse<SellerOrderResponse> getOrders(
             OrderStatus status,
+            PaymentMethod paymentMethod,
+            PaymentStatus paymentStatus,
+            String keyword,
             int page,
             int size
     ) {
@@ -42,9 +45,14 @@ public class SellerOrderService {
                 Sort.by("createdAt").descending()
         );
 
-        Page<Order> orders = (status == null)
-                ? orderRepository.findByShopId(shopId, pageable)
-                : orderRepository.findByShopIdAndStatus(shopId, status, pageable);
+        Page<Order> orders = orderRepository.searchSellerOrders(
+                shopId,
+                status,
+                paymentMethod,
+                paymentStatus,
+                keyword,
+                pageable
+        );
 
         List<SellerOrderResponse> content = orders
                 .map(this::mapToDTO)
@@ -183,6 +191,20 @@ public class SellerOrderService {
                 .totalPrice(item.getPrice()
                         .multiply(BigDecimal.valueOf(item.getQuantity())))
                 .build();
+    }
+
+    public List<String> autocompleteOrders(String keyword) {
+        String k = (keyword == null) ? "" : keyword.trim();
+
+        if (k.isEmpty()) {
+            return List.of();
+        }
+
+        return orderRepository.autocompleteOrders(k)
+                .stream()
+                .distinct()
+                .limit(5)
+                .toList();
     }
 
 }
