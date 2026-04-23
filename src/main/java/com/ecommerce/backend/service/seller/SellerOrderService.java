@@ -45,7 +45,11 @@ public class SellerOrderService {
                 Sort.by("createdAt").descending()
         );
 
-        Page<Order> orders = orderRepository.searchSellerOrders(
+        if (keyword != null) {
+            keyword = keyword.trim();
+        }
+
+        Page<Order> orders = orderRepository.getOrders(
                 shopId,
                 status,
                 paymentMethod,
@@ -174,6 +178,7 @@ public class SellerOrderService {
                 .orderCode(order.getOrderCode())
                 .status(order.getStatus())
                 .customerName(order.getUser().getFullName())
+                .phone(order.getShippingPhone())
                 .sellerRevenue(Optional.ofNullable(order.getSubtotal()).orElse(BigDecimal.ZERO).subtract(Optional.ofNullable(order.getPlatformFeeAmount()).orElse(BigDecimal.ZERO)))
                 .createdAt(order.getCreatedAt())
                 .paymentStatus(order.getPaymentStatus())

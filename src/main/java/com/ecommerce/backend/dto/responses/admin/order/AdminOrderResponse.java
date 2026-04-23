@@ -16,6 +16,7 @@ public class AdminOrderResponse {
     private String orderCode;
     private Integer userId;
     private String username;
+    private String phone;
     private Integer shopId;
     private String shopName;
     private OrderStatus status;

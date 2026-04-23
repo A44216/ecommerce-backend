@@ -33,8 +33,7 @@ public interface OrderRepository extends JpaRepository<Order, Integer> {
 
     @Query("""
         SELECT o FROM Order o
-        LEFT JOIN FETCH o.user u
-        LEFT JOIN FETCH o.shop s
+        LEFT JOIN o.user u
         WHERE o.shop.id = :shopId
         AND (:status IS NULL OR o.status = :status)
         AND (:paymentMethod IS NULL OR o.paymentMethod = :paymentMethod)
@@ -43,10 +42,10 @@ public interface OrderRepository extends JpaRepository<Order, Integer> {
             :keyword IS NULL OR :keyword = '' OR
             LOWER(o.orderCode) LIKE LOWER(CONCAT('%', :keyword, '%')) OR
             LOWER(u.fullName) LIKE LOWER(CONCAT('%', :keyword, '%')) OR
-            u.phone LIKE CONCAT('%', :keyword, '%')
+            o.shippingPhone LIKE CONCAT('%', :keyword, '%')
         )
     """)
-    Page<Order> searchSellerOrders(
+    Page<Order> getOrders(
             @Param("shopId") Integer shopId,
             @Param("status") OrderStatus status,
             @Param("paymentMethod") PaymentMethod paymentMethod,
