@@ -51,11 +51,11 @@ public class AdminOrderService {
                 .orderCode(order.getOrderCode())
                 .userId(order.getUser() != null ? order.getUser().getId() : null)
                 .username(order.getUser() != null ? order.getUser().getUsername() : null)
-                .phone(order.getUser() != null ? order.getUser().getPhone() : null)
                 .shopId(order.getShop() != null ? order.getShop().getId() : null)
                 .shopName(order.getShop() != null ? order.getShop().getShopName() : null)
                 .status(order.getStatus())
-                .paymentMethod(order.getPaymentMethod())
+                .paymentMethod(orde
+                        r.getPaymentMethod())
                 .paymentStatus(order.getPaymentStatus())
                 .totalPrice(order.getTotalPrice())
                 .platformFeeAmount(order.getPlatformFeeAmount())

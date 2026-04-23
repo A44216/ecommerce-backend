@@ -19,7 +19,7 @@ public class SellerOrderResponse {
 
     private OrderStatus status;
     private String customerName;
-    private String phone;
+    private String customerPhone;
     private BigDecimal sellerRevenue;
     private LocalDateTime createdAt;
 

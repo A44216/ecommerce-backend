@@ -178,7 +178,7 @@ public class SellerOrderService {
                 .orderCode(order.getOrderCode())
                 .status(order.getStatus())
                 .customerName(order.getUser().getFullName())
-                .phone(order.getShippingPhone())
+                .customerPhone(order.getShippingPhone())
                 .sellerRevenue(Optional.ofNullable(order.getSubtotal()).orElse(BigDecimal.ZERO).subtract(Optional.ofNullable(order.getPlatformFeeAmount()).orElse(BigDecimal.ZERO)))
                 .createdAt(order.getCreatedAt())
                 .paymentStatus(order.getPaymentStatus())
