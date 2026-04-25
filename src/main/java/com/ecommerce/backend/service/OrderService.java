@@ -188,6 +188,13 @@ public class OrderService {
         order.setShop(shop);
         order.setPaymentMethod(request.getPaymentMethod());
 
+        // Tự động thiết lập trạng thái thanh toán
+        if (request.getPaymentMethod() == com.ecommerce.backend.enums.PaymentMethod.QR) {
+            order.setPaymentStatus(com.ecommerce.backend.enums.PaymentStatus.PAID);
+        } else {
+            order.setPaymentStatus(com.ecommerce.backend.enums.PaymentStatus.UNPAID);
+        }
+
         // Snapshot thông tin vận chuyển tại thời điểm đặt hàng
         order.setShippingName(address.getFullName());
         order.setShippingPhone(address.getPhone());
