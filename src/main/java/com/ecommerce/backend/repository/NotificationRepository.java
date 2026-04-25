@@ -14,4 +14,7 @@ public interface NotificationRepository extends JpaRepository<Notification, Inte
 
     // Đếm số lượng thông báo CHƯA ĐỌC để hiển thị chấm đỏ trên App
     long countByUserIdAndIsReadFalse(Integer userId);
+
+    // Đếm số lượng thông báo CHƯA ĐỌC theo từng loại
+    long countByUserIdAndTypeAndIsReadFalse(Integer userId, com.ecommerce.backend.enums.NotificationType type);
 }

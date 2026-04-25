@@ -1,4 +1,7 @@
 package com.ecommerce.backend.service;
+ 
+import java.util.HashMap;
+import java.util.Map;
 
 import com.ecommerce.backend.dto.responses.NotificationResponse;
 import com.ecommerce.backend.entity.Notification;
@@ -57,6 +60,16 @@ public class NotificationService {
     // 4. Đếm thông báo chưa đọc (cho chấm đỏ trên app)
     public long countUnread(Integer userId) {
         return notificationRepository.countByUserIdAndIsReadFalse(userId);
+    }
+
+    // 5. Lấy tổng hợp số lượng chưa đọc theo từng loại
+    public Map<String, Long> getUnreadCountsByType(Integer userId) {
+        Map<String, Long> summary = new HashMap<>();
+        for (NotificationType type : NotificationType.values()) {
+            long count = notificationRepository.countByUserIdAndTypeAndIsReadFalse(userId, type);
+            summary.put(type.name(), count);
+        }
+        return summary;
     }
 
     private NotificationResponse mapToResponse(Notification n) {
