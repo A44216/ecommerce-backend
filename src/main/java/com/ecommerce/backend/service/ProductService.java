@@ -94,12 +94,12 @@ public class ProductService {
         return products.stream().map(this::mapToDTO).toList();
     }
 
-    public com.ecommerce.backend.dto.responses.PageResponse<ProductResponse> getAllProductsPaginated(int page, int size) {
-        org.springframework.data.domain.Pageable pageable = org.springframework.data.domain.PageRequest.of(page, size);
+    public com.ecommerce.backend.dto.responses.PageResponse<ProductResponse> getAllProductsPaginated(int page, int size, String sortBy) {
+        org.springframework.data.domain.Pageable pageable = createPageable(page, size, sortBy);
         org.springframework.data.domain.Page<Product> productPage = productRepository.findByStatusAndIsDeletedFalse(ProductStatus.APPROVED, pageable);
-        
+
         List<ProductResponse> content = productPage.getContent().stream().map(this::mapToDTO).toList();
-        
+
         return new com.ecommerce.backend.dto.responses.PageResponse<>(
                 content,
                 productPage.getNumber(),
@@ -110,8 +110,8 @@ public class ProductService {
         );
     }
 
-    public com.ecommerce.backend.dto.responses.PageResponse<ProductResponse> searchProductsPaginated(String keyword, int page, int size) {
-        org.springframework.data.domain.Pageable pageable = org.springframework.data.domain.PageRequest.of(page, size);
+    public com.ecommerce.backend.dto.responses.PageResponse<ProductResponse> searchProductsPaginated(String keyword, int page, int size, String sortBy) {
+        org.springframework.data.domain.Pageable pageable = createPageable(page, size, sortBy);
         org.springframework.data.domain.Page<Product> productPage = productRepository.findByNameContainingIgnoreCaseAndStatusAndIsDeletedFalse(keyword, ProductStatus.APPROVED, pageable);
 
         List<ProductResponse> content = productPage.getContent().stream().map(this::mapToDTO).toList();
@@ -126,8 +126,8 @@ public class ProductService {
         );
     }
 
-    public com.ecommerce.backend.dto.responses.PageResponse<ProductResponse> getProductsByCategoryPaginated(Integer categoryId, int page, int size) {
-        org.springframework.data.domain.Pageable pageable = org.springframework.data.domain.PageRequest.of(page, size);
+    public com.ecommerce.backend.dto.responses.PageResponse<ProductResponse> getProductsByCategoryPaginated(Integer categoryId, int page, int size, String sortBy) {
+        org.springframework.data.domain.Pageable pageable = createPageable(page, size, sortBy);
         org.springframework.data.domain.Page<Product> productPage = productRepository.findByCategoryIdAndStatusAndIsDeletedFalse(categoryId, ProductStatus.APPROVED, pageable);
 
         List<ProductResponse> content = productPage.getContent().stream().map(this::mapToDTO).toList();
@@ -140,6 +140,25 @@ public class ProductService {
                 productPage.getTotalPages(),
                 productPage.isLast()
         );
+    }
+
+    private org.springframework.data.domain.Pageable createPageable(int page, int size, String sortBy) {
+        org.springframework.data.domain.Sort sort = org.springframework.data.domain.Sort.unsorted();
+        if (sortBy != null && !sortBy.isEmpty()) {
+            String[] parts = sortBy.split(",");
+            String property = parts[0];
+            String direction = parts.length > 1 ? parts[1] : "asc";
+
+            if (direction.equalsIgnoreCase("desc")) {
+                sort = org.springframework.data.domain.Sort.by(property).descending();
+            } else {
+                sort = org.springframework.data.domain.Sort.by(property).ascending();
+            }
+        } else {
+            // Default sort by ID descending (newest first) if no sort specified
+            sort = org.springframework.data.domain.Sort.by("id").descending();
+        }
+        return org.springframework.data.domain.PageRequest.of(page, size, sort);
     }
 
     public ProductResponse getProductById(Integer id) {

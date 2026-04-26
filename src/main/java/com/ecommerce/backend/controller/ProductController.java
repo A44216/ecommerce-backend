@@ -32,24 +32,27 @@ public class ProductController {
     @GetMapping("/page")
     public ResponseEntity<com.ecommerce.backend.dto.responses.PageResponse<ProductResponse>> getProductsPaginated(
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size) {
-        return ResponseEntity.ok(productService.getAllProductsPaginated(page, size));
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(required = false) String sortBy) {
+        return ResponseEntity.ok(productService.getAllProductsPaginated(page, size, sortBy));
     }
 
     @GetMapping("/search/page")
     public ResponseEntity<com.ecommerce.backend.dto.responses.PageResponse<ProductResponse>> searchProductsPaginated(
             @RequestParam String keyword,
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size) {
-        return ResponseEntity.ok(productService.searchProductsPaginated(keyword, page, size));
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(required = false) String sortBy) {
+        return ResponseEntity.ok(productService.searchProductsPaginated(keyword, page, size, sortBy));
     }
 
     @GetMapping("/category/{categoryId}/page")
     public ResponseEntity<com.ecommerce.backend.dto.responses.PageResponse<ProductResponse>> getProductsByCategoryPaginated(
             @PathVariable Integer categoryId,
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size) {
-        return ResponseEntity.ok(productService.getProductsByCategoryPaginated(categoryId, page, size));
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(required = false) String sortBy) {
+        return ResponseEntity.ok(productService.getProductsByCategoryPaginated(categoryId, page, size, sortBy));
     }
 
     // lấy thông tin chi tiết một sản phẩm theo ID
