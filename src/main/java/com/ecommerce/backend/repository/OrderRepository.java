@@ -281,29 +281,63 @@ public interface OrderRepository extends JpaRepository<Order, Integer> {
             @Param("endDate") LocalDateTime endDate,
             Pageable pageable);
 
-    @Query("""
-        SELECT
-        CASE
-            WHEN LOWER(o.orderCode) LIKE LOWER(CONCAT('%', :keyword, '%')) THEN o.orderCode
-            WHEN o.user.phone LIKE CONCAT('%', :keyword, '%') THEN o.user.phone
-            WHEN LOWER(o.user.fullName) LIKE LOWER(CONCAT('%', :keyword, '%')) THEN o.user.fullName
-            ELSE o.orderCode
-        END
-        FROM Order o
-        WHERE (:keyword IS NULL OR :keyword = '' OR
-            LOWER(o.orderCode) LIKE LOWER(CONCAT('%', :keyword, '%')) OR
-            o.user.phone LIKE CONCAT('%', :keyword, '%') OR
-            LOWER(o.user.fullName) LIKE LOWER(CONCAT('%', :keyword, '%'))
-        )
-        ORDER BY
-            CASE
-                WHEN LOWER(o.orderCode) LIKE LOWER(CONCAT('%', :keyword, '%')) THEN 1
-                WHEN o.user.phone LIKE CONCAT('%', :keyword, '%') THEN 2
-                WHEN LOWER(o.user.fullName) LIKE LOWER(CONCAT('%', :keyword, '%')) THEN 3
-                ELSE 4
-            END,
-            o.createdAt DESC
-    """)
+//    @Query("""
+//        SELECT
+//        CASE
+//            WHEN LOWER(o.orderCode) LIKE LOWER(CONCAT('%', :keyword, '%')) THEN o.orderCode
+//            WHEN o.shippingPhone LIKE CONCAT('%', :keyword, '%') THEN o.shippingPhone
+//            WHEN LOWER(o.user.fullName) LIKE LOWER(CONCAT('%', :keyword, '%')) THEN o.user.fullName
+//            ELSE o.orderCode
+//        END
+//        FROM Order o
+//        WHERE (:keyword IS NULL OR :keyword = '' OR
+//            LOWER(o.orderCode) LIKE LOWER(CONCAT('%', :keyword, '%')) OR
+//            o.shippingPhone LIKE CONCAT('%', :keyword, '%') OR
+//            LOWER(o.user.fullName) LIKE LOWER(CONCAT('%', :keyword, '%'))
+//        )
+//        ORDER BY
+//            CASE
+//                WHEN LOWER(o.orderCode) LIKE LOWER(CONCAT('%', :keyword, '%')) THEN 1
+//                WHEN o.shippingPhone LIKE CONCAT('%', :keyword, '%') THEN 2
+//                WHEN LOWER(o.user.fullName) LIKE LOWER(CONCAT('%', :keyword, '%')) THEN 3
+//                ELSE 4
+//            END,
+//            o.createdAt DESC
+//    """)
+//    List<String> autocompleteOrders(@Param("keyword") String keyword);
+
+    @Query(value = """
+        SELECT value FROM (
+            (
+                SELECT o.order_code AS value, 1 AS priority, o.created_at
+                FROM orders o
+                WHERE LOWER(o.order_code) LIKE LOWER(CONCAT('%', :keyword, '%'))
+                ORDER BY o.created_at DESC
+                LIMIT 5
+            )
+            UNION ALL
+            (
+                SELECT o.shipping_phone AS value, 2 AS priority, o.created_at
+                FROM orders o
+                WHERE o.shipping_phone LIKE CONCAT('%', :keyword, '%')
+                ORDER BY o.created_at DESC
+                LIMIT 5
+            )
+            UNION ALL
+            (
+                SELECT u.full_name AS value, 3 AS priority, o.created_at
+                FROM orders o
+                JOIN users u ON o.user_id = u.id
+                WHERE LOWER(u.full_name) LIKE LOWER(CONCAT('%', :keyword, '%'))
+                ORDER BY o.created_at DESC
+                LIMIT 5
+            )
+        ) t
+        ORDER BY priority, created_at DESC
+        LIMIT 5
+    """, nativeQuery = true)
     List<String> autocompleteOrders(@Param("keyword") String keyword);
+
+
 
 }

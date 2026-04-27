@@ -142,6 +142,7 @@ public class AdminUserService {
 
         return userRepository.autocompleteUsers(k)
                 .stream()
+                .distinct()
                 .limit(5)
                 .toList();
     }

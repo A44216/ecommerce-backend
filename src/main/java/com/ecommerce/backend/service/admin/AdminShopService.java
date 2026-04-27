@@ -113,6 +113,7 @@ public class AdminShopService {
 
         return shopRepository.autocompleteShops(k)
                 .stream()
+                .distinct()
                 .limit(5)
                 .toList();
     }

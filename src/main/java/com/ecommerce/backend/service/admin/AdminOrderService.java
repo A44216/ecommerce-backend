@@ -54,8 +54,7 @@ public class AdminOrderService {
                 .shopId(order.getShop() != null ? order.getShop().getId() : null)
                 .shopName(order.getShop() != null ? order.getShop().getShopName() : null)
                 .status(order.getStatus())
-                .paymentMethod(orde
-                        r.getPaymentMethod())
+                .paymentMethod(order.getPaymentMethod())
                 .paymentStatus(order.getPaymentStatus())
                 .totalPrice(order.getTotalPrice())
                 .platformFeeAmount(order.getPlatformFeeAmount())
