@@ -97,4 +97,11 @@ public class SellerProductController {
         return ResponseEntity.noContent().build();
     }
 
+    @GetMapping("/autocomplete")
+    public ResponseEntity<List<String>> autocomplete(
+            @RequestParam(required = false) String keyword
+    ) {
+        return ResponseEntity.ok(productService.autocompleteProducts(keyword));
+    }
+
 }

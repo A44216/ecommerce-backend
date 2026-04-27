@@ -88,4 +88,18 @@ public interface ProductRepository extends JpaRepository<Product, Integer> {
     @EntityGraph(attributePaths = {"images", "category", "shop"})
     Optional<Product> findById(Integer id);
 
+    @Query("""
+        SELECT DISTINCT p.name
+        FROM Product p
+        WHERE p.shop.id = :shopId
+        AND p.isDeleted = false
+        AND LOWER(p.name) LIKE LOWER(CONCAT('%', :keyword, '%'))
+        ORDER BY p.name ASC
+    """)
+    Page<String> autocompleteProducts(
+            @Param("shopId") Integer shopId,
+            @Param("keyword") String keyword,
+            Pageable pageable
+    );
+
 }

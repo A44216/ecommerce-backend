@@ -228,4 +228,21 @@ public class SellerProductService {
                 products.getTotalPages()
         );
     }
+
+    public List<String> autocompleteProducts(String keyword) {
+        String k = (keyword == null) ? "" : keyword.trim();
+
+        if (k.isEmpty()) {
+            return List.of();
+        }
+
+        Integer shopId = sellerShopService.getMyShop().getId();
+
+        Pageable pageable = PageRequest.of(0, 5);
+
+        return productRepository
+                .autocompleteProducts(shopId, k, pageable)
+                .getContent(); // lấy đúng 5 record từ DB
+    }
+
 }
