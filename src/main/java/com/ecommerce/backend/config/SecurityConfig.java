@@ -28,14 +28,15 @@ public class SecurityConfig {
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
                 .authorizeHttpRequests(auth -> auth
+                        // Các endpoint công khai (không cần đăng nhập)
                         .requestMatchers("/api/auth/**").permitAll()
-                        .requestMatchers("/api/shops/**").authenticated()
-                        .requestMatchers("/api/images/**").authenticated()
-                        .requestMatchers(HttpMethod.GET, "/api/products/**").permitAll()
-                        .requestMatchers("/api/products/**").authenticated()
-                        .requestMatchers("/api/notifications/**").permitAll()
-                        .requestMatchers("/api/auth/**", "/api/products/**", "/api/reviews/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/products/**", "/api/categories/**", "/api/shops/**", "/api/reviews/**", "/api/images/**").permitAll()
+
+                        // Các endpoint cần đăng nhập
+                        .requestMatchers("/api/notifications/**").authenticated()
                         .requestMatchers("/api/conversations/**", "/api/messages/**").authenticated()
+
+                        // Tất cả các yêu cầu còn lại đều cần xác thực
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
