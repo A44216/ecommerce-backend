@@ -55,7 +55,7 @@ public class AdminOrderController {
 
     @GetMapping("/autocomplete")
     public ResponseEntity<List<String>> autocomplete(
-            @RequestParam String keyword,
+            @RequestParam(required = false) String keyword,
             @RequestParam(required = false) Integer shopId
     ) {
         return ResponseEntity.ok(

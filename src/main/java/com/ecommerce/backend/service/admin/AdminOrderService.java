@@ -18,6 +18,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 @Service
@@ -96,11 +97,18 @@ public class AdminOrderService {
     }
 
     private AdminOrderDetailResponse mapToDetailDTO(Order order) {
+
+        BigDecimal sellerReceived = null;
+
+        if (order.getTotalPrice() != null && order.getPlatformFeeAmount() != null) {
+            sellerReceived = order.getTotalPrice().subtract(order.getPlatformFeeAmount());
+        }
+
         return AdminOrderDetailResponse.builder()
                 .id(order.getId())
                 .orderCode(order.getOrderCode())
                 .userId(order.getUser() != null ? order.getUser().getId() : null)
-                .username(order.getUser() != null ? order.getUser().getUsername() : null)
+                .fullName(order.getUser() != null ? order.getUser().getFullName() : null)
                 .shopId(order.getShop() != null ? order.getShop().getId() : null)
                 .shopName(order.getShop() != null ? order.getShop().getShopName() : null)
                 .status(order.getStatus())
@@ -111,6 +119,7 @@ public class AdminOrderService {
                 .platformFeeRate(order.getPlatformFeeRate())
                 .platformFeeAmount(order.getPlatformFeeAmount())
                 .totalPrice(order.getTotalPrice())
+                .sellerReceived(sellerReceived)
                 .shippingName(order.getShippingName())
                 .shippingPhone(order.getShippingPhone())
                 .shippingAddress(order.getShippingAddress())
