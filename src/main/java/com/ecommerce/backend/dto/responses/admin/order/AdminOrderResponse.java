@@ -24,4 +24,6 @@ public class AdminOrderResponse {
     private BigDecimal totalPrice;
     private BigDecimal platformFeeAmount;
     private LocalDateTime createdAt;
+
+    private String imageOrder;
 }

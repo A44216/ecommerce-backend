@@ -294,7 +294,10 @@ public interface OrderRepository extends JpaRepository<Order, Integer> {
 
     @Query("""
         SELECT o FROM Order o
-        LEFT JOIN o.user u
+        LEFT JOIN FETCH o.user u
+        LEFT JOIN FETCH o.shop s
+        LEFT JOIN FETCH o.items i
+        LEFT JOIN FETCH i.product p
         WHERE (:shopId IS NULL OR o.shop.id = :shopId)
         AND (:status IS NULL OR o.status = :status)
         AND (:paymentMethod IS NULL OR o.paymentMethod = :paymentMethod)

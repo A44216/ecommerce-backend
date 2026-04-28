@@ -69,6 +69,15 @@ public class AdminOrderService {
     }
 
     private AdminOrderResponse mapToDTO(Order order) {
+
+        String imageOrder = null;
+
+        if (order.getItems() != null && !order.getItems().isEmpty()) {
+            imageOrder = order.getItems()
+                    .getFirst()
+                    .getProductImage();
+        }
+
         return AdminOrderResponse.builder()
                 .id(order.getId())
                 .orderCode(order.getOrderCode())
@@ -82,6 +91,7 @@ public class AdminOrderService {
                 .totalPrice(order.getTotalPrice())
                 .platformFeeAmount(order.getPlatformFeeAmount())
                 .createdAt(order.getCreatedAt())
+                .imageOrder(imageOrder)
                 .build();
     }
 
