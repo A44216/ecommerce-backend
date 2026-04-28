@@ -205,7 +205,7 @@ public class SellerOrderService {
             return List.of();
         }
 
-        return orderRepository.autocompleteOrders(k)
+        return orderRepository.autocompleteSellerOrders(k)
                 .stream()
                 .distinct()
                 .limit(5)

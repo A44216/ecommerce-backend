@@ -201,27 +201,6 @@ public interface OrderRepository extends JpaRepository<Order, Integer> {
             """, nativeQuery = true)
     List<Object[]> getPlatformRevenueByYear();
 
-    @Query(value = """
-                SELECT o FROM Order o
-                LEFT JOIN FETCH o.shop s
-                LEFT JOIN FETCH o.user u
-                WHERE (:status IS NULL OR o.status = :status)
-                AND (:paymentMethod IS NULL OR o.paymentMethod = :paymentMethod)
-                AND (:paymentStatus IS NULL OR o.paymentStatus = :paymentStatus)
-            """, countQuery = """
-                SELECT COUNT(o) FROM Order o
-                LEFT JOIN o.shop s
-                LEFT JOIN o.user u
-                WHERE (:status IS NULL OR o.status = :status)
-                AND (:paymentMethod IS NULL OR o.paymentMethod = :paymentMethod)
-                AND (:paymentStatus IS NULL OR o.paymentStatus = :paymentStatus)
-            """)
-    Page<Order> adminSearchOrders(
-            @Param("status") OrderStatus status,
-            @Param("paymentMethod") PaymentMethod paymentMethod,
-            @Param("paymentStatus") PaymentStatus paymentStatus,
-            Pageable pageable);
-
     @Query("""
             SELECT COALESCE(SUM(o.subtotal - o.platformFeeAmount), 0)
             FROM Order o
@@ -281,31 +260,6 @@ public interface OrderRepository extends JpaRepository<Order, Integer> {
             @Param("endDate") LocalDateTime endDate,
             Pageable pageable);
 
-//    @Query("""
-//        SELECT
-//        CASE
-//            WHEN LOWER(o.orderCode) LIKE LOWER(CONCAT('%', :keyword, '%')) THEN o.orderCode
-//            WHEN o.shippingPhone LIKE CONCAT('%', :keyword, '%') THEN o.shippingPhone
-//            WHEN LOWER(o.user.fullName) LIKE LOWER(CONCAT('%', :keyword, '%')) THEN o.user.fullName
-//            ELSE o.orderCode
-//        END
-//        FROM Order o
-//        WHERE (:keyword IS NULL OR :keyword = '' OR
-//            LOWER(o.orderCode) LIKE LOWER(CONCAT('%', :keyword, '%')) OR
-//            o.shippingPhone LIKE CONCAT('%', :keyword, '%') OR
-//            LOWER(o.user.fullName) LIKE LOWER(CONCAT('%', :keyword, '%'))
-//        )
-//        ORDER BY
-//            CASE
-//                WHEN LOWER(o.orderCode) LIKE LOWER(CONCAT('%', :keyword, '%')) THEN 1
-//                WHEN o.shippingPhone LIKE CONCAT('%', :keyword, '%') THEN 2
-//                WHEN LOWER(o.user.fullName) LIKE LOWER(CONCAT('%', :keyword, '%')) THEN 3
-//                ELSE 4
-//            END,
-//            o.createdAt DESC
-//    """)
-//    List<String> autocompleteOrders(@Param("keyword") String keyword);
-
     @Query(value = """
         SELECT value FROM (
             (
@@ -336,8 +290,61 @@ public interface OrderRepository extends JpaRepository<Order, Integer> {
         ORDER BY priority, created_at DESC
         LIMIT 5
     """, nativeQuery = true)
-    List<String> autocompleteOrders(@Param("keyword") String keyword);
+    List<String> autocompleteSellerOrders(@Param("keyword") String keyword);
 
+    @Query("""
+        SELECT o FROM Order o
+        LEFT JOIN o.user u
+        WHERE (:shopId IS NULL OR o.shop.id = :shopId)
+        AND (:status IS NULL OR o.status = :status)
+        AND (:paymentMethod IS NULL OR o.paymentMethod = :paymentMethod)
+        AND (:paymentStatus IS NULL OR o.paymentStatus = :paymentStatus)
+        AND (
+            :keyword IS NULL OR :keyword = '' OR
+            LOWER(o.orderCode) LIKE LOWER(CONCAT('%', :keyword, '%')) OR
+            LOWER(u.fullName) LIKE LOWER(CONCAT('%', :keyword, '%')) OR
+            o.shippingPhone LIKE CONCAT('%', :keyword, '%')
+        )
+    """)
+    Page<Order> adminSearchOrders(
+            @Param("shopId") Integer shopId,
+            @Param("keyword") String keyword,
+            @Param("status") OrderStatus status,
+            @Param("paymentMethod") PaymentMethod paymentMethod,
+            @Param("paymentStatus") PaymentStatus paymentStatus,
+            Pageable pageable
+    );
 
+    @Query(value = """
+        SELECT value FROM (
+            (
+                SELECT o.order_code AS value, 1 AS priority, o.created_at
+                FROM orders o
+                WHERE (:shopId IS NULL OR o.shop_id = :shopId)
+                  AND LOWER(o.order_code) LIKE LOWER(CONCAT('%', :keyword, '%'))
+            )
+            UNION ALL
+            (
+                SELECT o.shipping_phone AS value, 2 AS priority, o.created_at
+                FROM orders o
+                WHERE (:shopId IS NULL OR o.shop_id = :shopId)
+                  AND o.shipping_phone LIKE CONCAT('%', :keyword, '%')
+            )
+            UNION ALL
+            (
+                SELECT u.full_name AS value, 3 AS priority, o.created_at
+                FROM orders o
+                JOIN users u ON o.user_id = u.id
+                WHERE (:shopId IS NULL OR o.shop_id = :shopId)
+                  AND LOWER(u.full_name) LIKE LOWER(CONCAT('%', :keyword, '%'))
+            )
+        ) t
+        ORDER BY t.priority ASC, t.created_at DESC
+        LIMIT 5
+    """, nativeQuery = true)
+    List<String> autocompleteAdminOrders(
+            @Param("keyword") String keyword,
+            @Param("shopId") Integer shopId
+    );
 
 }

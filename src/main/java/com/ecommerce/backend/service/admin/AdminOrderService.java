@@ -18,6 +18,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 @Service
 @RequiredArgsConstructor
 public class AdminOrderService {
@@ -25,10 +27,31 @@ public class AdminOrderService {
     private final OrderRepository orderRepository;
 
     public PageResponse<AdminOrderResponse> getOrders(
-            int page, int size, OrderStatus status, PaymentMethod paymentMethod, PaymentStatus paymentStatus) {
-        
-        Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
-        Page<Order> orders = orderRepository.adminSearchOrders(status, paymentMethod, paymentStatus, pageable);
+            int page,
+            int size,
+            String keyword,
+            Integer shopId,
+            OrderStatus status,
+            PaymentMethod paymentMethod,
+            PaymentStatus paymentStatus,
+            String sortBy,
+            String direction
+    ) {
+
+        Sort sort = (direction != null && direction.equalsIgnoreCase("asc"))
+                ? Sort.by(sortBy).ascending()
+                : Sort.by(sortBy).descending();
+
+        Pageable pageable = PageRequest.of(page, size, sort);
+
+        Page<Order> orders = orderRepository.adminSearchOrders(
+                shopId,
+                keyword,
+                status,
+                paymentMethod,
+                paymentStatus,
+                pageable
+        );
 
         return new PageResponse<>(
                 orders.getContent().stream().map(this::mapToDTO).toList(),
@@ -97,4 +120,12 @@ public class AdminOrderService {
                 .quantity(item.getQuantity())
                 .build();
     }
+
+    public List<String> autocomplete(String keyword, Integer shopId) {
+        if (keyword == null || keyword.isBlank()) {
+            return List.of();
+        }
+        return orderRepository.autocompleteAdminOrders(keyword.trim(), shopId);
+    }
+
 }
