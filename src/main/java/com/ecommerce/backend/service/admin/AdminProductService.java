@@ -24,10 +24,35 @@ public class AdminProductService {
     private final ProductRepository productRepository;
 
     public PageResponse<AdminProductResponse> getProducts(
-            int page, int size, Integer shopId, Integer categoryId, ProductStatus status, String keyword) {
-        
-        Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
-        Page<Product> products = productRepository.adminSearchProducts(shopId, categoryId, status, keyword, pageable);
+            int page,
+            int size,
+            Integer shopId,
+            Integer categoryId,
+            ProductStatus status,
+            Boolean isDeleted,
+            String keyword,
+            String sortBy,
+            String direction
+    ) {
+
+        if (sortBy == null || sortBy.isBlank()) {
+            sortBy = "createdAt";
+        }
+
+        Sort sort = "asc".equalsIgnoreCase(direction)
+                ? Sort.by(sortBy).ascending()
+                : Sort.by(sortBy).descending();
+
+        Pageable pageable = PageRequest.of(page, size, sort);
+
+        Page<Product> products = productRepository.adminSearchProducts(
+                shopId,
+                categoryId,
+                status,
+                keyword,
+                isDeleted,
+                pageable
+        );
 
         return new PageResponse<>(
                 products.getContent().stream().map(this::mapToDTO).toList(),

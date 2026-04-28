@@ -27,8 +27,24 @@ public class AdminProductController {
             @RequestParam(required = false) Integer shopId,
             @RequestParam(required = false) Integer categoryId,
             @RequestParam(required = false) ProductStatus status,
-            @RequestParam(required = false) String keyword) {
-        return ResponseEntity.ok(adminProductService.getProducts(page, size, shopId, categoryId, status, keyword));
+            @RequestParam(required = false) Boolean isDeleted,
+            @RequestParam(required = false) String keyword,
+            @RequestParam(defaultValue = "createdAt") String sortBy,
+            @RequestParam(defaultValue = "desc") String direction
+    ) {
+        return ResponseEntity.ok(
+                adminProductService.getProducts(
+                        page,
+                        size,
+                        shopId,
+                        categoryId,
+                        status,
+                        isDeleted,
+                        keyword,
+                        sortBy,
+                        direction
+                )
+        );
     }
 
     @GetMapping("/{id}")

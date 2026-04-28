@@ -44,39 +44,76 @@ public interface ProductRepository extends JpaRepository<Product, Integer> {
             Pageable pageable
     );
 
-    @Query(
-        value = """
-            SELECT p FROM Product p
-            LEFT JOIN FETCH p.category c
-            LEFT JOIN FETCH p.shop s
-            WHERE (:shopId IS NULL OR s.id = :shopId)
-            AND (:categoryId IS NULL OR c.id = :categoryId)
-            AND (:status IS NULL OR p.status = :status)
-            AND (
-                :keyword IS NULL OR
-                LOWER(p.name) LIKE LOWER(CONCAT('%', :keyword, '%')) OR
-                LOWER(s.shopName) LIKE LOWER(CONCAT('%', :keyword, '%'))
-            )
-        """,
-        countQuery = """
-            SELECT COUNT(p) FROM Product p
-            LEFT JOIN p.category c
-            LEFT JOIN p.shop s
-            WHERE (:shopId IS NULL OR s.id = :shopId)
-            AND (:categoryId IS NULL OR c.id = :categoryId)
-            AND (:status IS NULL OR p.status = :status)
-            AND (
-                :keyword IS NULL OR
-                LOWER(p.name) LIKE LOWER(CONCAT('%', :keyword, '%')) OR
-                LOWER(s.shopName) LIKE LOWER(CONCAT('%', :keyword, '%'))
-            )
-        """
-    )
+//    @Query(
+//        value = """
+//            SELECT p FROM Product p
+//            LEFT JOIN FETCH p.category c
+//            LEFT JOIN FETCH p.shop s
+//            WHERE (:shopId IS NULL OR s.id = :shopId)
+//            AND (:categoryId IS NULL OR c.id = :categoryId)
+//            AND (:status IS NULL OR p.status = :status)
+//            AND (
+//                :keyword IS NULL OR
+//                LOWER(p.name) LIKE LOWER(CONCAT('%', :keyword, '%')) OR
+//                LOWER(s.shopName) LIKE LOWER(CONCAT('%', :keyword, '%'))
+//            )
+//        """,
+//        countQuery = """
+//            SELECT COUNT(p) FROM Product p
+//            LEFT JOIN p.category c
+//            LEFT JOIN p.shop s
+//            WHERE (:shopId IS NULL OR s.id = :shopId)
+//            AND (:categoryId IS NULL OR c.id = :categoryId)
+//            AND (:status IS NULL OR p.status = :status)
+//            AND (
+//                :keyword IS NULL OR
+//                LOWER(p.name) LIKE LOWER(CONCAT('%', :keyword, '%')) OR
+//                LOWER(s.shopName) LIKE LOWER(CONCAT('%', :keyword, '%'))
+//            )
+//        """
+//    )
+//    Page<Product> adminSearchProducts(
+//            @Param("shopId") Integer shopId,
+//            @Param("categoryId") Integer categoryId,
+//            @Param("status") ProductStatus status,
+//            @Param("keyword") String keyword,
+//            Pageable pageable
+//    );
+
+    @Query(value = """
+        SELECT p FROM Product p
+        LEFT JOIN FETCH p.category c
+        LEFT JOIN FETCH p.shop s
+        WHERE (:shopId IS NULL OR s.id = :shopId)
+        AND (:categoryId IS NULL OR c.id = :categoryId)
+        AND (:status IS NULL OR p.status = :status)
+        AND (:isDeleted IS NULL OR p.isDeleted = :isDeleted)
+        AND (
+            :keyword IS NULL OR
+            LOWER(p.name) LIKE LOWER(CONCAT('%', :keyword, '%')) OR
+            LOWER(s.shopName) LIKE LOWER(CONCAT('%', :keyword, '%'))
+        )
+    """,
+            countQuery = """
+        SELECT COUNT(p) FROM Product p
+        LEFT JOIN p.category c
+        LEFT JOIN p.shop s
+        WHERE (:shopId IS NULL OR s.id = :shopId)
+        AND (:categoryId IS NULL OR c.id = :categoryId)
+        AND (:status IS NULL OR p.status = :status)
+        AND (:isDeleted IS NULL OR p.isDeleted = :isDeleted)
+        AND (
+            :keyword IS NULL OR
+            LOWER(p.name) LIKE LOWER(CONCAT('%', :keyword, '%')) OR
+            LOWER(s.shopName) LIKE LOWER(CONCAT('%', :keyword, '%'))
+        )
+    """)
     Page<Product> adminSearchProducts(
             @Param("shopId") Integer shopId,
             @Param("categoryId") Integer categoryId,
             @Param("status") ProductStatus status,
             @Param("keyword") String keyword,
+            @Param("isDeleted") Boolean isDeleted,
             Pageable pageable
     );
 
