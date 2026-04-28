@@ -2,6 +2,7 @@ package com.ecommerce.backend.controller.admin;
 
 import com.ecommerce.backend.dto.responses.admin.shop.AdminShopDetailResponse;
 import com.ecommerce.backend.dto.responses.admin.shop.AdminShopResponse;
+import com.ecommerce.backend.dto.responses.admin.shop.AdminShopAutocompleteResponse;
 import com.ecommerce.backend.dto.responses.seller.PageResponse;
 import com.ecommerce.backend.enums.ShopStatus;
 import com.ecommerce.backend.service.admin.AdminShopService;
@@ -45,7 +46,7 @@ public class AdminShopController {
     }
 
     @GetMapping("/autocomplete")
-    public List<String> autocomplete(@RequestParam(required = false) String keyword) {
+    public List<AdminShopAutocompleteResponse> autocomplete(@RequestParam(required = false) String keyword) {
         return adminShopService.autocompleteShops(keyword);
     }
 

@@ -2,6 +2,7 @@ package com.ecommerce.backend.service.admin;
 
 import com.ecommerce.backend.dto.responses.admin.shop.AdminShopDetailResponse;
 import com.ecommerce.backend.dto.responses.admin.shop.AdminShopResponse;
+import com.ecommerce.backend.dto.responses.admin.shop.AdminShopAutocompleteResponse;
 import com.ecommerce.backend.dto.responses.admin.user.AdminUserResponse;
 import com.ecommerce.backend.dto.responses.seller.PageResponse;
 import com.ecommerce.backend.entity.Shop;
@@ -104,7 +105,7 @@ public class AdminShopService {
                 .build();
     }
 
-    public List<String> autocompleteShops(String keyword) {
+    public List<AdminShopAutocompleteResponse> autocompleteShops(String keyword) {
         String k = (keyword == null) ? "" : keyword.trim();
 
         if (k.isEmpty()) {
@@ -113,6 +114,10 @@ public class AdminShopService {
 
         return shopRepository.autocompleteShops(k)
                 .stream()
+                .map(row -> new AdminShopAutocompleteResponse(
+                        ((Number) row[0]).intValue(), // id
+                        (String) row[1]              // label
+                ))
                 .distinct()
                 .limit(5)
                 .toList();
