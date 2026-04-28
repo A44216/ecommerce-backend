@@ -82,4 +82,16 @@ public class AdminProductService {
                 .images(imageUrls)
                 .build();
     }
+
+    public List<String> autocomplete(String keyword, Integer shopId) {
+        if (keyword == null || keyword.isBlank()) {
+            return List.of();
+        }
+
+        return productRepository.autocompleteAdminProducts(
+                keyword.trim(),
+                shopId
+        );
+    }
+
 }

@@ -10,6 +10,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @PreAuthorize("hasRole('ADMIN')")
 @RestController
 @RequestMapping("/api/admin/products")
@@ -33,4 +35,15 @@ public class AdminProductController {
     public ResponseEntity<AdminProductDetailResponse> getProductById(@PathVariable Integer id) {
         return ResponseEntity.ok(adminProductService.getProductById(id));
     }
+
+    @GetMapping("/autocomplete")
+    public ResponseEntity<List<String>> autocomplete(
+            @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) Integer shopId
+    ) {
+        return ResponseEntity.ok(
+                adminProductService.autocomplete(keyword, shopId)
+        );
+    }
+
 }

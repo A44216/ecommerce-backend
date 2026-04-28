@@ -9,5 +9,5 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class AdminShopAutocompleteResponse {
     private Integer id;
-    private String label;
+    private String name;
 }

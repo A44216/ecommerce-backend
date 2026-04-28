@@ -91,15 +91,57 @@ public interface ProductRepository extends JpaRepository<Product, Integer> {
     @Query("""
         SELECT DISTINCT p.name
         FROM Product p
+        LEFT JOIN p.category c
         WHERE p.shop.id = :shopId
-        AND p.isDeleted = false
-        AND LOWER(p.name) LIKE LOWER(CONCAT('%', :keyword, '%'))
-        ORDER BY p.name ASC
+          AND p.isDeleted = false
+          AND (
+              LOWER(p.name) LIKE LOWER(CONCAT('%', :keyword, '%'))
+              OR LOWER(c.name) LIKE LOWER(CONCAT('%', :keyword, '%'))
+          )
+        ORDER BY
+          CASE
+            WHEN LOWER(p.name) LIKE LOWER(CONCAT('%', :keyword, '%')) THEN 0
+            ELSE 1
+          END,
+          p.name ASC
     """)
     Page<String> autocompleteProducts(
             @Param("shopId") Integer shopId,
             @Param("keyword") String keyword,
             Pageable pageable
+    );
+
+
+    @Query(value = """
+        SELECT p.name
+        FROM products p
+        LEFT JOIN categories c ON p.category_id = c.id
+        LEFT JOIN shops s ON p.shop_id = s.id
+        WHERE (:shopId IS NULL OR p.shop_id = :shopId)
+          AND p.is_deleted = false
+          AND c.is_deleted = false
+          AND (
+                LOWER(p.name) LIKE LOWER(CONCAT('%', :keyword, '%'))
+             OR LOWER(c.name) LIKE LOWER(CONCAT('%', :keyword, '%'))
+             OR LOWER(s.shop_name) LIKE LOWER(CONCAT('%', :keyword, '%'))
+          )
+        GROUP BY p.name
+        ORDER BY
+          MIN(
+            CASE
+              WHEN LOWER(p.name) LIKE LOWER(CONCAT(:keyword, '%')) THEN 0
+              WHEN LOWER(p.name) LIKE LOWER(CONCAT('%', :keyword, '%')) THEN 1
+              WHEN LOWER(c.name) LIKE LOWER(CONCAT('%', :keyword, '%')) THEN 2
+              ELSE 3
+            END
+          ),
+          MAX(p.sold_count) DESC,
+          MAX(p.created_at) DESC
+        LIMIT 5
+    """, nativeQuery = true)
+    List<String> autocompleteAdminProducts(
+            @Param("keyword") String keyword,
+            @Param("shopId") Integer shopId
     );
 
 }
