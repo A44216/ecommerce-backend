@@ -70,6 +70,11 @@ public class AdminProductService {
     }
 
     private AdminProductResponse mapToDTO(Product product) {
+
+        String image = (product.getImages() != null && !product.getImages().isEmpty())
+                ? product.getImages().getFirst().getImageUrl()
+                : null;
+
         return AdminProductResponse.builder()
                 .id(product.getId())
                 .shopId(product.getShop() != null ? product.getShop().getId() : null)
@@ -82,6 +87,7 @@ public class AdminProductService {
                 .status(product.getStatus())
                 .soldCount(product.getSoldCount())
                 .createdAt(product.getCreatedAt())
+                .image(image)
                 .build();
     }
 
@@ -117,6 +123,42 @@ public class AdminProductService {
                 keyword.trim(),
                 shopId
         );
+    }
+
+    public void updateStatus(Integer id, ProductStatus status) {
+
+        Product product = productRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Product not found"));
+
+        // rule nghiệp vụ
+        if (product.getStatus() == ProductStatus.REJECTED
+                && status == ProductStatus.APPROVED) {
+            throw new IllegalStateException("Cannot approve rejected product directly");
+        }
+
+        product.setStatus(status);
+        productRepository.save(product);
+    }
+
+    public void deleteProduct(Integer id) {
+
+        Product product = productRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Product not found"));
+
+        // soft delete
+        product.setDeleted(true);
+
+        productRepository.save(product);
+    }
+
+    public void restoreProduct(Integer id) {
+
+        Product product = productRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Product not found"));
+
+        product.setDeleted(false);
+
+        productRepository.save(product);
     }
 
 }

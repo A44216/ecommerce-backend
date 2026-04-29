@@ -62,4 +62,25 @@ public class AdminProductController {
         );
     }
 
+    @PatchMapping("/{id}/status")
+    public ResponseEntity<Void> updateStatus(
+            @PathVariable Integer id,
+            @RequestParam ProductStatus status
+    ) {
+        adminProductService.updateStatus(id, status);
+        return ResponseEntity.ok().build();
+    }
+
+    @PatchMapping("/{id}/delete")
+    public ResponseEntity<Void> deleteProduct(@PathVariable Integer id) {
+        adminProductService.deleteProduct(id);
+        return ResponseEntity.ok().build();
+    }
+
+    @PatchMapping("/{id}/restore")
+    public ResponseEntity<Void> restoreProduct(@PathVariable Integer id) {
+        adminProductService.restoreProduct(id);
+        return ResponseEntity.ok().build();
+    }
+
 }

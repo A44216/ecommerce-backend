@@ -21,4 +21,7 @@ public class AdminProductResponse {
     private ProductStatus status;
     private Integer soldCount;
     private LocalDateTime createdAt;
+
+    private String image;
+
 }
