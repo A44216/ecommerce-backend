@@ -1,6 +1,7 @@
 package com.ecommerce.backend.controller.seller;
 
 import com.ecommerce.backend.dto.requests.seller.product.SellerProductRequest;
+import com.ecommerce.backend.dto.responses.ProductAutocompleteResponse;
 import com.ecommerce.backend.dto.responses.seller.PageResponse;
 import com.ecommerce.backend.dto.responses.seller.product.SellerProductResponse;
 import com.ecommerce.backend.enums.ProductStatus;
@@ -98,7 +99,7 @@ public class SellerProductController {
     }
 
     @GetMapping("/autocomplete")
-    public ResponseEntity<List<String>> autocomplete(
+    public ResponseEntity<List<ProductAutocompleteResponse>> autocomplete(
             @RequestParam(required = false) String keyword
     ) {
         return ResponseEntity.ok(productService.autocompleteProducts(keyword));

@@ -15,6 +15,7 @@ import java.util.List;
 public class SellerProductResponse {
 
     private Integer id;
+    private String productCode;
     private String name;
     private BigDecimal price;
     private int stock;

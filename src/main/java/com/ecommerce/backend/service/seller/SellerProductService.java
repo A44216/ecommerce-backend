@@ -1,6 +1,7 @@
 package com.ecommerce.backend.service.seller;
 
 import com.ecommerce.backend.dto.requests.seller.product.SellerProductRequest;
+import com.ecommerce.backend.dto.responses.ProductAutocompleteResponse;
 import com.ecommerce.backend.dto.responses.ProductImageResponse;
 import com.ecommerce.backend.dto.responses.seller.PageResponse;
 import com.ecommerce.backend.dto.responses.seller.product.SellerProductResponse;
@@ -34,6 +35,7 @@ public class SellerProductService {
     private SellerProductResponse mapToDTO(Product product) {
         return SellerProductResponse.builder()
                 .id(product.getId())
+                .productCode(product.getProductCode())
                 .name(product.getName())
                 .price(product.getPrice())
                 .stock(product.getStock())
@@ -105,7 +107,16 @@ public class SellerProductService {
         Product product = new Product();
         mapRequestToProduct(product, request);
 
-        return mapToDTO(productRepository.save(product));
+        // save lần 1 để có ID
+        product = productRepository.save(product);
+
+        // set productCode
+        product.setProductCode("PRD-" + String.format("%06d", product.getId()));
+
+        // save lần 2
+        product = productRepository.save(product);
+
+        return mapToDTO(product);
     }
 
     // UPDATE
@@ -229,20 +240,19 @@ public class SellerProductService {
         );
     }
 
-    public List<String> autocompleteProducts(String keyword) {
-        String k = (keyword == null) ? "" : keyword.trim();
+    public List<ProductAutocompleteResponse> autocompleteProducts(String keyword) {
 
+        String k = (keyword == null) ? "" : keyword.trim();
         if (k.isEmpty()) {
             return List.of();
         }
 
         Integer shopId = sellerShopService.getMyShop().getId();
-
         Pageable pageable = PageRequest.of(0, 5);
 
         return productRepository
                 .autocompleteProducts(shopId, k, pageable)
-                .getContent(); // lấy đúng 5 record từ DB
+                .getContent();
     }
 
 }

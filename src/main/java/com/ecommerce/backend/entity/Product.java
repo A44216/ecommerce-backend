@@ -17,14 +17,8 @@ import java.util.List;
                 // shop_id, is_deleted, status
                 @Index(name = "idx_products_shop_filter", columnList = "shop_id, is_deleted, status"),
 
-                // shop_id, status
-                @Index(name = "idx_products_shop_status", columnList = "shop_id, status"),
-
                 // shop_id, category
                 @Index( name = "idx_products_shop_category", columnList = "shop_id, category_id, is_deleted"),
-
-                // category_id
-                @Index(name = "idx_products_category", columnList = "category_id"),
 
                 // category_id, name
                 @Index(name = "idx_products_category_name", columnList = "category_id, name"),
@@ -35,11 +29,9 @@ import java.util.List;
                 // created_at
                 @Index(name = "idx_products_created", columnList = "created_at"),
 
-                // name
-                @Index(name = "idx_products_name", columnList = "name"),
-
-                // status
-                @Index(name = "idx_products_status", columnList = "status")
+                @Index(name = "idx_products_category_filter", columnList = "category_id, is_deleted, created_at"),
+                @Index(name = "idx_products_shop_created", columnList = "shop_id, created_at"),
+                @Index(name = "idx_products_category_sold", columnList = "category_id, sold_count")
         }
 )
 @Getter
@@ -91,5 +83,8 @@ public class Product {
 
     @OneToMany(mappedBy = "product", fetch = FetchType.LAZY)
     private List<ProductImage> images;
+
+    @Column(name = "product_code", nullable = false, unique = true)
+    private String productCode;
 
 }

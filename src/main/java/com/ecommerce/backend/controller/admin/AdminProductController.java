@@ -1,5 +1,6 @@
 package com.ecommerce.backend.controller.admin;
 
+import com.ecommerce.backend.dto.responses.ProductAutocompleteResponse;
 import com.ecommerce.backend.dto.responses.admin.product.AdminProductDetailResponse;
 import com.ecommerce.backend.dto.responses.admin.product.AdminProductResponse;
 import com.ecommerce.backend.dto.responses.seller.PageResponse;
@@ -53,7 +54,7 @@ public class AdminProductController {
     }
 
     @GetMapping("/autocomplete")
-    public ResponseEntity<List<String>> autocomplete(
+    public ResponseEntity<List<ProductAutocompleteResponse>> autocomplete(
             @RequestParam(required = false) String keyword,
             @RequestParam(required = false) Integer shopId
     ) {

@@ -1,5 +1,6 @@
 package com.ecommerce.backend.service.admin;
 
+import com.ecommerce.backend.dto.responses.ProductAutocompleteResponse;
 import com.ecommerce.backend.dto.responses.admin.product.AdminProductDetailResponse;
 import com.ecommerce.backend.dto.responses.admin.product.AdminProductResponse;
 import com.ecommerce.backend.dto.responses.seller.PageResponse;
@@ -77,6 +78,7 @@ public class AdminProductService {
 
         return AdminProductResponse.builder()
                 .id(product.getId())
+                .productCode(product.getProductCode())
                 .shopId(product.getShop() != null ? product.getShop().getId() : null)
                 .shopName(product.getShop() != null ? product.getShop().getShopName() : null)
                 .categoryId(product.getCategory() != null ? product.getCategory().getId() : null)
@@ -97,6 +99,7 @@ public class AdminProductService {
 
         return AdminProductDetailResponse.builder()
                 .id(product.getId())
+                .productCode(product.getProductCode())
                 .shopId(product.getShop() != null ? product.getShop().getId() : null)
                 .shopName(product.getShop() != null ? product.getShop().getShopName() : null)
                 .categoryId(product.getCategory() != null ? product.getCategory().getId() : null)
@@ -114,14 +117,17 @@ public class AdminProductService {
                 .build();
     }
 
-    public List<String> autocomplete(String keyword, Integer shopId) {
+    public List<ProductAutocompleteResponse> autocomplete(String keyword, Integer shopId) {
         if (keyword == null || keyword.isBlank()) {
             return List.of();
         }
 
+        Pageable pageable = PageRequest.of(0, 5);
+
         return productRepository.autocompleteAdminProducts(
                 keyword.trim(),
-                shopId
+                shopId,
+                pageable
         );
     }
 

@@ -12,6 +12,7 @@ import java.util.List;
 @Builder
 public class AdminProductDetailResponse {
     private Integer id;
+    private String productCode;
     private Integer shopId;
     private String shopName;
     private Integer categoryId;

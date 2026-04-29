@@ -11,6 +11,7 @@ import java.time.LocalDateTime;
 @Builder
 public class AdminProductResponse {
     private Integer id;
+    private String productCode;
     private Integer shopId;
     private String shopName;
     private Integer categoryId;

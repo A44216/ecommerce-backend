@@ -29,7 +29,7 @@ public class Complaint {
     private User user;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "order_id")
+    @JoinColumn(name = "order_id", nullable = true)
     private Order order;
 
     @Column(nullable = false, columnDefinition = "TEXT")
