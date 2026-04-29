@@ -132,6 +132,7 @@ public class AdminOrderService {
     private AdminOrderItemResponse mapItemToDTO(OrderItem item) {
         return AdminOrderItemResponse.builder()
                 .id(item.getId())
+                .productCode(item.getProduct().getProductCode())
                 .productId(item.getProduct().getId())
                 .productName(item.getProductName())
                 .productImage(item.getProductImage())

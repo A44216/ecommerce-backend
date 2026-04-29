@@ -188,6 +188,7 @@ public class SellerOrderService {
 
     private SellerOrderItemResponse mapItem(OrderItem item) {
         return SellerOrderItemResponse.builder()
+                .productCode(item.getProduct().getProductCode())
                 .productId(item.getProduct().getId())
                 .productName(item.getProductName())
                 .productImage(item.getProductImage())

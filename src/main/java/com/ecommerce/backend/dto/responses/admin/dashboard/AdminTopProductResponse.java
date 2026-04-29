@@ -13,6 +13,7 @@ import java.math.BigDecimal;
 @AllArgsConstructor
 public class AdminTopProductResponse {
     private Integer id;
+    private String productCode;
     private String name;
     private String image;
     private String shopName;
@@ -20,13 +21,24 @@ public class AdminTopProductResponse {
     private BigDecimal revenue;
     private BigDecimal price;
 
-    public AdminTopProductResponse(Integer id, String name, String image, String shopName, Long soldCount, BigDecimal revenue, BigDecimal price) {
+    public AdminTopProductResponse(
+            Integer id,
+            String productCode,
+            String name,
+            String image,
+            String shopName,
+            Long soldCount,
+            BigDecimal revenue,
+            BigDecimal price
+    ) {
         this.id = id;
+        this.productCode = productCode;
         this.name = name;
         this.image = image;
         this.shopName = shopName;
         this.soldCount = soldCount != null ? soldCount.intValue() : 0;
-        this.revenue = revenue != null ? revenue : BigDecimal.ZERO;
-        this.price = price != null ? price : BigDecimal.ZERO;
+        this.revenue = revenue;
+        this.price = price;
     }
+
 }

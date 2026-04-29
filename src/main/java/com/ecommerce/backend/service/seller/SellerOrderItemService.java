@@ -35,6 +35,7 @@ public class SellerOrderItemService {
 
     private SellerOrderItemResponse mapToDTO(OrderItem item) {
         return SellerOrderItemResponse.builder()
+                .productCode(item.getProduct().getProductCode())
                 .productId(item.getProduct().getId())
                 .productName(item.getProductName())
                 .productImage(item.getProductImage())

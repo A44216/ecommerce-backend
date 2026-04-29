@@ -1,5 +1,6 @@
 package com.ecommerce.backend.repository;
 
+import com.ecommerce.backend.dto.responses.admin.dashboard.AdminTopProductResponse;
 import com.ecommerce.backend.dto.responses.seller.dashboard.SellerTopSellingProductResponse;
 import com.ecommerce.backend.entity.OrderItem;
 import org.springframework.data.domain.Pageable;
@@ -28,6 +29,7 @@ public interface OrderItemRepository extends JpaRepository<OrderItem, Integer> {
     @Query("""
         SELECT new com.ecommerce.backend.dto.responses.seller.dashboard.SellerTopSellingProductResponse(
             oi.product.id,
+            oi.product.productCode,
             oi.product.name,
             SUM(oi.quantity),
             SUM(oi.price * oi.quantity),
@@ -39,7 +41,7 @@ public interface OrderItemRepository extends JpaRepository<OrderItem, Integer> {
         WHERE oi.order.shop.id = :shopId
             AND oi.order.status = com.ecommerce.backend.enums.OrderStatus.COMPLETED
             AND oi.order.paymentStatus = com.ecommerce.backend.enums.PaymentStatus.PAID
-        GROUP BY oi.product.id, oi.product.name
+        GROUP BY oi.product.id, oi.product.productCode, oi.product.name
         ORDER BY SUM(oi.price * oi.quantity) DESC
     """)
     List<SellerTopSellingProductResponse> findTopByRevenue(
@@ -51,6 +53,7 @@ public interface OrderItemRepository extends JpaRepository<OrderItem, Integer> {
     @Query("""
         SELECT new com.ecommerce.backend.dto.responses.seller.dashboard.SellerTopSellingProductResponse(
             oi.product.id,
+            oi.product.productCode,
             oi.product.name,
             SUM(oi.quantity),
             SUM(oi.price * oi.quantity),
@@ -60,9 +63,9 @@ public interface OrderItemRepository extends JpaRepository<OrderItem, Integer> {
         FROM OrderItem oi
         LEFT JOIN oi.product.images pi
         WHERE oi.order.shop.id = :shopId
-          AND oi.order.status = com.ecommerce.backend.enums.OrderStatus.COMPLETED
-          AND oi.order.paymentStatus = com.ecommerce.backend.enums.PaymentStatus.PAID
-        GROUP BY oi.product.id, oi.product.name
+            AND oi.order.status = com.ecommerce.backend.enums.OrderStatus.COMPLETED
+            AND oi.order.paymentStatus = com.ecommerce.backend.enums.PaymentStatus.PAID
+        GROUP BY oi.product.id, oi.product.productCode, oi.product.name
         ORDER BY SUM(oi.quantity) DESC
     """)
     List<SellerTopSellingProductResponse> findTopBySold(
@@ -87,6 +90,7 @@ public interface OrderItemRepository extends JpaRepository<OrderItem, Integer> {
     @Query("""
         SELECT new com.ecommerce.backend.dto.responses.seller.dashboard.SellerTopSellingProductResponse(
             oi.product.id,
+            oi.product.productCode,
             oi.product.name,
             SUM(oi.quantity),
             SUM(oi.price * oi.quantity),
@@ -99,7 +103,7 @@ public interface OrderItemRepository extends JpaRepository<OrderItem, Integer> {
             AND oi.order.status = com.ecommerce.backend.enums.OrderStatus.COMPLETED
             AND oi.order.paymentStatus = com.ecommerce.backend.enums.PaymentStatus.PAID
             AND oi.order.completedAt BETWEEN :startDate AND :endDate
-        GROUP BY oi.product.id, oi.product.name
+        GROUP BY oi.product.id, oi.product.productCode, oi.product.name
         ORDER BY SUM(oi.price * oi.quantity) DESC
     """)
     List<SellerTopSellingProductResponse> findTopByRevenueByDate(
@@ -112,6 +116,7 @@ public interface OrderItemRepository extends JpaRepository<OrderItem, Integer> {
     @Query("""
         SELECT new com.ecommerce.backend.dto.responses.seller.dashboard.SellerTopSellingProductResponse(
             oi.product.id,
+            oi.product.productCode,
             oi.product.name,
             SUM(oi.quantity),
             SUM(oi.price * oi.quantity),
@@ -124,7 +129,7 @@ public interface OrderItemRepository extends JpaRepository<OrderItem, Integer> {
             AND oi.order.status = com.ecommerce.backend.enums.OrderStatus.COMPLETED
             AND oi.order.paymentStatus = com.ecommerce.backend.enums.PaymentStatus.PAID
             AND oi.order.completedAt BETWEEN :startDate AND :endDate
-        GROUP BY oi.product.id, oi.product.name
+        GROUP BY oi.product.id, oi.product.productCode, oi.product.name
         ORDER BY SUM(oi.quantity) DESC
     """)
     List<SellerTopSellingProductResponse> findTopBySoldByDate(
@@ -137,10 +142,11 @@ public interface OrderItemRepository extends JpaRepository<OrderItem, Integer> {
     @Query("""
         SELECT new com.ecommerce.backend.dto.responses.admin.dashboard.AdminTopProductResponse(
             oi.product.id,
+            oi.product.productCode,
             oi.product.name,
             MIN(pi.imageUrl),
             oi.product.shop.shopName,
-            SUM(oi.quantity),
+            CAST(SUM(oi.quantity) as integer),
             SUM(oi.price * oi.quantity),
             MIN(oi.price)
         )
@@ -149,10 +155,10 @@ public interface OrderItemRepository extends JpaRepository<OrderItem, Integer> {
         WHERE oi.order.status = com.ecommerce.backend.enums.OrderStatus.COMPLETED
             AND oi.order.paymentStatus = com.ecommerce.backend.enums.PaymentStatus.PAID
             AND oi.order.completedAt BETWEEN :startDate AND :endDate
-        GROUP BY oi.product.id, oi.product.name, oi.product.shop.shopName
+        GROUP BY oi.product.id, oi.product.productCode, oi.product.name, oi.product.shop.shopName
         ORDER BY SUM(oi.price * oi.quantity) DESC
     """)
-    List<com.ecommerce.backend.dto.responses.admin.dashboard.AdminTopProductResponse> adminFindTopByRevenueByDate(
+    List<AdminTopProductResponse> adminFindTopByRevenueByDate(
             @Param("startDate") LocalDateTime startDate,
             @Param("endDate") LocalDateTime endDate,
             Pageable pageable
@@ -161,10 +167,11 @@ public interface OrderItemRepository extends JpaRepository<OrderItem, Integer> {
     @Query("""
         SELECT new com.ecommerce.backend.dto.responses.admin.dashboard.AdminTopProductResponse(
             oi.product.id,
+            oi.product.productCode,
             oi.product.name,
             MIN(pi.imageUrl),
             oi.product.shop.shopName,
-            SUM(oi.quantity),
+            CAST(SUM(oi.quantity) as integer),
             SUM(oi.price * oi.quantity),
             MIN(oi.price)
         )
@@ -173,12 +180,13 @@ public interface OrderItemRepository extends JpaRepository<OrderItem, Integer> {
         WHERE oi.order.status = com.ecommerce.backend.enums.OrderStatus.COMPLETED
             AND oi.order.paymentStatus = com.ecommerce.backend.enums.PaymentStatus.PAID
             AND oi.order.completedAt BETWEEN :startDate AND :endDate
-        GROUP BY oi.product.id, oi.product.name, oi.product.shop.shopName
+        GROUP BY oi.product.id, oi.product.productCode, oi.product.name, oi.product.shop.shopName
         ORDER BY SUM(oi.quantity) DESC
     """)
-    List<com.ecommerce.backend.dto.responses.admin.dashboard.AdminTopProductResponse> adminFindTopBySoldByDate(
+    List<AdminTopProductResponse> adminFindTopBySoldByDate(
             @Param("startDate") LocalDateTime startDate,
             @Param("endDate") LocalDateTime endDate,
             Pageable pageable
     );
+
 }
