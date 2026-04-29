@@ -55,8 +55,8 @@ public interface ProductRepository extends JpaRepository<Product, Integer> {
 
     @Query(value = """
         SELECT p FROM Product p
-        LEFT JOIN FETCH p.category c
-        LEFT JOIN FETCH p.shop s
+        LEFT JOIN p.category c
+        LEFT JOIN p.shop s
         WHERE (:shopId IS NULL OR s.id = :shopId)
         AND (:categoryId IS NULL OR c.id = :categoryId)
         AND (:status IS NULL OR p.status = :status)
@@ -67,15 +67,8 @@ public interface ProductRepository extends JpaRepository<Product, Integer> {
             LOWER(p.productCode) LIKE LOWER(CONCAT('%', :keyword, '%')) OR
             LOWER(s.shopName) LIKE LOWER(CONCAT('%', :keyword, '%'))
         )
-        ORDER BY
-            CASE
-                WHEN LOWER(p.productCode) LIKE LOWER(CONCAT(:keyword, '%')) THEN 0
-                WHEN LOWER(p.name) LIKE LOWER(CONCAT(:keyword, '%')) THEN 1
-                ELSE 2
-            END,
-            p.createdAt DESC
     """,
-            countQuery = """
+                countQuery = """
         SELECT COUNT(p) FROM Product p
         LEFT JOIN p.category c
         LEFT JOIN p.shop s
@@ -109,7 +102,6 @@ public interface ProductRepository extends JpaRepository<Product, Integer> {
 
     @Query("""
         SELECT new com.ecommerce.backend.dto.responses.ProductAutocompleteResponse(
-            p.id,
             p.productCode,
             p.name
         )
@@ -138,7 +130,6 @@ public interface ProductRepository extends JpaRepository<Product, Integer> {
 
     @Query("""
         SELECT new com.ecommerce.backend.dto.responses.ProductAutocompleteResponse(
-            p.id,
             p.productCode,
             p.name
         )
@@ -156,11 +147,12 @@ public interface ProductRepository extends JpaRepository<Product, Integer> {
           )
         ORDER BY
           CASE
-            WHEN LOWER(p.productCode) LIKE LOWER(CONCAT(:keyword, '%')) THEN 0
-            WHEN LOWER(p.name) LIKE LOWER(CONCAT(:keyword, '%')) THEN 1
-            ELSE 2
+            WHEN LOWER(p.productCode) = LOWER(:keyword) THEN 0
+            WHEN LOWER(p.productCode) LIKE LOWER(CONCAT(:keyword, '%')) THEN 1
+            WHEN LOWER(p.name) LIKE LOWER(CONCAT(:keyword, '%')) THEN 2
+            ELSE 3
           END,
-          p.createdAt DESC
+          p.productCode ASC
     """)
     List<ProductAutocompleteResponse> autocompleteAdminProducts(
             @Param("keyword") String keyword,

@@ -40,9 +40,38 @@ public class AdminProductService {
             sortBy = "createdAt";
         }
 
-        Sort sort = "asc".equalsIgnoreCase(direction)
-                ? Sort.by(sortBy).ascending()
-                : Sort.by(sortBy).descending();
+        Sort sort;
+
+        switch (sortBy) {
+
+            case "createdAt":
+                sort = "asc".equalsIgnoreCase(direction)
+                        ? Sort.by("createdAt").ascending()
+                        : Sort.by("createdAt").descending();
+                break;
+
+            case "price":
+                sort = "asc".equalsIgnoreCase(direction)
+                        ? Sort.by("price").ascending()
+                        : Sort.by("price").descending();
+                break;
+
+            case "soldCount":
+                sort = "asc".equalsIgnoreCase(direction)
+                        ? Sort.by("soldCount").ascending()
+                        : Sort.by("soldCount").descending();
+                break;
+
+            case "name":
+                sort = "asc".equalsIgnoreCase(direction)
+                        ? Sort.by("name").ascending()
+                        : Sort.by("name").descending();
+                break;
+
+            default:
+                sort = Sort.by("createdAt").descending();
+                break;
+        }
 
         Pageable pageable = PageRequest.of(page, size, sort);
 
