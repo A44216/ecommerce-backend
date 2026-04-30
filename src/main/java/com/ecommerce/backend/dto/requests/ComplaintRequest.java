@@ -8,7 +8,6 @@ import lombok.Setter;
 @Getter
 @Setter
 public class ComplaintRequest {
-    @NotNull(message = "Order id is required")
     private Integer orderId;
 
     @NotBlank(message = "Complaint content is required")

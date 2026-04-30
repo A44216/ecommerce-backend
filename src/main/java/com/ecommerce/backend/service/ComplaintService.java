@@ -77,12 +77,15 @@ public class ComplaintService {
         User user = userRepository.findById(request.getUserId())
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
-        Order order = orderRepository.findById(request.getOrderId())
-                .orElseThrow(() -> new ResourceNotFoundException("Order not found"));
-
         Complaint complaint = new Complaint();
         complaint.setUser(user);
-        complaint.setOrder(order);
+        
+        if (request.getOrderId() != null) {
+            Order order = orderRepository.findById(request.getOrderId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Order not found"));
+            complaint.setOrder(order);
+        }
+        
         complaint.setContent(request.getContent());
         complaint.setStatus(ComplaintStatus.PENDING); // Mặc định là PENDING khi mới tạo
 
