@@ -108,7 +108,6 @@ public interface ProductRepository extends JpaRepository<Product, Integer> {
         FROM Product p
         LEFT JOIN p.category c
         WHERE p.shop.id = :shopId
-          AND p.isDeleted = false
           AND (
               LOWER(p.name) LIKE LOWER(CONCAT('%', :keyword, '%'))
               OR LOWER(p.productCode) LIKE LOWER(CONCAT('%', :keyword, '%'))
