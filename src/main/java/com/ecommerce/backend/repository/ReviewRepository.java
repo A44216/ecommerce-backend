@@ -7,6 +7,8 @@ import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.util.List;
+
 public interface ReviewRepository extends org.springframework.data.jpa.repository.JpaRepository<Review, Integer> {
 
     @EntityGraph(attributePaths = {"user", "product"})
@@ -30,4 +32,8 @@ public interface ReviewRepository extends org.springframework.data.jpa.repositor
     Page<Review> findByProductId(Integer productId, Pageable pageable);
 
     Page<Review> findByUserId(Integer userId, Pageable pageable);
+
+    List<Review> findByProductId(Integer productId);
+
+    List<Review> findByUserId(Integer userId);
 }

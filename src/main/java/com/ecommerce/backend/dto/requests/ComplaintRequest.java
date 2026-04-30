@@ -1,13 +1,13 @@
 package com.ecommerce.backend.dto.requests;
 
 import jakarta.validation.constraints.*;
+
 import lombok.Getter;
 import lombok.Setter;
 
 @Getter
 @Setter
 public class ComplaintRequest {
-
     @NotNull(message = "Order id is required")
     private Integer orderId;
 
@@ -17,4 +17,5 @@ public class ComplaintRequest {
 
     @NotNull(message = "User id is required")
     private Integer userId;
+
 }

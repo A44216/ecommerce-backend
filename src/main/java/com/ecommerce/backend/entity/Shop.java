@@ -6,6 +6,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.math.BigDecimal;
+
 import java.time.LocalDateTime;
 
 @Entity
@@ -63,4 +64,5 @@ public class Shop {
 
     @Column(name = "email", length = 100)
     private String email;
+
 }

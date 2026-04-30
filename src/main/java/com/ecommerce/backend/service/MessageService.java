@@ -5,15 +5,28 @@ import com.ecommerce.backend.entity.Message;
 import com.ecommerce.backend.repository.MessageRepository;
 import org.springframework.stereotype.Service;
 
+import com.ecommerce.backend.dto.requests.MessageRequest;
+import com.ecommerce.backend.entity.Conversation;
+import com.ecommerce.backend.entity.User;
+import com.ecommerce.backend.exception.ResourceNotFoundException;
+import com.ecommerce.backend.repository.ConversationRepository;
+import com.ecommerce.backend.repository.UserRepository;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
 public class MessageService {
 
     private final MessageRepository repository;
+    private final ConversationRepository conversationRepository;
+    private final UserRepository userRepository;
 
-    public MessageService(MessageRepository repository) {
+    public MessageService(MessageRepository repository, ConversationRepository conversationRepository, UserRepository userRepository) {
         this.repository = repository;
+        this.conversationRepository = conversationRepository;
+        this.userRepository = userRepository;
     }
 
     private MessageResponse mapToDTO(Message message) {
@@ -39,8 +52,22 @@ public class MessageService {
     }
 
     // gửi tin nhắn
-    public Message sendMessage(Message message) {
-        return repository.save(message);
+    @Transactional
+    public MessageResponse sendMessage(MessageRequest request) {
+        Conversation conversation = conversationRepository.findById(request.getConversationId())
+                .orElseThrow(() -> new ResourceNotFoundException("Conversation not found"));
+        User sender = userRepository.findById(request.getSenderId())
+                .orElseThrow(() -> new ResourceNotFoundException("Sender not found"));
+
+        Message message = new Message();
+        message.setConversation(conversation);
+        message.setSender(sender);
+        message.setMessage(request.getMessage());
+        message.setCreatedAt(LocalDateTime.now());
+
+        message = repository.save(message);
+
+        return mapToDTO(message);
     }
 
     // xoá tin nhắn

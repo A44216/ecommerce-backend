@@ -25,7 +25,8 @@ import java.util.List;
                 @Index(name = "idx_orders_shop_status_payment_date", columnList = "shop_id, status, payment_status, completed_at"),
                 @Index(name = "idx_orders_cron_cancel", columnList = "status, payment_method, payment_status, created_at"),
                 @Index(name = "idx_orders_order_code", columnList = "order_code"),
-                @Index(name = "idx_orders_shop_order_code", columnList = "shop_id, order_code")
+                @Index(name = "idx_orders_shop_order_code", columnList = "shop_id, order_code"),
+                @Index(name = "idx_orders_code", columnList = "order_code")
         }
 )
 @Getter
@@ -37,6 +38,7 @@ public class Order {
     private Integer id;
 
     @Column(name = "order_code", nullable = false, unique = true, length = 30)
+
     private String orderCode;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -89,6 +91,7 @@ public class Order {
     private String shippingPhone;
 
     @Column(name = "shipping_address",nullable = false, length = 255)
+
     private String shippingAddress;
 
     @Column(name = "created_at", insertable = false, updatable = false)

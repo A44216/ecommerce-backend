@@ -16,6 +16,7 @@ import java.time.LocalDateTime;
         },
         indexes = {
                 @Index(name = "idx_coupons_status_end_date", columnList = "status, end_date")
+
         }
 )
 @Getter

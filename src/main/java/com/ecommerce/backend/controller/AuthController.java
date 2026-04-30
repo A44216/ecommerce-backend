@@ -1,7 +1,9 @@
 package com.ecommerce.backend.controller;
 
 import com.ecommerce.backend.dto.requests.*;
+
 import com.ecommerce.backend.dto.requests.admin.profile.AdminChangePasswordRequest;
+
 import com.ecommerce.backend.dto.responses.LoginResponse;
 import com.ecommerce.backend.dto.responses.UserResponse;
 import com.ecommerce.backend.service.AuthService;
@@ -65,4 +67,15 @@ public class AuthController {
         return ResponseEntity.ok(Collections.singletonMap("message", "PASSWORD_CHANGED_SUCCESSFULLY"));
     }
 
+    @PostMapping("/send-unlink-email-otp")
+    public ResponseEntity<?> sendUnlinkEmailOtp(@RequestBody SendOtpRequest request) {
+        authService.sendUnlinkEmailOtp(request);
+        return ResponseEntity.ok(Collections.singletonMap("message", "OTP_SENT_SUCCESSFULLY"));
+    }
+
+    @PostMapping("/send-verify-new-email-otp")
+    public ResponseEntity<?> sendVerifyNewEmailOtp(@RequestBody SendOtpRequest request) {
+        authService.sendVerifyNewEmailOtp(request);
+        return ResponseEntity.ok(Collections.singletonMap("message", "OTP_SENT_SUCCESSFULLY"));
+    }
 }

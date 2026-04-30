@@ -1,15 +1,15 @@
 package com.ecommerce.backend.dto.responses;
 
 import com.ecommerce.backend.enums.ComplaintStatus;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
+import lombok.*;
 
 import java.time.LocalDateTime;
 
 @Getter
 @AllArgsConstructor
 @Builder
+@NoArgsConstructor
+@Setter
 public class ComplaintResponse {
 
     private Integer id;

@@ -10,6 +10,7 @@ import lombok.Setter;
         indexes = {
                 @Index(name = "idx_categories_not_deleted_name", columnList = "is_deleted, name")
         },
+
         uniqueConstraints = {
                 @UniqueConstraint(name = "unique_categories_name", columnNames = "name")
         }
@@ -27,4 +28,5 @@ public class Category {
 
     @Column(name = "is_deleted", nullable = false)
     private Boolean isDeleted = false;
+
 }

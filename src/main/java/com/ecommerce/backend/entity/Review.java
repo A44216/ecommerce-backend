@@ -13,7 +13,10 @@ import java.time.LocalDateTime;
                 @Index(name = "idx_reviews_product_rating", columnList = "product_id, rating"),
                 @Index(name = "idx_reviews_user", columnList = "user_id"),
                 @Index(name = "idx_reviews_rating", columnList = "rating"),
-                @Index(name = "idx_reviews_product_created", columnList = "product_id, created_at")
+                @Index(name = "idx_reviews_product_created", columnList = "product_id, created_at"),
+                @Index(name = "idx_reviews_product", columnList = "product_id"),
+                @Index(name = "idx_reviews_user", columnList = "user_id"),
+                @Index(name = "idx_reviews_rating", columnList = "rating")
         },
         uniqueConstraints = {
                 @UniqueConstraint(name = "unique_reviews_order_item", columnNames = "order_item_id")

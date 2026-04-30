@@ -1,10 +1,14 @@
 package com.ecommerce.backend.config;
 
 import com.ecommerce.backend.enums.Role;
+
 import com.ecommerce.backend.security.JwtFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+
+import org.springframework.http.HttpMethod;
+
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -31,6 +35,16 @@ public class SecurityConfig {
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers("/api/seller/**").hasRole(Role.SELLER.name())
                         .requestMatchers("/api/admin/**").hasRole(Role.ADMIN.name())
+
+                        // Các endpoint công khai (không cần đăng nhập)
+                        .requestMatchers("/api/auth/**", "/api/payment/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/products/**", "/api/categories/**", "/api/shops/**", "/api/reviews/**", "/api/images/**").permitAll()
+
+                        // Các endpoint cần đăng nhập
+                        .requestMatchers("/api/notifications/**").authenticated()
+                        .requestMatchers("/api/conversations/**", "/api/messages/**").authenticated()
+
+                        // Tất cả các yêu cầu còn lại đều cần xác thực
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);

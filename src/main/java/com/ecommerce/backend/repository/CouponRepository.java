@@ -40,4 +40,8 @@ public interface CouponRepository extends JpaRepository<Coupon, Integer> {
 
     List<Coupon> findTop5ByCodeContainingIgnoreCaseOrderByCodeAsc(String code);
 
+    Optional<Coupon> findByCode(String code);
+
+    boolean existsByCode(String code);
+
 }

@@ -15,6 +15,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 @SpringBootApplication
 @EnableAsync
 @EnableScheduling
+
 public class EcommerceBackendApplication {
 
 	public static void main(String[] args) {

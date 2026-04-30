@@ -31,7 +31,15 @@ import java.util.List;
 
                 @Index(name = "idx_products_category_filter", columnList = "category_id, is_deleted, created_at"),
                 @Index(name = "idx_products_shop_created", columnList = "shop_id, created_at"),
-                @Index(name = "idx_products_category_sold", columnList = "category_id, sold_count")
+                @Index(name = "idx_products_category_sold", columnList = "category_id, sold_count"),
+
+                @Index(name = "idx_products_name", columnList = "name"),
+                @Index(name = "idx_products_shop", columnList = "shop_id"),
+                @Index(name = "idx_products_price", columnList = "price"),
+                @Index(name = "idx_products_category", columnList = "category_id"),
+                @Index(name = "idx_products_search", columnList = "name, price"),
+                @Index(name = "idx_products_sold", columnList = "sold_count"),
+                @Index(name = "idx_products_status", columnList = "status")
         }
 )
 @Getter
@@ -58,6 +66,7 @@ public class Product {
 
     @Column(nullable = false)
     private int stock = 0;
+
 
     @Column(columnDefinition = "TEXT")
     private String description;

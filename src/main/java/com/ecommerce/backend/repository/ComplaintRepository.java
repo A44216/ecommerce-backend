@@ -7,6 +7,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -23,4 +24,7 @@ public interface ComplaintRepository extends JpaRepository<Complaint, Integer> {
     @Query(value = "SELECT c FROM Complaint c LEFT JOIN FETCH c.user LEFT JOIN FETCH c.order WHERE (:status IS NULL OR c.status = :status)",
            countQuery = "SELECT COUNT(c) FROM Complaint c WHERE (:status IS NULL OR c.status = :status)")
     Page<Complaint> adminSearchComplaints(@Param("status") ComplaintStatus status, Pageable pageable);
+
+    List<Complaint> findByUserIdOrderByCreatedAtDesc(Integer userId);
+
 }
