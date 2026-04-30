@@ -14,6 +14,8 @@ import com.ecommerce.backend.repository.AddressRepository;
 import com.ecommerce.backend.repository.OrderRepository;
 import com.ecommerce.backend.repository.ShopRepository;
 import com.ecommerce.backend.repository.UserRepository;
+import lombok.Getter;
+import lombok.Setter;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -22,6 +24,8 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
+@Getter
+@Setter
 public class OrderService {
 
     private final OrderRepository repository;
@@ -74,8 +78,8 @@ public class OrderService {
         List<OrderItemResponse> itemResponses = new ArrayList<>();
 
         // Kiểm tra xem đơn hàng có danh sách sản phẩm không
-        if (order.getOrderItems() != null) {
-            itemResponses = order.getOrderItems().stream()
+        if (order.getItems() != null) {
+            itemResponses = order.getItems().stream()
                     .map(item -> {
                         // Lấy URL của ảnh đầu tiên (nếu có)
                         String firstImageUrl = null;
@@ -267,7 +271,7 @@ public class OrderService {
 
             // Lưu tất cả OrderItems vào DB
             orderItemRepository.saveAll(orderItemsList);
-            savedOrder.setOrderItems(orderItemsList);
+            savedOrder.setItems(orderItemsList);
         }
 
         // ==========================================

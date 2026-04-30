@@ -50,15 +50,4 @@ public class ComplaintController {
         complaintService.deleteComplaint(id);
         return ResponseEntity.noContent().build();
     }
-
-    @PostMapping
-    public ResponseEntity<?> submitComplaint(@RequestBody ComplaintRequest request) {
-        complaintService.submitComplaint(request);
-        return ResponseEntity.ok().build();
-    }
-
-    @GetMapping("/user/{userId}")
-    public List<ComplaintResponse> getMyComplaints(@PathVariable Integer userId) {
-        return complaintService.getComplaintsByUser(userId);
-    }
 }

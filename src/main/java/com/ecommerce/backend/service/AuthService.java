@@ -1,10 +1,8 @@
 package com.ecommerce.backend.service;
 
 import com.ecommerce.backend.dto.requests.*;
-<<<<<<< HEAD
 import com.ecommerce.backend.dto.requests.admin.profile.AdminChangePasswordRequest;
-=======
->>>>>>> origin/user-home
+
 import com.ecommerce.backend.dto.responses.LoginResponse;
 import com.ecommerce.backend.dto.responses.UserResponse;
 import com.ecommerce.backend.entity.User;

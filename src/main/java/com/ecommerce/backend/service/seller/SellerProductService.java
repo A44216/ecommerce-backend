@@ -107,13 +107,16 @@ public class SellerProductService {
         Product product = new Product();
         mapRequestToProduct(product, request);
 
-        // save lần 1 để có ID
+        // 1. Gán một mã ngẫu nhiên tạm thời để vượt qua lỗi NOT NULL
+        product.setProductCode("TEMP-" + java.util.UUID.randomUUID().toString());
+
+        // 2. save lần 1 để có ID
         product = productRepository.save(product);
 
-        // set productCode
+        // 3. set productCode chính thức dựa vào ID vừa có
         product.setProductCode("PRD-" + String.format("%06d", product.getId()));
 
-        // save lần 2
+        // 4. save lần 2
         product = productRepository.save(product);
 
         return mapToDTO(product);
