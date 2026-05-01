@@ -10,6 +10,8 @@ import com.ecommerce.backend.repository.OrderItemRepository;
 import com.ecommerce.backend.repository.OrderRepository;
 import com.ecommerce.backend.repository.ShopRepository;
 import com.ecommerce.backend.repository.UserRepository;
+import com.ecommerce.backend.util.DateRangeResult;
+import com.ecommerce.backend.util.DateRangeUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.security.core.Authentication;
@@ -113,54 +115,16 @@ public class SellerDashboardService {
         return result;
     }
 
-    private LocalDateTime[] getDateRange(DateRange range) {
-
-        LocalDateTime start;
-        LocalDateTime end = LocalDateTime.now();
-
-        switch (range) {
-            case TODAY -> {
-                start = LocalDate.now().atStartOfDay();
-            }
-            case LAST_7_DAYS -> {
-                start = LocalDate.now().minusDays(6).atStartOfDay();
-            }
-            case LAST_30_DAYS -> {
-                start = LocalDate.now().minusDays(29).atStartOfDay();
-            }
-            case THIS_MONTH -> {
-                start = LocalDate.now().withDayOfMonth(1).atStartOfDay();
-            }
-            case LAST_MONTH -> {
-                start = LocalDate.now().minusMonths(1).withDayOfMonth(1).atStartOfDay();
-                end = LocalDate.now().withDayOfMonth(1).atStartOfDay().minusSeconds(1);
-            }
-            case LAST_3_MONTHS -> {
-                start = LocalDate.now().minusMonths(3).withDayOfMonth(1).atStartOfDay();
-            }
-            case LAST_6_MONTHS -> {
-                start = LocalDate.now().minusMonths(6).withDayOfMonth(1).atStartOfDay();
-            }
-            case THIS_YEAR -> {
-                start = LocalDate.now().withDayOfYear(1).atStartOfDay();
-            }
-            default -> {
-                start = LocalDate.now().atStartOfDay();
-            }
-        }
-
-        return new LocalDateTime[]{start, end};
-    }
-
     public SellerDashboardKPIResponse getKPI(
             Authentication authentication,
             DateRange range
     ) {
         Integer shopId = getShopId(authentication);
 
-        LocalDateTime[] dateRange = getDateRange(range);
-        LocalDateTime startDate = dateRange[0];
-        LocalDateTime endDate = dateRange[1];
+        DateRangeResult dateRange = DateRangeUtil.getRange(range);
+
+        LocalDateTime startDate = dateRange.start();
+        LocalDateTime endDate = dateRange.end();
 
         BigDecimal revenue = orderRepository.sumRevenueByShopAndDate(shopId, startDate, endDate);
         Integer orders = orderRepository.countOrderByShopAndDate(shopId, startDate, endDate);
@@ -179,9 +143,10 @@ public class SellerDashboardService {
     ) {
         Integer shopId = getShopId(authentication);
 
-        LocalDateTime[] dateRange = getDateRange(range);
-        LocalDateTime startDate = dateRange[0];
-        LocalDateTime endDate = dateRange[1];
+        DateRangeResult dateRange = DateRangeUtil.getRange(range);
+
+        LocalDateTime startDate = dateRange.start();
+        LocalDateTime endDate = dateRange.end();
 
         return new SellerDashboardTopProductResponse(
                 orderItemRepository.findTopByRevenueByDate(

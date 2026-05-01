@@ -40,7 +40,7 @@ public class SellerDashboardController {
     @GetMapping("/dashboard/top-products")
     public SellerDashboardTopProductResponse getTopProducts(
             Authentication authentication,
-            @RequestParam(defaultValue = "THIS_MONTH") DateRange range
+            @RequestParam(defaultValue = "TODAY") DateRange range
     ) {
         return dashboardService.getTopProducts(authentication, range);
     }
