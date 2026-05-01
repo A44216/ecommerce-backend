@@ -215,11 +215,13 @@ public interface OrderRepository extends JpaRepository<Order, Integer> {
     Integer countByCreatedAtBetween(LocalDateTime startDate, LocalDateTime endDate);
 
     @Query("""
-            SELECT o.status, COUNT(o)
-            FROM Order o
-            WHERE o.createdAt BETWEEN :startDate AND :endDate
-            GROUP BY o.status
-        """)
+        SELECT o.status, COUNT(DISTINCT o.id)
+        FROM Order o
+        WHERE o.createdAt BETWEEN :startDate AND :endDate
+           OR (o.status = com.ecommerce.backend.enums.OrderStatus.COMPLETED
+               AND o.completedAt BETWEEN :startDate AND :endDate)
+        GROUP BY o.status
+    """)
     List<Object[]> countOrdersByStatusAndDate(
             @Param("startDate") LocalDateTime startDate,
             @Param("endDate") LocalDateTime endDate);

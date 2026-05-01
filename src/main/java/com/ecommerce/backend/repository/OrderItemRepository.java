@@ -26,53 +26,53 @@ public interface OrderItemRepository extends JpaRepository<OrderItem, Integer> {
     """)
     Integer sumQuantityByShop(@Param("shopId") Integer shopId);
 
-    // TOP PRODUCTS BY REVENUE (LIMIT được truyền từ service)
-    @Query("""
-        SELECT new com.ecommerce.backend.dto.responses.seller.dashboard.SellerTopSellingProductResponse(
-            oi.product.id,
-            oi.product.productCode,
-            oi.product.name,
-            SUM(oi.quantity),
-            SUM(oi.price * oi.quantity),
-            MIN(pi.imageUrl),
-            MIN(oi.price)
-        )
-        FROM OrderItem oi
-        LEFT JOIN oi.product.images pi
-        WHERE oi.order.shop.id = :shopId
-            AND oi.order.status = com.ecommerce.backend.enums.OrderStatus.COMPLETED
-            AND oi.order.paymentStatus = com.ecommerce.backend.enums.PaymentStatus.PAID
-        GROUP BY oi.product.id, oi.product.productCode, oi.product.name
-        ORDER BY SUM(oi.price * oi.quantity) DESC
-    """)
-    List<SellerTopSellingProductResponse> findTopByRevenue(
-            @Param("shopId") Integer shopId,
-            Pageable pageable
-    );
+//    // TOP PRODUCTS BY REVENUE (LIMIT được truyền từ service)
+//    @Query("""
+//        SELECT new com.ecommerce.backend.dto.responses.seller.dashboard.SellerTopSellingProductResponse(
+//            oi.product.id,
+//            oi.product.productCode,
+//            oi.product.name,
+//            SUM(oi.quantity),
+//            SUM(oi.price * oi.quantity),
+//            MIN(pi.imageUrl),
+//            MIN(oi.price)
+//        )
+//        FROM OrderItem oi
+//        LEFT JOIN oi.product.images pi
+//        WHERE oi.order.shop.id = :shopId
+//            AND oi.order.status = com.ecommerce.backend.enums.OrderStatus.COMPLETED
+//            AND oi.order.paymentStatus = com.ecommerce.backend.enums.PaymentStatus.PAID
+//        GROUP BY oi.product.id, oi.product.productCode, oi.product.name
+//        ORDER BY SUM(oi.price * oi.quantity) DESC
+//    """)
+//    List<SellerTopSellingProductResponse> findTopByRevenue(
+//            @Param("shopId") Integer shopId,
+//            Pageable pageable
+//    );
 
-    // TOP PRODUCTS BY SOLD (nếu cần sau này)
-    @Query("""
-        SELECT new com.ecommerce.backend.dto.responses.seller.dashboard.SellerTopSellingProductResponse(
-            oi.product.id,
-            oi.product.productCode,
-            oi.product.name,
-            SUM(oi.quantity),
-            SUM(oi.price * oi.quantity),
-            MIN(pi.imageUrl),
-            MIN(oi.price)
-        )
-        FROM OrderItem oi
-        LEFT JOIN oi.product.images pi
-        WHERE oi.order.shop.id = :shopId
-            AND oi.order.status = com.ecommerce.backend.enums.OrderStatus.COMPLETED
-            AND oi.order.paymentStatus = com.ecommerce.backend.enums.PaymentStatus.PAID
-        GROUP BY oi.product.id, oi.product.productCode, oi.product.name
-        ORDER BY SUM(oi.quantity) DESC
-    """)
-    List<SellerTopSellingProductResponse> findTopBySold(
-            @Param("shopId") Integer shopId,
-            Pageable pageable
-    );
+//    // TOP PRODUCTS BY SOLD (nếu cần sau này)
+//    @Query("""
+//        SELECT new com.ecommerce.backend.dto.responses.seller.dashboard.SellerTopSellingProductResponse(
+//            oi.product.id,
+//            oi.product.productCode,
+//            oi.product.name,
+//            SUM(oi.quantity),
+//            SUM(oi.price * oi.quantity),
+//            MIN(pi.imageUrl),
+//            MIN(oi.price)
+//        )
+//        FROM OrderItem oi
+//        LEFT JOIN oi.product.images pi
+//        WHERE oi.order.shop.id = :shopId
+//            AND oi.order.status = com.ecommerce.backend.enums.OrderStatus.COMPLETED
+//            AND oi.order.paymentStatus = com.ecommerce.backend.enums.PaymentStatus.PAID
+//        GROUP BY oi.product.id, oi.product.productCode, oi.product.name
+//        ORDER BY SUM(oi.quantity) DESC
+//    """)
+//    List<SellerTopSellingProductResponse> findTopBySold(
+//            @Param("shopId") Integer shopId,
+//            Pageable pageable
+//    );
 
     @Query("""
         SELECT COALESCE(SUM(oi.quantity), 0)
@@ -95,11 +95,10 @@ public interface OrderItemRepository extends JpaRepository<OrderItem, Integer> {
             oi.product.name,
             SUM(oi.quantity),
             SUM(oi.price * oi.quantity),
-            MIN(pi.imageUrl),
+            (SELECT MIN(pi.imageUrl) FROM ProductImage pi WHERE pi.product.id = oi.product.id),
             MIN(oi.price)
         )
         FROM OrderItem oi
-        LEFT JOIN oi.product.images pi
         WHERE oi.order.shop.id = :shopId
             AND oi.order.status = com.ecommerce.backend.enums.OrderStatus.COMPLETED
             AND oi.order.paymentStatus = com.ecommerce.backend.enums.PaymentStatus.PAID
@@ -121,11 +120,10 @@ public interface OrderItemRepository extends JpaRepository<OrderItem, Integer> {
             oi.product.name,
             SUM(oi.quantity),
             SUM(oi.price * oi.quantity),
-            MIN(pi.imageUrl),
+            (SELECT MIN(pi.imageUrl) FROM ProductImage pi WHERE pi.product.id = oi.product.id),
             MIN(oi.price)
         )
         FROM OrderItem oi
-        LEFT JOIN oi.product.images pi
         WHERE oi.order.shop.id = :shopId
             AND oi.order.status = com.ecommerce.backend.enums.OrderStatus.COMPLETED
             AND oi.order.paymentStatus = com.ecommerce.backend.enums.PaymentStatus.PAID
@@ -145,14 +143,13 @@ public interface OrderItemRepository extends JpaRepository<OrderItem, Integer> {
             oi.product.id,
             oi.product.productCode,
             oi.product.name,
-            MIN(pi.imageUrl),
+            (SELECT MIN(pi.imageUrl) FROM ProductImage pi WHERE pi.product.id = oi.product.id),
             oi.product.shop.shopName,
             CAST(SUM(oi.quantity) as integer),
             SUM(oi.price * oi.quantity),
             MIN(oi.price)
         )
         FROM OrderItem oi
-        LEFT JOIN oi.product.images pi
         WHERE oi.order.status = com.ecommerce.backend.enums.OrderStatus.COMPLETED
             AND oi.order.paymentStatus = com.ecommerce.backend.enums.PaymentStatus.PAID
             AND oi.order.completedAt BETWEEN :startDate AND :endDate
@@ -170,14 +167,13 @@ public interface OrderItemRepository extends JpaRepository<OrderItem, Integer> {
             oi.product.id,
             oi.product.productCode,
             oi.product.name,
-            MIN(pi.imageUrl),
+            (SELECT MIN(pi.imageUrl) FROM ProductImage pi WHERE pi.product.id = oi.product.id),
             oi.product.shop.shopName,
             CAST(SUM(oi.quantity) as integer),
             SUM(oi.price * oi.quantity),
             MIN(oi.price)
         )
         FROM OrderItem oi
-        LEFT JOIN oi.product.images pi
         WHERE oi.order.status = com.ecommerce.backend.enums.OrderStatus.COMPLETED
             AND oi.order.paymentStatus = com.ecommerce.backend.enums.PaymentStatus.PAID
             AND oi.order.completedAt BETWEEN :startDate AND :endDate
