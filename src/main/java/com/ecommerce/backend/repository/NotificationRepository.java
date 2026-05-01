@@ -12,6 +12,9 @@ public interface NotificationRepository extends JpaRepository<Notification, Inte
     // Lấy danh sách thông báo của 1 user, sắp xếp mới nhất lên đầu
     List<Notification> findByUserIdOrderByCreatedAtDesc(Integer userId);
 
+    // Lấy danh sách thông báo của 1 user theo Loại (Type)
+    List<Notification> findByUserIdAndTypeOrderByCreatedAtDesc(Integer userId, com.ecommerce.backend.enums.NotificationType type);
+
     // Đếm số lượng thông báo CHƯA ĐỌC để hiển thị chấm đỏ trên App
     long countByUserIdAndIsReadFalse(Integer userId);
 

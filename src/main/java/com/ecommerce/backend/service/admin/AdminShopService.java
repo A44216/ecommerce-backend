@@ -11,7 +11,9 @@ import com.ecommerce.backend.enums.ShopStatus;
 import com.ecommerce.backend.exception.ResourceNotFoundException;
 import com.ecommerce.backend.repository.ProductRepository;
 import com.ecommerce.backend.repository.ShopRepository;
+import com.ecommerce.backend.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -27,6 +29,7 @@ public class AdminShopService {
 
     private final ShopRepository shopRepository;
     private final ProductRepository productRepository;
+    private final UserRepository userRepository;
 
     public PageResponse<AdminShopResponse> getShops(int page, int size, ShopStatus status, String keyword,
             String sortBy, String sortDir) {
@@ -49,10 +52,19 @@ public class AdminShopService {
         return mapToDetailDTO(shop, totalProducts);
     }
 
+    @Transactional
     public void updateShopStatus(Integer id, ShopStatus status) {
         Shop shop = shopRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Shop not found"));
         shop.setStatus(status);
+        
+        if (status == ShopStatus.APPROVED) {
+            User user = shop.getUser();
+            if (user != null && user.getRole() == com.ecommerce.backend.enums.Role.CUSTOMER) {
+                user.setRole(com.ecommerce.backend.enums.Role.SELLER);
+                userRepository.save(user);
+            }
+        }
         shopRepository.save(shop);
     }
 

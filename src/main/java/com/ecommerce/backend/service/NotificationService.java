@@ -35,6 +35,14 @@ public class NotificationService {
                 .collect(Collectors.toList());
     }
 
+    // 1b. Lấy danh sách thông báo của User theo Loại
+    public List<NotificationResponse> getNotificationsForUserByType(Integer userId, NotificationType type) {
+        return notificationRepository.findByUserIdAndTypeOrderByCreatedAtDesc(userId, type)
+                .stream()
+                .map(this::mapToResponse)
+                .collect(Collectors.toList());
+    }
+
     // 2. Tạo thông báo mới (Hàm này sẽ được các Service khác gọi)
     @Transactional
     public void createNotification(Integer userId, String title, String body, NotificationType type, Integer relatedId) {

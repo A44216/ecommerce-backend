@@ -70,6 +70,7 @@ public class ShopService {
         Shop shop = new Shop();
 
         mapRequestToShop(shop, request, user);
+        shop.setStatus(com.ecommerce.backend.enums.ShopStatus.PENDING); // Bắt buộc là PENDING khi mới tạo
 
         Shop saved = shopRepository.save(shop);
 

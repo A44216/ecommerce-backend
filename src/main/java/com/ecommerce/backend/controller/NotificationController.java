@@ -23,6 +23,14 @@ public class NotificationController {
         return notificationService.getNotificationsForUser(userId);
     }
 
+    // Lấy thông báo theo loại
+    @GetMapping("/user/{userId}/type/{type}")
+    public List<NotificationResponse> getMyNotificationsByType(
+            @PathVariable Integer userId, 
+            @PathVariable com.ecommerce.backend.enums.NotificationType type) {
+        return notificationService.getNotificationsForUserByType(userId, type);
+    }
+
     // Lấy số lượng chưa đọc tổng quát
     @GetMapping("/user/{userId}/unread-count")
     public Map<String, Long> getUnreadCount(@PathVariable Integer userId) {
