@@ -9,6 +9,9 @@ import com.ecommerce.backend.entity.User;
 import com.ecommerce.backend.enums.NotificationType;
 import com.ecommerce.backend.repository.NotificationRepository;
 import com.ecommerce.backend.repository.UserRepository;
+import com.ecommerce.backend.entity.SystemNotification;
+import com.ecommerce.backend.repository.SystemNotificationRepository;
+import com.ecommerce.backend.dto.responses.SystemNotificationResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,6 +25,7 @@ public class NotificationService {
 
     private final NotificationRepository notificationRepository;
     private final UserRepository userRepository;
+    private final SystemNotificationRepository systemNotificationRepository;
 
     // 1. Lấy danh sách thông báo của User
     public List<NotificationResponse> getNotificationsForUser(Integer userId) {
@@ -70,6 +74,38 @@ public class NotificationService {
             summary.put(type.name(), count);
         }
         return summary;
+    }
+
+    // 6. Broadcast thông báo hệ thống cho toàn bộ user
+    @Transactional
+    public void broadcastNotification(String title, String body, NotificationType type) {
+        // Lưu lịch sử broadcast
+        SystemNotification sysNotif = new SystemNotification();
+        sysNotif.setTitle(title);
+        sysNotif.setBody(body);
+        sysNotif.setType(type);
+        systemNotificationRepository.save(sysNotif);
+
+        // Gửi thông báo cho từng user
+        List<User> allUsers = userRepository.findAll();
+        for (User user : allUsers) {
+            Notification notification = new Notification();
+            notification.setUser(user);
+            notification.setTitle(title);
+            notification.setBody(body);
+            notification.setType(type);
+            notification.setRelatedId(null);
+            notification.setRead(false);
+            notificationRepository.save(notification);
+        }
+    }
+
+    // 7. Lấy danh sách lịch sử thông báo hệ thống đã gửi
+    public List<SystemNotificationResponse> getSystemNotifications() {
+        return systemNotificationRepository.findAllByOrderByCreatedAtDesc()
+                .stream()
+                .map(n -> new SystemNotificationResponse(n.getId(), n.getTitle(), n.getBody(), n.getType(), n.getCreatedAt()))
+                .collect(Collectors.toList());
     }
 
     private NotificationResponse mapToResponse(Notification n) {
