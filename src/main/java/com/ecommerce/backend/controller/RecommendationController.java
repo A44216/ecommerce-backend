@@ -10,37 +10,31 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/recommendations")
-@CrossOrigin
 public class RecommendationController {
 
-    private final RecommendationService recommendationService;
+    private final RecommendationService service;
 
-    public RecommendationController(RecommendationService recommendationService) {
-        this.recommendationService = recommendationService;
+    public RecommendationController(RecommendationService service) {
+        this.service = service;
     }
 
-    // tất cả recommendation
     @GetMapping
-    public List<RecommendationResponse> getAllRecommendations() {
-        return recommendationService.getAllRecommendations();
+    public List<RecommendationResponse> getAll() {
+        return service.getAllRecommendations();
     }
 
-    // recommendation theo user
     @GetMapping("/user/{userId}")
     public List<RecommendationResponse> getByUser(@PathVariable Integer userId) {
-        return recommendationService.getByUser(userId);
+        return service.getByUser(userId);
     }
 
-    // tạo recommendation
     @PostMapping
-    public RecommendationResponse createRecommendation(
-            @Valid @RequestBody RecommendationRequest request) {
-        return recommendationService.createRecommendation(request);
+    public RecommendationResponse create(@RequestBody @Valid RecommendationRequest request) {
+        return service.createRecommendation(request);
     }
 
-    // xóa
     @DeleteMapping("/{id}")
-    public void deleteRecommendation(@PathVariable Integer id) {
-        recommendationService.deleteRecommendation(id);
+    public void delete(@PathVariable Integer id) {
+        service.deleteRecommendation(id);
     }
 }

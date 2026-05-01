@@ -42,7 +42,7 @@ public class Review {
     @JoinColumn(name = "order_item_id", nullable = false)    private OrderItem orderItem;
 
     @Column(nullable = false)
-    private int rating = 5;
+    private Integer rating = 5;
 
     @Column(columnDefinition = "TEXT")
     private String comment;

@@ -1,13 +1,11 @@
 package com.ecommerce.backend.dto.responses;
 
-import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 
 import java.math.BigDecimal;
 
 @Getter
-@AllArgsConstructor
 @Builder
 public class RecommendationResponse {
 
@@ -15,5 +13,13 @@ public class RecommendationResponse {
     private String productName;
     private String imageUrl;
     private BigDecimal price;
+
     private BigDecimal score;
+
+    private BigDecimal soldScore;
+    private BigDecimal ratingScore;
+    private BigDecimal priceScore;
+
+    private String type;
+    private String reason;
 }

@@ -65,8 +65,7 @@ public class Product {
     private BigDecimal price = BigDecimal.ZERO;
 
     @Column(nullable = false)
-    private int stock = 0;
-
+    private Integer stock = 0;
 
     @Column(columnDefinition = "TEXT")
     private String description;
@@ -79,10 +78,10 @@ public class Product {
     private BigDecimal ratingAvg = BigDecimal.ZERO;
 
     @Column(name = "rating_count")
-    private int ratingCount = 0;
+    private Integer ratingCount = 0;
 
     @Column(name = "sold_count")
-    private int soldCount = 0;
+    private Integer soldCount = 0;
 
     @Column(name = "created_at", insertable = false, updatable = false)
     private LocalDateTime createdAt;

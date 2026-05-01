@@ -18,15 +18,15 @@ public class SellerProductResponse {
     private String productCode;
     private String name;
     private BigDecimal price;
-    private int stock;
+    private Integer stock;
     private String description;
 
     private String categoryName;
     private String shopName;
 
     private BigDecimal ratingAvg;
-    private int ratingCount;
-    private int soldCount;
+    private Integer ratingCount;
+    private Integer soldCount;
 
     private ProductStatus status;
     private Boolean isDeleted;

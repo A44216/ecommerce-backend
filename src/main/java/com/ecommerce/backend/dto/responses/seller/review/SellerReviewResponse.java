@@ -17,7 +17,7 @@ public class SellerReviewResponse {
     private String userAvatar;
 
     // REVIEW DATA
-    private int rating;
+    private Integer rating;
     private String comment;
     private LocalDateTime createdAt;
 
