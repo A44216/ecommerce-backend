@@ -16,9 +16,10 @@ public class AdminComplaintDetailResponse {
     private ComplaintStatus status;
     private LocalDateTime createdAt;
     private LocalDateTime resolvedAt;
+    private AdminUserResponse resolvedBy;
+    private String adminResponse;
 
     private AdminUserResponse user;
     
     private Integer orderId;
-    private BigDecimal orderTotal;
 }

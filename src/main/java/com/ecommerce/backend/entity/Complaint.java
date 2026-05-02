@@ -2,7 +2,7 @@ package com.ecommerce.backend.entity;
 
 import com.ecommerce.backend.enums.ComplaintStatus;
 import jakarta.persistence.*;
-import lombok.Getter;
+        import lombok.Getter;
 import lombok.Setter;
 
 import java.time.LocalDateTime;
@@ -44,5 +44,12 @@ public class Complaint {
 
     @Column(name = "resolved_at")
     private LocalDateTime resolvedAt;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "resolved_by")
+    private User resolvedBy;
+
+    @Column(name = "admin_response", columnDefinition = "TEXT")
+    private String adminResponse;
 
 }

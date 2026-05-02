@@ -1,10 +1,12 @@
 package com.ecommerce.backend.controller.admin;
 
+import com.ecommerce.backend.dto.requests.admin.complaint.AdminReplyComplaintRequest;
 import com.ecommerce.backend.dto.responses.admin.complaint.AdminComplaintDetailResponse;
 import com.ecommerce.backend.dto.responses.admin.complaint.AdminComplaintResponse;
 import com.ecommerce.backend.dto.responses.seller.PageResponse;
 import com.ecommerce.backend.enums.ComplaintStatus;
 import com.ecommerce.backend.service.admin.AdminComplaintService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -38,4 +40,14 @@ public class AdminComplaintController {
         adminComplaintService.updateComplaintStatus(id, status);
         return ResponseEntity.noContent().build();
     }
+
+    @PostMapping("/{id}/reply")
+    public ResponseEntity<Void> replyComplaint(
+            @PathVariable Integer id,
+            @RequestBody @Valid AdminReplyComplaintRequest request) {
+
+        adminComplaintService.replyComplaint(id, request.getResponse());
+        return ResponseEntity.noContent().build();
+    }
+
 }

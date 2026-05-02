@@ -9,18 +9,23 @@ import com.ecommerce.backend.entity.User;
 import com.ecommerce.backend.enums.ComplaintStatus;
 import com.ecommerce.backend.exception.ResourceNotFoundException;
 import com.ecommerce.backend.repository.ComplaintRepository;
+import com.ecommerce.backend.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+
+import java.time.LocalDateTime;
 
 @Service
 @RequiredArgsConstructor
 public class AdminComplaintService {
 
     private final ComplaintRepository complaintRepository;
+    private final UserRepository userRepository;
 
     public PageResponse<AdminComplaintResponse> getComplaints(int page, int size, ComplaintStatus status) {
         Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
@@ -48,10 +53,38 @@ public class AdminComplaintService {
         complaint.setStatus(status);
 
         if (status == ComplaintStatus.RESOLVED || status == ComplaintStatus.REJECTED) {
-            complaint.setResolvedAt(java.time.LocalDateTime.now());
+            complaint.setResolvedAt(LocalDateTime.now());
         }
 
         complaintRepository.save(complaint);
+    }
+
+    public void replyComplaint(Integer id, String response) {
+
+        Complaint complaint = complaintRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Complaint not found"));
+
+        User adminUser = getCurrentUser();
+
+        complaint.setAdminResponse(response);
+        complaint.setResolvedBy(adminUser);
+        complaint.setResolvedAt(LocalDateTime.now());
+        complaint.setStatus(ComplaintStatus.RESOLVED);
+
+        complaintRepository.save(complaint);
+    }
+
+    private User getCurrentUser() {
+        var authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        if (authentication == null || !authentication.isAuthenticated()) {
+            throw new RuntimeException("Unauthenticated user");
+        }
+
+        String username = authentication.getName();
+
+        return userRepository.findByUsername(username)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
     }
 
     private AdminComplaintResponse mapToDTO(Complaint complaint) {
@@ -63,6 +96,8 @@ public class AdminComplaintService {
                 .content(complaint.getContent())
                 .status(complaint.getStatus())
                 .createdAt(complaint.getCreatedAt())
+                .resolvedBy(complaint.getResolvedBy() != null ? complaint.getResolvedBy().getId() : null)
+                .adminResponse(complaint.getAdminResponse())
                 .build();
     }
 
@@ -73,9 +108,10 @@ public class AdminComplaintService {
                 .status(complaint.getStatus())
                 .createdAt(complaint.getCreatedAt())
                 .resolvedAt(complaint.getResolvedAt())
+                .resolvedBy(mapUserToDTO(complaint.getResolvedBy()))
+                .adminResponse(complaint.getAdminResponse())
                 .user(mapUserToDTO(complaint.getUser()))
                 .orderId(complaint.getOrder() != null ? complaint.getOrder().getId() : null)
-                .orderTotal(complaint.getOrder() != null ? complaint.getOrder().getTotalPrice() : null)
                 .build();
     }
 
