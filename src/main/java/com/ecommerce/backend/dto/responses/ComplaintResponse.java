@@ -16,8 +16,6 @@ public class ComplaintResponse {
 
     private Integer userId;
 
-    private Integer orderId;
-
     private String content;
 
     private ComplaintStatus status;

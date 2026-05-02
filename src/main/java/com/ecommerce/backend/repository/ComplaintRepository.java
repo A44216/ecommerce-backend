@@ -19,12 +19,31 @@ public interface ComplaintRepository extends JpaRepository<Complaint, Integer> {
 
     Long countByStatus(ComplaintStatus status);
 
-    List<Complaint> findByOrderId(Integer orderId);
-
-    @Query(value = "SELECT c FROM Complaint c LEFT JOIN FETCH c.user LEFT JOIN FETCH c.order WHERE (:status IS NULL OR c.status = :status)",
-           countQuery = "SELECT COUNT(c) FROM Complaint c WHERE (:status IS NULL OR c.status = :status)")
-    Page<Complaint> adminSearchComplaints(@Param("status") ComplaintStatus status, Pageable pageable);
+    @Query("""
+        SELECT c FROM Complaint c
+        JOIN c.user u
+        WHERE (:status IS NULL OR c.status = :status)
+        AND (
+            :keyword IS NULL OR
+            LOWER(c.content) LIKE LOWER(CONCAT('%', :keyword, '%')) OR
+            LOWER(u.username) LIKE LOWER(CONCAT('%', :keyword, '%'))
+        )
+    """)
+    Page<Complaint> adminSearchComplaints(
+            @Param("status") ComplaintStatus status,
+            @Param("keyword") String keyword,
+            Pageable pageable
+    );
 
     List<Complaint> findByUserIdOrderByCreatedAtDesc(Integer userId);
+
+    @Query("""
+        SELECT DISTINCT u.username
+        FROM Complaint c
+        JOIN c.user u
+        WHERE LOWER(u.username) LIKE LOWER(CONCAT('%', :keyword, '%'))
+        ORDER BY u.username
+    """)
+    List<String> autoCompleteComplaints(@Param("keyword") String keyword, Pageable pageable);
 
 }

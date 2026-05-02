@@ -28,10 +28,6 @@ public class Complaint {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "order_id", nullable = true)
-    private Order order;
-
     @Column(nullable = false, columnDefinition = "TEXT")
     private String content;
 

@@ -12,6 +12,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @PreAuthorize("hasRole('ADMIN')")
 @RestController
 @RequestMapping("/api/admin/complaints")
@@ -24,8 +26,18 @@ public class AdminComplaintController {
     public ResponseEntity<PageResponse<AdminComplaintResponse>> getComplaints(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
-            @RequestParam(required = false) ComplaintStatus status) {
-        return ResponseEntity.ok(adminComplaintService.getComplaints(page, size, status));
+            @RequestParam(required = false) ComplaintStatus status,
+            @RequestParam(required = false) String keyword,
+            @RequestParam(defaultValue = "createdAt") String sortBy,
+            @RequestParam(defaultValue = "desc") String direction
+    ) {
+        return ResponseEntity.ok(
+                adminComplaintService.getComplaints(
+                        page, size,
+                        status, keyword,
+                        sortBy, direction
+                )
+        );
     }
 
     @GetMapping("/{id}")
@@ -48,6 +60,13 @@ public class AdminComplaintController {
 
         adminComplaintService.replyComplaint(id, request.getResponse());
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/autocomplete")
+    public ResponseEntity<List<String>> autocomplete(
+            @RequestParam(required = false) String keyword
+    ) {
+        return ResponseEntity.ok(adminComplaintService.autocomplete(keyword));
     }
 
 }

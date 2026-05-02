@@ -20,6 +20,5 @@ public class AdminComplaintDetailResponse {
     private String adminResponse;
 
     private AdminUserResponse user;
-    
-    private Integer orderId;
+
 }

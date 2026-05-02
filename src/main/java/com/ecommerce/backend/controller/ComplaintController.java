@@ -35,11 +35,6 @@ public class ComplaintController {
         return ResponseEntity.ok(complaintService.getComplaintsByUserId(userId));
     }
 
-    @GetMapping("/order/{orderId}")
-    public ResponseEntity<List<ComplaintResponse>> getComplaintsByOrderId(@PathVariable Integer orderId) {
-        return ResponseEntity.ok(complaintService.getComplaintsByOrderId(orderId));
-    }
-
     @PostMapping
     public ResponseEntity<ComplaintResponse> createComplaint(@Valid @RequestBody ComplaintRequest request) {
         return new ResponseEntity<>(complaintService.createComplaint(request), HttpStatus.CREATED);

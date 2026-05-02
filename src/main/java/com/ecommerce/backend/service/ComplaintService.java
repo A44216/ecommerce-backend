@@ -36,7 +36,6 @@ public class ComplaintService {
         return ComplaintResponse.builder()
                 .id(complaint.getId())
                 .userId(complaint.getUser().getId())
-                .orderId(complaint.getOrder() != null ? complaint.getOrder().getId() : null)
                 .content(complaint.getContent())
                 .status(complaint.getStatus())
                 .createdAt(complaint.getCreatedAt())
@@ -65,13 +64,6 @@ public class ComplaintService {
                 .toList();
     }
 
-    // lấy khiếu nại theo Order
-    public List<ComplaintResponse> getComplaintsByOrderId(Integer orderId) {
-        return complaintRepository.findByOrderId(orderId).stream()
-                .map(this::mapToDTO)
-                .toList();
-    }
-
     // tạo khiếu nại mới
     public ComplaintResponse createComplaint(ComplaintRequest request) {
         User user = userRepository.findById(request.getUserId())
@@ -79,12 +71,6 @@ public class ComplaintService {
 
         Complaint complaint = new Complaint();
         complaint.setUser(user);
-        
-        if (request.getOrderId() != null) {
-            Order order = orderRepository.findById(request.getOrderId())
-                    .orElseThrow(() -> new ResourceNotFoundException("Order not found"));
-            complaint.setOrder(order);
-        }
         
         complaint.setContent(request.getContent());
         complaint.setStatus(ComplaintStatus.PENDING); // Mặc định là PENDING khi mới tạo
@@ -110,11 +96,6 @@ public class ComplaintService {
         complaint.setContent(request.getContent());
         complaint.setStatus(ComplaintStatus.PENDING);
 
-        if (request.getOrderId() != null) {
-            Order order = orderRepository.findById(request.getOrderId()).orElse(null);
-            complaint.setOrder(order);
-        }
-
         complaintRepository.save(complaint);
     }
 
@@ -128,7 +109,6 @@ public class ComplaintService {
     private ComplaintResponse mapToResponse(Complaint c) {
         ComplaintResponse res = new ComplaintResponse();
         res.setId(c.getId());
-        res.setOrderId(c.getOrder() != null ? c.getOrder().getId() : null);
         res.setContent(c.getContent());
         res.setStatus(c.getStatus());
         res.setCreatedAt(c.getCreatedAt());

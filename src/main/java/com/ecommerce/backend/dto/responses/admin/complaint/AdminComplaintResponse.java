@@ -10,12 +10,13 @@ import java.time.LocalDateTime;
 @Builder
 public class AdminComplaintResponse {
     private Integer id;
-    private Integer userId;
+
     private String username;
-    private Integer orderId;
+
     private String content;
     private ComplaintStatus status;
     private LocalDateTime createdAt;
+
     private Integer resolvedBy;
     private String adminResponse;
 }

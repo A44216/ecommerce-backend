@@ -19,6 +19,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -27,12 +28,33 @@ public class AdminComplaintService {
     private final ComplaintRepository complaintRepository;
     private final UserRepository userRepository;
 
-    public PageResponse<AdminComplaintResponse> getComplaints(int page, int size, ComplaintStatus status) {
-        Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
-        Page<Complaint> complaints = complaintRepository.adminSearchComplaints(status, pageable);
+    public PageResponse<AdminComplaintResponse> getComplaints(
+            int page,
+            int size,
+            ComplaintStatus status,
+            String keyword,
+            String sortBy,
+            String direction
+    ) {
+
+        Sort sort = direction.equalsIgnoreCase("asc")
+                ? Sort.by(sortBy).ascending()
+                : Sort.by(sortBy).descending();
+
+        Pageable pageable = PageRequest.of(page, size, sort);
+
+        Page<Complaint> complaints =
+                complaintRepository.adminSearchComplaints(
+                        status,
+                        keyword,
+                        pageable
+                );
 
         return new PageResponse<>(
-                complaints.getContent().stream().map(this::mapToDTO).toList(),
+                complaints.getContent()
+                        .stream()
+                        .map(this::mapToDTO)
+                        .toList(),
                 complaints.getNumber(),
                 complaints.getSize(),
                 complaints.getTotalElements(),
@@ -90,9 +112,7 @@ public class AdminComplaintService {
     private AdminComplaintResponse mapToDTO(Complaint complaint) {
         return AdminComplaintResponse.builder()
                 .id(complaint.getId())
-                .userId(complaint.getUser() != null ? complaint.getUser().getId() : null)
                 .username(complaint.getUser() != null ? complaint.getUser().getUsername() : null)
-                .orderId(complaint.getOrder() != null ? complaint.getOrder().getId() : null)
                 .content(complaint.getContent())
                 .status(complaint.getStatus())
                 .createdAt(complaint.getCreatedAt())
@@ -111,7 +131,6 @@ public class AdminComplaintService {
                 .resolvedBy(mapUserToDTO(complaint.getResolvedBy()))
                 .adminResponse(complaint.getAdminResponse())
                 .user(mapUserToDTO(complaint.getUser()))
-                .orderId(complaint.getOrder() != null ? complaint.getOrder().getId() : null)
                 .build();
     }
 
@@ -127,4 +146,16 @@ public class AdminComplaintService {
                 .avatar(user.getAvatar())
                 .build();
     }
+
+    public List<String> autocomplete(String keyword) {
+        if (keyword == null || keyword.isBlank()) {
+            return List.of();
+        }
+
+        return complaintRepository.autoCompleteComplaints(
+                keyword,
+                PageRequest.of(0, 5)
+        );
+    }
+
 }
