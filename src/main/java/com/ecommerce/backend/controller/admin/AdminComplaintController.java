@@ -45,28 +45,26 @@ public class AdminComplaintController {
         return ResponseEntity.ok(adminComplaintService.getComplaintById(id));
     }
 
-    @PatchMapping("/{id}/status")
-    public ResponseEntity<Void> updateComplaintStatus(
-            @PathVariable Integer id,
-            @RequestParam ComplaintStatus status) {
-        adminComplaintService.updateComplaintStatus(id, status);
-        return ResponseEntity.noContent().build();
-    }
-
-    @PostMapping("/{id}/reply")
-    public ResponseEntity<Void> replyComplaint(
-            @PathVariable Integer id,
-            @RequestBody @Valid AdminReplyComplaintRequest request) {
-
-        adminComplaintService.replyComplaint(id, request.getResponse());
-        return ResponseEntity.noContent().build();
-    }
-
     @GetMapping("/autocomplete")
     public ResponseEntity<List<String>> autocomplete(
             @RequestParam(required = false) String keyword
     ) {
         return ResponseEntity.ok(adminComplaintService.autocomplete(keyword));
     }
+
+    @PostMapping("/{id}/reply")
+    public ResponseEntity<Void> replyComplaint(
+            @PathVariable Integer id,
+            @RequestBody @Valid AdminReplyComplaintRequest request
+    ) {
+        adminComplaintService.replyComplaint(
+                id,
+                request.getStatus(),
+                request.getResponse()
+        );
+
+        return ResponseEntity.noContent().build();
+    }
+
 
 }

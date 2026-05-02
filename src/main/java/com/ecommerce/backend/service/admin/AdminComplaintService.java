@@ -68,34 +68,6 @@ public class AdminComplaintService {
         return mapToDetailDTO(complaint);
     }
 
-    public void updateComplaintStatus(Integer id, ComplaintStatus status) {
-        Complaint complaint = complaintRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Complaint not found"));
-
-        complaint.setStatus(status);
-
-        if (status == ComplaintStatus.RESOLVED || status == ComplaintStatus.REJECTED) {
-            complaint.setResolvedAt(LocalDateTime.now());
-        }
-
-        complaintRepository.save(complaint);
-    }
-
-    public void replyComplaint(Integer id, String response) {
-
-        Complaint complaint = complaintRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Complaint not found"));
-
-        User adminUser = getCurrentUser();
-
-        complaint.setAdminResponse(response);
-        complaint.setResolvedBy(adminUser);
-        complaint.setResolvedAt(LocalDateTime.now());
-        complaint.setStatus(ComplaintStatus.RESOLVED);
-
-        complaintRepository.save(complaint);
-    }
-
     private User getCurrentUser() {
         var authentication = SecurityContextHolder.getContext().getAuthentication();
 
@@ -156,6 +128,33 @@ public class AdminComplaintService {
                 keyword,
                 PageRequest.of(0, 5)
         );
+    }
+
+    public void replyComplaint(Integer id, ComplaintStatus status, String response) {
+
+        if (status != ComplaintStatus.RESOLVED && status != ComplaintStatus.REJECTED) {
+            throw new IllegalArgumentException("Invalid final status");
+        }
+
+        if (response == null || response.trim().isEmpty()) {
+            throw new IllegalArgumentException("Admin response is required");
+        }
+
+        Complaint complaint = complaintRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Complaint not found"));
+
+        if (complaint.getStatus() != ComplaintStatus.PENDING) {
+            throw new IllegalStateException("Complaint already processed");
+        }
+
+        User adminUser = getCurrentUser();
+
+        complaint.setStatus(status);
+        complaint.setAdminResponse(response.trim());
+        complaint.setResolvedBy(adminUser);
+        complaint.setResolvedAt(LocalDateTime.now());
+
+        complaintRepository.save(complaint);
     }
 
 }
