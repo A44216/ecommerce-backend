@@ -25,6 +25,7 @@ public interface ComplaintRepository extends JpaRepository<Complaint, Integer> {
         WHERE (:status IS NULL OR c.status = :status)
         AND (
             :keyword IS NULL OR
+            LOWER(c.complaintCode) LIKE LOWER(CONCAT('%', :keyword, '%')) OR
             LOWER(c.content) LIKE LOWER(CONCAT('%', :keyword, '%')) OR
             LOWER(u.username) LIKE LOWER(CONCAT('%', :keyword, '%'))
         )

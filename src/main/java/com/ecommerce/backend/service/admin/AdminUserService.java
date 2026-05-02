@@ -89,6 +89,7 @@ public class AdminUserService {
     private AdminUserResponse mapToDTO(User user) {
         return AdminUserResponse.builder()
                 .id(user.getId())
+                .username(user.getUsername())
                 .fullName(user.getFullName())
                 .email(user.getEmail())
                 .phone(user.getPhone())

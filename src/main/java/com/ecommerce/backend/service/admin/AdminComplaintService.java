@@ -112,6 +112,7 @@ public class AdminComplaintService {
         if (user == null) return null;
         return AdminUserResponse.builder()
                 .id(user.getId())
+                .username(user.getUsername())
                 .fullName(user.getFullName())
                 .email(user.getEmail())
                 .phone(user.getPhone())
