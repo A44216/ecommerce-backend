@@ -12,6 +12,8 @@ import java.time.LocalDateTime;
 @Builder
 public class AdminComplaintDetailResponse {
     private Integer id;
+    private String complaintCode;
+
     private String content;
     private ComplaintStatus status;
     private LocalDateTime createdAt;

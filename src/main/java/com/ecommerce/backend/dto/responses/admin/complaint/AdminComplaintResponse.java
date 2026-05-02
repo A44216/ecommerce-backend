@@ -10,6 +10,7 @@ import java.time.LocalDateTime;
 @Builder
 public class AdminComplaintResponse {
     private Integer id;
+    private String complaintCode;
 
     private String username;
 

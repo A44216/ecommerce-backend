@@ -6,6 +6,7 @@ import com.ecommerce.backend.enums.UserStatus;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
+import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
 
@@ -15,7 +16,8 @@ import java.time.LocalDateTime;
         uniqueConstraints = {
                 @UniqueConstraint(name = "unique_users_username", columnNames = "username"),
                 @UniqueConstraint(name = "unique_users_email", columnNames = "email"),
-                @UniqueConstraint(name = "unique_users_phone", columnNames = "phone")
+                @UniqueConstraint(name = "unique_users_phone", columnNames = "phone"),
+                @UniqueConstraint(name = "unique_users_google_id", columnNames = "google_id")
         }
 )
 @Getter
@@ -49,10 +51,11 @@ public class User {
     @Column(nullable = false)
     private UserStatus status = UserStatus.ACTIVE;
 
-    @Column(name = "created_at", insertable = false, updatable = false)
+    @CreationTimestamp
+    @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
 
-    @Column(name = "google_id", unique = true)
+    @Column(name = "google_id", length = 255, unique = true)
     private String googleId;
 
     @Enumerated(EnumType.STRING)

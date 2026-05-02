@@ -6,6 +6,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
 
@@ -40,6 +41,8 @@ public class Notification {
     // Đánh dấu đã đọc hay chưa (Mặc định khi mới tạo là chưa đọc)
     private boolean isRead = false;
 
+    @CreationTimestamp
+    @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
 
     // Tự động lấy giờ hiện tại khi lưu vào DB

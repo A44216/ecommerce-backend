@@ -6,6 +6,7 @@ import com.ecommerce.backend.enums.PaymentStatus;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
+import org.hibernate.annotations.CreationTimestamp;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -14,6 +15,9 @@ import java.util.List;
 @Entity
 @Table(
         name = "orders",
+        uniqueConstraints = {
+                @UniqueConstraint(name = "unique_orders_order_code", columnNames = "order_code")
+        },
         indexes = {
                 @Index(name = "idx_orders_status", columnList = "status"),
                 @Index(name = "idx_orders_user_created", columnList = "user_id, created_at"),
@@ -24,9 +28,7 @@ import java.util.List;
                 @Index(name = "idx_orders_completed_at", columnList = "completed_at"),
                 @Index(name = "idx_orders_shop_status_payment_date", columnList = "shop_id, status, payment_status, completed_at"),
                 @Index(name = "idx_orders_cron_cancel", columnList = "status, payment_method, payment_status, created_at"),
-                @Index(name = "idx_orders_order_code", columnList = "order_code"),
                 @Index(name = "idx_orders_shop_order_code", columnList = "shop_id, order_code"),
-                @Index(name = "idx_orders_code", columnList = "order_code")
         }
 )
 @Getter
@@ -91,10 +93,10 @@ public class Order {
     private String shippingPhone;
 
     @Column(name = "shipping_address",nullable = false, length = 255)
-
     private String shippingAddress;
 
-    @Column(name = "created_at", insertable = false, updatable = false)
+    @CreationTimestamp
+    @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
 
     @Column(name = "completed_at")

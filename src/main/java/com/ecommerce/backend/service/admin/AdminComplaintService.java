@@ -84,6 +84,7 @@ public class AdminComplaintService {
     private AdminComplaintResponse mapToDTO(Complaint complaint) {
         return AdminComplaintResponse.builder()
                 .id(complaint.getId())
+                .complaintCode(complaint.getComplaintCode())
                 .username(complaint.getUser() != null ? complaint.getUser().getUsername() : null)
                 .content(complaint.getContent())
                 .status(complaint.getStatus())
@@ -96,6 +97,7 @@ public class AdminComplaintService {
     private AdminComplaintDetailResponse mapToDetailDTO(Complaint complaint) {
         return AdminComplaintDetailResponse.builder()
                 .id(complaint.getId())
+                .complaintCode(complaint.getComplaintCode())
                 .content(complaint.getContent())
                 .status(complaint.getStatus())
                 .createdAt(complaint.getCreatedAt())
@@ -124,10 +126,7 @@ public class AdminComplaintService {
             return List.of();
         }
 
-        return complaintRepository.autoCompleteComplaints(
-                keyword,
-                PageRequest.of(0, 5)
-        );
+        return complaintRepository.autocompleteComplaints(keyword);
     }
 
     public void replyComplaint(Integer id, ComplaintStatus status, String response) {

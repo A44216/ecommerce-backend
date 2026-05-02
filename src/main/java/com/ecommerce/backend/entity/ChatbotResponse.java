@@ -8,10 +8,7 @@ import lombok.Setter;
 @Table(
         name = "chatbot_responses",
         uniqueConstraints = {
-                @UniqueConstraint(
-                        name = "unique_chatbot_responses_keyword",
-                        columnNames = "keyword"
-                )
+                @UniqueConstraint(name = "unique_chatbot_responses_keyword", columnNames = "keyword")
         }
 )
 @Getter

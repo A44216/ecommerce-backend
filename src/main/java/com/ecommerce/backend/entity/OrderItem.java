@@ -10,10 +10,7 @@ import java.math.BigDecimal;
 @Table(
         name = "order_items",
         uniqueConstraints = {
-                @UniqueConstraint(
-                        name = "unique_order_product",
-                        columnNames = {"order_id", "product_id"}
-                )
+                @UniqueConstraint(name = "unique_order_items_order_product", columnNames = {"order_id", "product_id"})
         },
         indexes = {
                 @Index(name = "idx_order_items_order", columnList = "order_id"),

@@ -3,7 +3,6 @@ package com.ecommerce.backend.service;
 import com.ecommerce.backend.dto.requests.ComplaintRequest;
 import com.ecommerce.backend.dto.responses.ComplaintResponse;
 import com.ecommerce.backend.entity.Complaint;
-import com.ecommerce.backend.entity.Order;
 import com.ecommerce.backend.entity.User;
 import com.ecommerce.backend.enums.ComplaintStatus;
 
@@ -11,7 +10,6 @@ import com.ecommerce.backend.exception.ResourceNotFoundException;
 import com.ecommerce.backend.repository.ComplaintRepository;
 import com.ecommerce.backend.repository.OrderRepository;
 import com.ecommerce.backend.repository.UserRepository;
-import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 

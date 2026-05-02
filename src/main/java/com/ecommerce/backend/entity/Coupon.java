@@ -4,6 +4,7 @@ import com.ecommerce.backend.enums.CouponStatus;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
+import org.hibernate.annotations.CreationTimestamp;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -58,7 +59,8 @@ public class Coupon {
     @Column(nullable = false)
     private CouponStatus status = CouponStatus.ACTIVE;
 
-    @Column(name = "created_at", insertable = false, updatable = false)
+    @CreationTimestamp
+    @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
 
     @Column(name = "updated_at")

@@ -2,18 +2,21 @@ package com.ecommerce.backend.entity;
 
 import com.ecommerce.backend.enums.ComplaintStatus;
 import jakarta.persistence.*;
-        import lombok.Getter;
+import lombok.Getter;
 import lombok.Setter;
+import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
-
 
 @Entity
 @Table(
         name = "complaints",
+        uniqueConstraints = {
+                @UniqueConstraint(name = "unique_complaints_complaint_code", columnNames = "complaint_code")
+        },
         indexes = {
                 @Index(name = "idx_complaints_user", columnList = "user_id"),
-                @Index(name = "idx_complaints_order", columnList = "order_id")
+                @Index(name = "idx_complaints_resolved_by", columnList = "resolved_by")
         }
 )
 @Getter
@@ -35,7 +38,8 @@ public class Complaint {
     @Column(nullable = false)
     private ComplaintStatus status = ComplaintStatus.PENDING;
 
-    @Column(name = "created_at", insertable = false, updatable = false)
+    @CreationTimestamp
+    @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
 
     @Column(name = "resolved_at")
@@ -48,4 +52,6 @@ public class Complaint {
     @Column(name = "admin_response", columnDefinition = "TEXT")
     private String adminResponse;
 
+    @Column(name = "complaint_code", nullable = false, length = 30)
+    private String complaintCode;
 }

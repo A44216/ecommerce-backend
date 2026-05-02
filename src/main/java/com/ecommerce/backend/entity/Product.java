@@ -4,6 +4,7 @@ import com.ecommerce.backend.enums.ProductStatus;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
+import org.hibernate.annotations.CreationTimestamp;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -12,6 +13,9 @@ import java.util.List;
 @Entity
 @Table(
         name = "products",
+        uniqueConstraints = {
+                @UniqueConstraint(name = "unique_products_product_code", columnNames = "product_code")
+        },
         indexes = {
 
                 // shop_id, is_deleted, status
@@ -38,7 +42,6 @@ import java.util.List;
                 @Index(name = "idx_products_price", columnList = "price"),
                 @Index(name = "idx_products_category", columnList = "category_id"),
                 @Index(name = "idx_products_search", columnList = "name, price"),
-                @Index(name = "idx_products_sold", columnList = "sold_count"),
                 @Index(name = "idx_products_status", columnList = "status")
         }
 )
@@ -83,7 +86,8 @@ public class Product {
     @Column(name = "sold_count")
     private Integer soldCount = 0;
 
-    @Column(name = "created_at", insertable = false, updatable = false)
+    @CreationTimestamp
+    @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
 
     @Column(name = "is_deleted", nullable = false)
@@ -92,7 +96,7 @@ public class Product {
     @OneToMany(mappedBy = "product", fetch = FetchType.LAZY)
     private List<ProductImage> images;
 
-    @Column(name = "product_code", nullable = false, unique = true)
+    @Column(name = "product_code", nullable = false, unique = true, length = 30)
     private String productCode;
 
 }

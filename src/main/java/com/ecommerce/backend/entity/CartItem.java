@@ -8,10 +8,7 @@ import lombok.Setter;
 @Table(
         name = "cart_items",
         uniqueConstraints = {
-                @UniqueConstraint(
-                        name = "unique_cart_items_cart_product",
-                        columnNames = {"cart_id","product_id"}
-                )
+                @UniqueConstraint(name = "unique_cart_items_cart_product", columnNames = {"cart_id","product_id"})
         },
         indexes = {
                 @Index(name = "idx_cart_items_product", columnList = "product_id")

@@ -37,13 +37,28 @@ public interface ComplaintRepository extends JpaRepository<Complaint, Integer> {
 
     List<Complaint> findByUserIdOrderByCreatedAtDesc(Integer userId);
 
-    @Query("""
-        SELECT DISTINCT u.username
-        FROM Complaint c
-        JOIN c.user u
-        WHERE LOWER(u.username) LIKE LOWER(CONCAT('%', :keyword, '%'))
-        ORDER BY u.username
-    """)
-    List<String> autoCompleteComplaints(@Param("keyword") String keyword, Pageable pageable);
+    @Query(value = """
+        SELECT value FROM (
+            (
+                SELECT c.complaint_code AS value, 1 AS priority
+                FROM complaints c
+                WHERE LOWER(c.complaint_code) LIKE LOWER(CONCAT('%', :keyword, '%'))
+                ORDER BY c.created_at DESC
+                LIMIT 5
+            )
+            UNION ALL
+            (
+                SELECT u.username AS value, 2 AS priority
+                FROM complaints c
+                JOIN users u ON c.user_id = u.id
+                WHERE LOWER(u.username) LIKE LOWER(CONCAT('%', :keyword, '%'))
+                ORDER BY c.created_at DESC
+                LIMIT 5
+            )
+        ) t
+        ORDER BY t.priority
+        LIMIT 5
+    """, nativeQuery = true)
+    List<String> autocompleteComplaints(@Param("keyword") String keyword);
 
 }

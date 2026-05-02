@@ -4,6 +4,7 @@ import com.ecommerce.backend.enums.ShopStatus;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
+import org.hibernate.annotations.CreationTimestamp;
 
 import java.math.BigDecimal;
 
@@ -38,7 +39,8 @@ public class Shop {
     @Column(nullable = false)
     private ShopStatus status = ShopStatus.PENDING;
 
-    @Column(name = "created_at", insertable = false, updatable = false)
+    @CreationTimestamp
+    @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
 
     @Column(name = "avatar")

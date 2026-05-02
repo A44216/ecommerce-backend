@@ -3,6 +3,7 @@ package com.ecommerce.backend.entity;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
+import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
 
@@ -10,10 +11,7 @@ import java.time.LocalDateTime;
 @Table(
         name = "conversations",
         uniqueConstraints = {
-                @UniqueConstraint(
-                        name = "unique_conversations_customer_shop",
-                        columnNames = {"customer_id","shop_id"}
-                )
+                @UniqueConstraint(name = "unique_conversations_customer_shop", columnNames = {"customer_id","shop_id"})
         },
         indexes = {
                 @Index(name = "idx_conversations_customer", columnList = "customer_id"),
@@ -36,6 +34,7 @@ public class Conversation {
     @JoinColumn(name = "shop_id", nullable = false)
     private Shop shop;
 
-    @Column(name = "created_at", insertable = false, updatable = false)
+    @CreationTimestamp
+    @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
 }

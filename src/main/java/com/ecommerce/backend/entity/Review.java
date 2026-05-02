@@ -3,6 +3,7 @@ package com.ecommerce.backend.entity;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
+import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
 
@@ -14,9 +15,7 @@ import java.time.LocalDateTime;
                 @Index(name = "idx_reviews_user", columnList = "user_id"),
                 @Index(name = "idx_reviews_rating", columnList = "rating"),
                 @Index(name = "idx_reviews_product_created", columnList = "product_id, created_at"),
-                @Index(name = "idx_reviews_product", columnList = "product_id"),
-                @Index(name = "idx_reviews_user", columnList = "user_id"),
-                @Index(name = "idx_reviews_rating", columnList = "rating")
+                @Index(name = "idx_reviews_product", columnList = "product_id")
         },
         uniqueConstraints = {
                 @UniqueConstraint(name = "unique_reviews_order_item", columnNames = "order_item_id")
@@ -47,7 +46,8 @@ public class Review {
     @Column(columnDefinition = "TEXT")
     private String comment;
 
-    @Column(name = "created_at", insertable = false, updatable = false)
+    @CreationTimestamp
+    @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
 
     @Column(name = "seller_reply", columnDefinition = "TEXT")

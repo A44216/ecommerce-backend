@@ -4,6 +4,7 @@ import com.ecommerce.backend.enums.RecommendationType;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
+import org.hibernate.annotations.CreationTimestamp;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -43,10 +44,10 @@ public class Recommendation {
     private BigDecimal score;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
+    @Column(nullable = false, length = 20)
     private RecommendationType type;
 
-    @Lob
+    @Column(columnDefinition = "LONGTEXT")
     private String reason;
 
     @Column(name = "sold_score", precision = 5, scale = 4, nullable = false)
@@ -58,7 +59,8 @@ public class Recommendation {
     @Column(name = "price_score", precision = 5, scale = 4, nullable = false)
     private BigDecimal priceScore;
 
-    @Column(name = "created_at", insertable = false, updatable = false)
+    @CreationTimestamp
+    @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
 
     @Column(name = "updated_at")
