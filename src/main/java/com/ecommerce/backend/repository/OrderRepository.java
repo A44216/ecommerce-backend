@@ -35,7 +35,7 @@ public interface OrderRepository extends JpaRepository<Order, Integer> {
         SELECT o FROM Order o
         LEFT JOIN o.user u
         WHERE o.shop.id = :shopId
-        AND (:status IS NULL OR o.status = :status)
+        AND (:statuses IS NULL OR o.status IN :statuses)
         AND (:paymentMethod IS NULL OR o.paymentMethod = :paymentMethod)
         AND (:paymentStatus IS NULL OR o.paymentStatus = :paymentStatus)
         AND (
@@ -47,7 +47,7 @@ public interface OrderRepository extends JpaRepository<Order, Integer> {
     """)
     Page<Order> getOrders(
             @Param("shopId") Integer shopId,
-            @Param("status") OrderStatus status,
+            @Param("statuses") List<OrderStatus> statuses,
             @Param("paymentMethod") PaymentMethod paymentMethod,
             @Param("paymentStatus") PaymentStatus paymentStatus,
             @Param("keyword") String keyword,

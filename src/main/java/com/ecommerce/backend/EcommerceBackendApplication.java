@@ -23,8 +23,13 @@ public class EcommerceBackendApplication {
 	}
 
     @Bean
-    CommandLineRunner init(UserRepository repo, PasswordEncoder encoder) {
+    CommandLineRunner init(UserRepository repo, PasswordEncoder encoder, org.springframework.jdbc.core.JdbcTemplate jdbcTemplate) {
         return args -> {
+            try {
+                jdbcTemplate.execute("ALTER TABLE orders MODIFY COLUMN status VARCHAR(50);");
+            } catch (Exception e) {
+                System.out.println("Could not alter table orders: " + e.getMessage());
+            }
             if (repo.findByUsername("admin12345").isEmpty()) {
                 User admin = new User();
                 admin.setFullName("Admin");

@@ -56,4 +56,28 @@ public class OrderController {
     public OrderResponse cancelOrder(@PathVariable Integer id) {
         return service.cancelOrder(id);
     }
+
+    // Nút Đã nhận được hàng
+    @PutMapping("/{id}/receive")
+    public OrderResponse receiveOrder(@PathVariable Integer id) {
+        return service.receiveOrder(id);
+    }
+
+    // Nút Yêu cầu trả hàng hoàn tiền (Khách hàng)
+    @PutMapping("/{id}/return")
+    public OrderResponse requestReturn(@PathVariable Integer id, @RequestParam String reason) {
+        return service.requestReturn(id, reason);
+    }
+
+    // Nút Đồng ý trả hàng hoàn tiền (Seller)
+    @PutMapping("/{id}/accept-return")
+    public OrderResponse acceptReturn(@PathVariable Integer id) {
+        return service.acceptReturn(id);
+    }
+
+    // Nút Từ chối trả hàng hoàn tiền / Khiếu nại Admin (Seller)
+    @PutMapping("/{id}/reject-return")
+    public OrderResponse rejectReturn(@PathVariable Integer id, @RequestParam String reason) {
+        return service.rejectReturn(id, reason);
+    }
 }

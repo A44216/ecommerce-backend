@@ -28,6 +28,7 @@ public class SystemNotification {
     private String body;
 
     @Enumerated(EnumType.STRING)
+    @Column(name = "type", length = 50)
     private NotificationType type;
 
     @CreationTimestamp

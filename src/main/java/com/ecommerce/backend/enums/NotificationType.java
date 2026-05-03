@@ -6,5 +6,7 @@ public enum NotificationType {
     SYSTEM,     // Thông báo từ hệ thống
     LIVE,       // Live & Video
     AWARDS,     // Giải thưởng
-    FOOD        // Giao đồ ăn
+    FOOD,       // Giao đồ ăn
+    SHOP,       // Thông báo về Shop (Đăng ký, Duyệt shop...)
+    PRODUCT     // Thông báo về Sản phẩm (Duyệt sản phẩm, bị từ chối...)
 }

@@ -30,7 +30,7 @@ public class SellerOrderService {
     private final SellerShopService sellerShopService;
 
     public PageResponse<SellerOrderResponse> getOrders(
-            OrderStatus status,
+            List<OrderStatus> statuses,
             PaymentMethod paymentMethod,
             PaymentStatus paymentStatus,
             String keyword,
@@ -51,7 +51,7 @@ public class SellerOrderService {
 
         Page<Order> orders = orderRepository.getOrders(
                 shopId,
-                status,
+                statuses,
                 paymentMethod,
                 paymentStatus,
                 keyword,

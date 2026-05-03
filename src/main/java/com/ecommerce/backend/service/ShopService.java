@@ -4,6 +4,8 @@ import com.ecommerce.backend.dto.requests.ShopRequest;
 import com.ecommerce.backend.dto.responses.ShopResponse;
 import com.ecommerce.backend.entity.Shop;
 import com.ecommerce.backend.entity.User;
+import com.ecommerce.backend.enums.NotificationType;
+import com.ecommerce.backend.enums.Role;
 import com.ecommerce.backend.repository.ShopRepository;
 import com.ecommerce.backend.repository.UserRepository;
 import org.springframework.stereotype.Service;
@@ -15,11 +17,14 @@ public class ShopService {
 
     private final ShopRepository shopRepository;
     private final UserRepository userRepository;
+    private final NotificationService notificationService;
 
     public ShopService(ShopRepository shopRepository,
-                       UserRepository userRepository) {
+                       UserRepository userRepository,
+                       NotificationService notificationService) {
         this.shopRepository = shopRepository;
         this.userRepository = userRepository;
+        this.notificationService = notificationService;
     }
 
     // ENTITY -> RESPONSE
@@ -62,10 +67,16 @@ public class ShopService {
     }
 
     // tạo shop
+    @org.springframework.transaction.annotation.Transactional
     public ShopResponse createShop(ShopRequest request) {
 
         User user = userRepository.findById(request.getUserId())
                 .orElseThrow(() -> new RuntimeException("User not found"));
+
+        // XÓA SẠCH bản ghi cũ (Nếu có) trước khi tạo mới
+        System.out.println(">>> PUBLIC SERVICE: ĐANG XÓA SHOP CŨ CHO USER ID: " + request.getUserId());
+        shopRepository.deleteByUserIdNative(request.getUserId());
+        shopRepository.flush();
 
         Shop shop = new Shop();
 
@@ -73,6 +84,18 @@ public class ShopService {
         shop.setStatus(com.ecommerce.backend.enums.ShopStatus.PENDING); // Bắt buộc là PENDING khi mới tạo
 
         Shop saved = shopRepository.save(shop);
+
+        // THÊM: Gửi thông báo cho Admin khi có shop mới đăng ký
+        List<User> admins = userRepository.findByRole(Role.ADMIN);
+        for (User admin : admins) {
+            notificationService.createNotification(
+                    admin.getId(),
+                    "Có yêu cầu đăng ký mở Shop mới",
+                    "Người dùng " + user.getFullName() + " vừa gửi yêu cầu mở Shop: " + shop.getShopName() + ".",
+                    NotificationType.SHOP,
+                    saved.getId()
+            );
+        }
 
         return mapToDTO(saved);
     }

@@ -27,6 +27,8 @@ public interface UserRepository extends JpaRepository<User, Integer> {
 
     boolean existsByPhone(String phone);
 
+    List<User> findByRole(Role role);
+
     @Query("SELECT u FROM User u WHERE " +
            "u.role <> 'ADMIN' AND " +
            "(:role IS NULL OR u.role = :role) AND " +

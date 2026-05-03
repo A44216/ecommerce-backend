@@ -36,7 +36,7 @@ public class Shop {
     private String description;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
+    @Column(nullable = false, length = 50)
     private ShopStatus status = ShopStatus.PENDING;
 
     @CreationTimestamp

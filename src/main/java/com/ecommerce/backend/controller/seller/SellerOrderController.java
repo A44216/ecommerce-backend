@@ -20,17 +20,18 @@ import java.util.List;
 public class SellerOrderController {
 
     private final SellerOrderService service;
+    private final com.ecommerce.backend.service.OrderService orderService;
 
     @GetMapping
     public PageResponse<SellerOrderResponse> getOrders(
-            @RequestParam(required = false) OrderStatus status,
+            @RequestParam(name = "status", required = false) List<OrderStatus> statuses,
             @RequestParam(required = false) PaymentMethod paymentMethod,
             @RequestParam(required = false) PaymentStatus paymentStatus,
             @RequestParam(required = false) String keyword,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size
     ) {
-        return service.getOrders(status, paymentMethod, paymentStatus, keyword, page, size);
+        return service.getOrders(statuses, paymentMethod, paymentStatus, keyword, page, size);
     }
 
     @GetMapping("/{id}")
@@ -49,6 +50,16 @@ public class SellerOrderController {
     @GetMapping("/autocomplete")
     public List<String> autocomplete(@RequestParam(required = false) String keyword) {
         return service.autocompleteOrders(keyword);
+    }
+
+    @PutMapping("/{id}/accept-return")
+    public void acceptReturn(@PathVariable Integer id) {
+        orderService.acceptReturn(id);
+    }
+
+    @PutMapping("/{id}/reject-return")
+    public void rejectReturn(@PathVariable Integer id, @RequestParam String reason) {
+        orderService.rejectReturn(id, reason);
     }
 
 }

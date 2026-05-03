@@ -63,4 +63,9 @@ public class AdminOrderController {
         );
     }
 
+    @PutMapping("/{id}/resolve-dispute")
+    public ResponseEntity<?> resolveDispute(@PathVariable Integer id, @RequestParam String decision, com.ecommerce.backend.service.OrderService orderService) {
+        return ResponseEntity.ok(orderService.resolveDispute(id, decision));
+    }
+
 }

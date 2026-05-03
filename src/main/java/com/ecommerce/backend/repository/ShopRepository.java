@@ -13,7 +13,12 @@ import java.util.Optional;
 
 public interface ShopRepository extends JpaRepository<Shop, Integer> {
 
-    Optional<Shop> findByUserId(Integer userId);
+    @Query(value = "SELECT * FROM shops WHERE user_id = :userId", nativeQuery = true)
+    Optional<Shop> findByUserId(@Param("userId") Integer userId);
+
+    @org.springframework.data.jpa.repository.Modifying
+    @org.springframework.data.jpa.repository.Query(value = "DELETE FROM shops WHERE user_id = :userId", nativeQuery = true)
+    void deleteByUserIdNative(@Param("userId") Integer userId);
 
     @Query("SELECT s FROM Shop s JOIN FETCH s.user WHERE s.user.id = :userId")
     Optional<Shop> findByUserIdFetchUser(@Param("userId") Integer userId);

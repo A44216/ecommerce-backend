@@ -12,6 +12,8 @@ import com.ecommerce.backend.exception.ResourceNotFoundException;
 import com.ecommerce.backend.repository.ProductRepository;
 import com.ecommerce.backend.repository.ShopRepository;
 import com.ecommerce.backend.repository.UserRepository;
+import com.ecommerce.backend.service.NotificationService;
+import com.ecommerce.backend.enums.NotificationType;
 import lombok.RequiredArgsConstructor;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.data.domain.Page;
@@ -30,6 +32,7 @@ public class AdminShopService {
     private final ShopRepository shopRepository;
     private final ProductRepository productRepository;
     private final UserRepository userRepository;
+    private final NotificationService notificationService;
 
     public PageResponse<AdminShopResponse> getShops(int page, int size, ShopStatus status, String keyword,
             String sortBy, String sortDir) {
@@ -57,7 +60,7 @@ public class AdminShopService {
         Shop shop = shopRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Shop not found"));
         shop.setStatus(status);
-        
+
         if (status == ShopStatus.APPROVED) {
             User user = shop.getUser();
             if (user != null && user.getRole() == com.ecommerce.backend.enums.Role.CUSTOMER) {
@@ -65,7 +68,32 @@ public class AdminShopService {
                 userRepository.save(user);
             }
         }
-        shopRepository.save(shop);
+        
+        Shop savedShop = shopRepository.save(shop);
+
+        // Thông báo cho User
+        String title = "Cập nhật trạng thái Shop";
+        String message = "";
+        if (status == ShopStatus.APPROVED) {
+            title = "Chúc mừng! Shop của bạn đã được duyệt";
+            message = "Yêu cầu mở Shop '" + savedShop.getShopName() + "' của bạn đã được duyệt. Bạn có thể bắt đầu đăng bán sản phẩm ngay bây giờ.";
+        } else if (status == ShopStatus.REJECTED) {
+            title = "Yêu cầu mở Shop bị từ chối";
+            message = "Rất tiếc, yêu cầu mở Shop '" + savedShop.getShopName() + "' của bạn đã bị từ chối.";
+        } else if (status == ShopStatus.BLOCKED) {
+            title = "Shop của bạn đã bị khóa";
+            message = "Shop '" + savedShop.getShopName() + "' của bạn đã bị Admin khóa. Vui lòng liên hệ hỗ trợ để biết thêm chi tiết.";
+        }
+
+        if (!message.isEmpty()) {
+            notificationService.createNotification(
+                    savedShop.getUser().getId(),
+                    title,
+                    message,
+                    NotificationType.SHOP,
+                    savedShop.getId()
+            );
+        }
     }
 
     private AdminShopResponse mapToDTO(Shop shop) {
