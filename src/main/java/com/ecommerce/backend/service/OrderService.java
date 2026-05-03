@@ -340,6 +340,17 @@ public class OrderService {
                 savedOrder.getId()
         );
 
+        // Thông báo cho người bán
+        if (savedOrder.getShop() != null && savedOrder.getShop().getUser() != null) {
+            notificationService.createNotification(
+                    savedOrder.getShop().getUser().getId(),
+                    "Đơn hàng đã bị hủy",
+                    "Khách hàng " + savedOrder.getUser().getFullName() + " đã hủy đơn hàng #" + savedOrder.getId() + ".",
+                    NotificationType.ORDER,
+                    savedOrder.getId()
+            );
+        }
+
         return mapToDTO(savedOrder);
     }
 
