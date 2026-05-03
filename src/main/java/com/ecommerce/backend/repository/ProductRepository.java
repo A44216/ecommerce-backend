@@ -10,6 +10,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 
@@ -181,4 +182,15 @@ public interface ProductRepository extends JpaRepository<Product, Integer> {
     List<Product> findByCategoryIdAndStatusAndIsDeletedFalse(Integer categoryId, ProductStatus status);
 
     List<Product> findByShopIdAndStatusAndIsDeletedFalse(Integer shopId, ProductStatus status);
+
+    // Các hàm cho Xai và Fuzzy
+    @Query("SELECT MAX(p.soldCount) FROM Product p WHERE p.category.id = :categoryId")
+    Integer findMaxSoldCountByCategoryId(@Param("categoryId") Integer categoryId);
+
+    @Query("SELECT MIN(p.price) FROM Product p WHERE p.category.id = :categoryId")
+    BigDecimal findMinPriceByCategoryId(@Param("categoryId") Integer categoryId);
+
+    @Query("SELECT MAX(p.price) FROM Product p WHERE p.category.id = :categoryId")
+    BigDecimal findMaxPriceByCategoryId(@Param("categoryId") Integer categoryId);
+
 }
