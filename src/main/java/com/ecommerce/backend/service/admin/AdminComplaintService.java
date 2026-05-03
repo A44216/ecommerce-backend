@@ -9,13 +9,12 @@ import com.ecommerce.backend.entity.User;
 import com.ecommerce.backend.enums.ComplaintStatus;
 import com.ecommerce.backend.exception.ResourceNotFoundException;
 import com.ecommerce.backend.repository.ComplaintRepository;
-import com.ecommerce.backend.repository.UserRepository;
+import com.ecommerce.backend.util.SecurityUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -26,7 +25,7 @@ import java.util.List;
 public class AdminComplaintService {
 
     private final ComplaintRepository complaintRepository;
-    private final UserRepository userRepository;
+    private final SecurityUtils securityUtils;
 
     public PageResponse<AdminComplaintResponse> getComplaints(
             int page,
@@ -66,19 +65,6 @@ public class AdminComplaintService {
         Complaint complaint = complaintRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Complaint not found"));
         return mapToDetailDTO(complaint);
-    }
-
-    private User getCurrentUser() {
-        var authentication = SecurityContextHolder.getContext().getAuthentication();
-
-        if (authentication == null || !authentication.isAuthenticated()) {
-            throw new RuntimeException("Unauthenticated user");
-        }
-
-        String username = authentication.getName();
-
-        return userRepository.findByUsername(username)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
     }
 
     private AdminComplaintResponse mapToDTO(Complaint complaint) {
@@ -147,7 +133,7 @@ public class AdminComplaintService {
             throw new IllegalStateException("Complaint already processed");
         }
 
-        User adminUser = getCurrentUser();
+        User adminUser = securityUtils.getCurrentUser();
 
         complaint.setStatus(status);
         complaint.setAdminResponse(response.trim());

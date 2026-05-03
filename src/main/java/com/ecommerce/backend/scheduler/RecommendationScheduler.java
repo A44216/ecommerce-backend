@@ -23,7 +23,7 @@ public class RecommendationScheduler {
      * Tự động cập nhật gợi ý Fuzzy Logic & XAI cho toàn bộ hệ thống
      * Chạy lúc 00:00 (nửa đêm) mỗi ngày
      */
-    @Scheduled(cron = "0 * * * * *")
+    @Scheduled(cron = "0 0 0 * * *")
     @Transactional
     public void updateDailyRecommendations() {
         log.info("Starting daily Fuzzy Logic & XAI update job...");

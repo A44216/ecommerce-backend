@@ -11,6 +11,7 @@ import com.ecommerce.backend.exception.BadRequestException;
 import com.ecommerce.backend.exception.ResourceNotFoundException;
 import com.ecommerce.backend.repository.UserRepository;
 import com.ecommerce.backend.security.JwtService;
+import com.ecommerce.backend.util.SecurityUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.context.SecurityContextHolder;
 
@@ -44,6 +45,8 @@ public class AuthService {
 
     private final OtpTokenRepository otpTokenRepository;
     private final EmailService emailService;
+
+    private final SecurityUtils securityUtils;
 
     public LoginResponse login(LoginRequest request) {
 
@@ -359,7 +362,7 @@ public class AuthService {
     @Transactional
     public void changePassword(AdminChangePasswordRequest request) {
 
-        User user = getCurrentUser();
+        User user = securityUtils.getCurrentUser();
 
         if (request.getCurrentPassword() == null || request.getNewPassword() == null) {
             throw new BadRequestException("INVALID_INPUT");
@@ -378,13 +381,6 @@ public class AuthService {
         // update password
         user.setPassword(passwordEncoder.encode(request.getNewPassword()));
         userRepository.save(user);
-    }
-
-    private User getCurrentUser() {
-        String username = Objects.requireNonNull(SecurityContextHolder.getContext().getAuthentication()).getName();
-
-        return userRepository.findByUsername(username)
-                .orElseThrow(() -> new ResourceNotFoundException("USER_NOT_FOUND"));
     }
 
     public void sendUnlinkEmailOtp(SendOtpRequest request) {

@@ -8,9 +8,11 @@ import com.ecommerce.backend.enums.NotificationType;
 import com.ecommerce.backend.enums.Role;
 import com.ecommerce.backend.enums.ShopStatus;
 import com.ecommerce.backend.exception.BadRequestException;
+import com.ecommerce.backend.exception.ResourceNotFoundException;
 import com.ecommerce.backend.repository.ShopRepository;
 import com.ecommerce.backend.repository.UserRepository;
 import com.ecommerce.backend.service.NotificationService;
+import com.ecommerce.backend.util.SecurityUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -27,22 +29,7 @@ public class SellerShopService {
     private final ShopRepository shopRepository;
     private final UserRepository userRepository;
     private final NotificationService notificationService;
-    private final JdbcTemplate jdbcTemplate;
-
-    // GET CURRENT USER (KHÔNG CACHE - FIX THREAD SAFETY)
-    private User getCurrentUser() {
-        String username = SecurityContextHolder.getContext()
-                .getAuthentication()
-                .getName();
-
-        return userRepository.findByUsername(username)
-                .orElseThrow(() -> new RuntimeException("User not found"));
-    }
-
-    // GET CURRENT USER ID (OPTIMIZED)
-    private Integer getCurrentUserId() {
-        return getCurrentUser().getId();
-    }
+    private final SecurityUtils securityUtils;
 
     // GET MY SHOP
     public SellerShopResponse getMyShop() {
@@ -50,16 +37,18 @@ public class SellerShopService {
     }
 
     public Shop getMyShopEntity() {
-        return shopRepository.findByUserIdFetchUser(getCurrentUserId())
-                .orElseThrow(() -> new RuntimeException("Shop not found"));
+        // Dùng trực tiếp ID từ Token
+        return shopRepository.findByUserIdFetchUser(securityUtils.getCurrentUserId())
+                .orElseThrow(() -> new ResourceNotFoundException("Shop not found"));
     }
 
     // CREATE SHOP
     @Transactional
     public SellerShopResponse createShop(SellerShopRequest request) {
 
-        Integer userId = getCurrentUserId();
-        User user = getCurrentUser();
+        // Lấy User và ID từ SecurityUtils
+        User user = securityUtils.getCurrentUser();
+        Integer userId = user.getId();
         
         System.out.println(">>> ĐANG THỰC HIỆN XÓA SHOP CŨ CHO USER ID: " + userId);
         // XÓA SẠCH bản ghi cũ (Dùng Repository Modifying Query)
@@ -91,10 +80,8 @@ public class SellerShopService {
     @Transactional
     public SellerShopResponse updateShop(SellerShopRequest request) {
 
-        Integer userId = getCurrentUserId();
-
-        Shop shop = shopRepository.findByUserIdFetchUser(userId)
-                .orElseThrow(() -> new RuntimeException("Shop not found"));
+        Shop shop = shopRepository.findByUserIdFetchUser(securityUtils.getCurrentUserId())
+                .orElseThrow(() -> new ResourceNotFoundException("Shop not found"));
 
         mapRequest(shop, request, shop.getUser());
 
@@ -104,8 +91,8 @@ public class SellerShopService {
     // CANCEL SHOP REGISTRATION
     @Transactional
     public void cancelShopRegistration() {
-        Integer userId = getCurrentUserId();
-        User user = getCurrentUser();
+        User user = securityUtils.getCurrentUser();
+        Integer userId = user.getId();
         
         Shop shop = shopRepository.findByUserId(userId)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy yêu cầu đăng ký Shop"));
@@ -135,10 +122,8 @@ public class SellerShopService {
     // UPDATE AVATAR
     public SellerShopResponse updateAvatar(String avatar) {
 
-        Integer userId = getCurrentUserId();
-
-        Shop shop = shopRepository.findByUserIdFetchUser(userId)
-                .orElseThrow(() -> new RuntimeException("Shop not found"));
+        Shop shop = shopRepository.findByUserIdFetchUser(securityUtils.getCurrentUserId())
+                .orElseThrow(() -> new ResourceNotFoundException("Shop not found"));
 
         shop.setAvatar(avatar);
 

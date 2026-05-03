@@ -23,14 +23,15 @@ public class RecommendationController {
         return service.getAllRecommendations();
     }
 
-    @GetMapping("/user/{userId}")
-    public List<RecommendationResponse> getByUser(@PathVariable Integer userId) {
-        return service.getByUser(userId);
+    @GetMapping("/my-recommendations") // Endpoint mới không cần ID
+    public List<RecommendationResponse> getMyRecommendations() {
+        return service.getRecommendationsForCurrentUser();
     }
 
     @PostMapping
     public RecommendationResponse create(@RequestBody @Valid RecommendationRequest request) {
-        return service.createRecommendation(request);
+        // Truyền null cho tham số User để Service tự lấy người dùng đang đăng nhập qua Token
+        return service.createRecommendation(request, null);
     }
 
     @DeleteMapping("/{id}")

@@ -11,6 +11,7 @@ import com.ecommerce.backend.exception.ResourceNotFoundException;
 import com.ecommerce.backend.repository.ProductRepository;
 import com.ecommerce.backend.repository.RecommendationRepository;
 import com.ecommerce.backend.repository.UserRepository;
+import com.ecommerce.backend.util.SecurityUtils;
 import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -27,23 +28,32 @@ public class RecommendationService {
     private final RecommendationRepository recommendationRepository;
     private final UserRepository userRepository;
     private final ProductRepository productRepository;
+    private final SecurityUtils securityUtils;
 
     public RecommendationService(
             RecommendationRepository recommendationRepository,
             UserRepository userRepository,
-            ProductRepository productRepository
+            ProductRepository productRepository,
+            SecurityUtils securityUtils
     ) {
         this.recommendationRepository = recommendationRepository;
         this.userRepository = userRepository;
         this.productRepository = productRepository;
+        this.securityUtils = securityUtils;
     }
 
     public List<RecommendationResponse> getAllRecommendations() {
         return recommendationRepository.findAll().stream().map(this::mapToDTO).toList();
     }
 
-    public List<RecommendationResponse> getByUser(Integer userId) {
-        return recommendationRepository.findByUserId(userId).stream().map(this::mapToDTO).toList();
+    public List<RecommendationResponse> getRecommendationsForCurrentUser() {
+        User user = securityUtils.getCurrentUser();
+
+        return recommendationRepository.findByUserId(user.getId()).stream()
+                .sorted((a, b) -> b.getScore().compareTo(a.getScore()))
+                .limit(20)
+                .map(this::mapToDTO)
+                .toList();
     }
 
     public void deleteRecommendation(Integer id) {
@@ -53,10 +63,12 @@ public class RecommendationService {
     }
 
     // BẮT ĐẦU: FUZZY LOGIC & XAI ENGINE
-    public RecommendationResponse createRecommendation(RecommendationRequest request) {
+    public RecommendationResponse createRecommendation(RecommendationRequest request, User user) {
 
-        User user = userRepository.findById(request.getUserId())
-                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+        // Nếu truyền vào null (gọi từ Controller),
+        if (user == null) {
+            user = securityUtils.getCurrentUser();
+        }
 
         Product product = productRepository.findById(request.getProductId())
                 .orElseThrow(() -> new ResourceNotFoundException("Product not found"));
@@ -73,12 +85,15 @@ public class RecommendationService {
 
         // BƯỚC 1: CHUẨN HÓA ĐẦU VÀO (NORMALIZATION)
         double rScore = product.getRatingAvg() != null ? product.getRatingAvg().doubleValue() / 5.0 : 0;
-        double sScore = product.getSoldCount() != null ? (double) product.getSoldCount() / sMax : 0;
+        double sScore = product.getSoldCount() != null && sMax > 0 ? (double) product.getSoldCount() / sMax : 0;
 
-        double pScore = 0.5; // Default nếu Pmax = Pmin
-        if (pMax.compareTo(pMin) > 0 && product.getPrice() != null) {
+        double pScore = 0.5; // Mặc định là mức giá "Hợp lý" nếu không có khoảng giá
+        if (pMax != null && pMin != null && pMax.compareTo(pMin) > 0 && product.getPrice() != null) {
             pScore = product.getPrice().subtract(pMin)
                     .divide(pMax.subtract(pMin), 4, RoundingMode.HALF_UP).doubleValue();
+        } else {
+            // Nếu pMax == pMin (chỉ có 1 sản phẩm hoặc các sản phẩm bằng giá nhau), gán mặc định 0.5
+            pScore = 0.5;
         }
 
         // BƯỚC 2: MỜ HÓA (FUZZIFICATION) - Tính độ kích hoạt (μ)
@@ -101,35 +116,64 @@ public class RecommendationService {
         List<FuzzyRule> rules = new ArrayList<>();
 
         // Bảng 2.1 Ma trận luật XAI cốt lõi
+        // NHÓM LUẬT CHUYÊN BIỆT (L1 - L11)
+        // L1: Deal hời (Giá rẻ, Bán chạy, Đánh giá cao)
         rules.add(new FuzzyRule("L1", "Deal cực hời: Sản phẩm có giá cực tốt so với các mặt hàng cùng loại, bán rất chạy và được đánh giá rất cao!", 0.95,
                 Math.min(Math.min(muGoodR, muHighS), muCheapP)));
 
+        // L2: Lựa chọn an toàn (Giá hợp lý, Bán vừa, Đánh giá cao)
         rules.add(new FuzzyRule("L2", "Lựa chọn an toàn: Mức giá hợp lý đúng với mặt bằng chung, chất lượng đã được nhiều người dùng kiểm chứng.", 0.80,
                 Math.min(Math.min(muGoodR, muMediumS), muFairP)));
 
-        rules.add(new FuzzyRule("L3", "Thuộc phân khúc cao cấp: Chất lượng vượt trội nhưng có mức giá khá cao, phù hợp với nhu cầu chuyên biệt.", 0.60,
+        // L3: Hàng cao cấp kén khách (Giá đắt, Bán ít, Đánh giá cao)
+        rules.add(new FuzzyRule("L3", "Thuộc phân khúc cao cấp: Chất lượng vượt trội nhưng có mức giá khá cao, phù hợp với nhu cầu chuyên biệt.", 0.50,
                 Math.min(Math.min(muGoodR, muLowS), muExpensiveP)));
 
-        rules.add(new FuzzyRule("L4", "Tuy có mức giá rẻ và lượt mua cao, nhưng sản phẩm nhận nhiều phản hồi tiêu cực. Hãy cân nhắc kỹ!", 0.40,
+        // L4: Cảnh báo chất lượng (Giá rẻ, Bán chạy nhưng Đánh giá tệ)
+        rules.add(new FuzzyRule("L4", "Tuy có mức giá rẻ và lượt mua cao, nhưng sản phẩm nhận nhiều phản hồi tiêu cực. Hãy cân nhắc kỹ!", 0.30,
                 Math.min(Math.min(muPoorR, muHighS), muCheapP)));
 
+        // L5: Tránh xa (Giá đắt, Bán ít, Đánh giá tệ)
         rules.add(new FuzzyRule("L5", "Sản phẩm không được khuyến nghị: Mức giá cao nhưng chất lượng đánh giá rất thấp.", 0.15,
                 Math.min(Math.min(muPoorR, muLowS), muExpensiveP)));
 
-        rules.add(new FuzzyRule("L6", "Sản phẩm cao cấp được tin dùng: Dù mức giá cao nhưng chất lượng tuyệt vời và lượt bán khủng đã khẳng định giá trị sản phẩm.", 0.85,
+        // L6: Cao cấp tin dùng (Giá đắt, Bán chạy, Đánh giá cao)
+        rules.add(new FuzzyRule("L6", "Sản phẩm cao cấp được tin dùng: Dù mức giá cao nhưng chất lượng tuyệt vời và lượt bán khủng đã khẳng định giá trị sản phẩm.", 0.80,
                 Math.min(Math.min(muGoodR, muHighS), muExpensiveP)));
 
+        // L7: Phân khúc cao cấp (Giá đắt, Bán vừa, Đánh giá cao)
         rules.add(new FuzzyRule("L7", "Lựa chọn phân khúc cao cấp: Sản phẩm có chất lượng tốt, phù hợp cho người dùng ưu tiên trải nghiệm hàng đầu.", 0.68,
                 Math.min(Math.min(muGoodR, muMediumS), muExpensiveP)));
 
-        rules.add(new FuzzyRule("L8", "Món hời mới: Sản phẩm có giá rất tốt và đánh giá cao, dù chưa có nhiều lượt bán nhưng rất đáng để trải nghiệm.", 0.75,
+        // L8: Món hời mới (Giá rẻ, Bán ít, Đánh giá cao)
+        rules.add(new FuzzyRule("L8", "Món hời mới: Sản phẩm có giá rất tốt và đánh giá cao, dù chưa có nhiều lượt bán nhưng rất đáng để trải nghiệm.", 0.68,
                 Math.min(Math.min(muGoodR, muLowS), muCheapP)));
 
+        // L9: Sản phẩm quốc dân (Giá hợp lý, Bán chạy, Đánh giá trung bình)
         rules.add(new FuzzyRule("L9", "Sản phẩm quốc dân: Mức giá hợp lý, lượt bán ổn định và nhận được sự tin tưởng từ đông đảo cộng đồng.", 0.80,
                 Math.min(Math.min(muAvgR, muHighS), muFairP)));
 
-        rules.add(new FuzzyRule("L10", "Lựa chọn tiết kiệm: Giá thành rẻ, chất lượng ở mức ổn định, phù hợp với các nhu cầu mua sắm cơ bản.", 0.62,
+        // L10: Lựa chọn tiết kiệm (Giá rẻ, Bán vừa, Đánh giá trung bình)
+        rules.add(new FuzzyRule("L10", "Lựa chọn tiết kiệm: Giá thành rẻ, chất lượng ở mức ổn định, phù hợp với các nhu cầu mua sắm cơ bản.", 0.50,
                 Math.min(Math.min(muAvgR, muMediumS), muCheapP)));
+
+        // L11: Sản phẩm đắt khách (Giá rẻ, Bán chạy, Đánh giá trung bình)
+        rules.add(new FuzzyRule("L11", "Sản phẩm đắt khách: Giá siêu rẻ, bán rất chạy nhưng chất lượng chỉ ở mức trung bình. Phù hợp dùng tạm.", 0.68,
+                Math.min(Math.min(muAvgR, muHighS), muCheapP)));
+
+        // NHÓM LUẬT BAO QUÁT (Bảo vệ hệ thống khi không khớp các luật trên)
+        double muAny = 1.0;
+        // L12: Mặc định dựa trên Rating thấp
+        rules.add(new FuzzyRule("L12", "Sản phẩm nhận nhiều phản hồi chưa tốt từ người dùng, bạn nên cân nhắc kỹ trước khi quyết định mua hàng.", 0.30,
+                Math.min(Math.min(muPoorR, muAny), muAny)));
+
+        // L13: Mặc định dựa trên Rating trung bình
+        rules.add(new FuzzyRule("L13", "Sản phẩm có chất lượng ở mức cơ bản, đáp ứng được các nhu cầu mua sắm và sử dụng phổ thông.", 0.50,
+                Math.min(Math.min(muAvgR, muAny), muAny)));
+
+        // L14: Mặc định dựa trên Rating tốt
+        rules.add(new FuzzyRule("L14", "Sản phẩm có chất lượng tốt, nhận được nhiều phản hồi tích cực và sự tin tưởng từ cộng đồng người dùng.", 0.68,
+                Math.min(Math.min(muGoodR, muAny), muAny)));
 
         // Chọn Luật chi phối (Dominant Rule) để làm lý do giải thích
         FuzzyRule dominantRule = rules.getFirst();
@@ -156,7 +200,7 @@ public class RecommendationService {
         // --- ĐÃ SỬA: LOGIC UPSERT THAY VÌ LUÔN TẠO MỚI ---
         Recommendation recommendation = recommendationRepository
                 .findByUserIdAndProductIdAndType(user.getId(), product.getId(), RecommendationType.FUZZY)
-                .orElse(new Recommendation()); // Tìm DB xem có chưa, chưa có mới tạo đối tượng mới
+                .orElse(new Recommendation());
 
         // Ghi đè (Cập nhật) các thông số
         recommendation.setUser(user);
@@ -228,7 +272,10 @@ public class RecommendationService {
 
     @Transactional
     public void generateAllFuzzyRecommendationsForUser(Integer userId) {
-        // --- ĐÃ XÓA 2 LỆNH DELETE VÀ FLUSH Ở ĐÂY ---
+
+        // Lấy đối tượng User từ DB trước để tránh lỗi SecurityContext trong Scheduler
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
         // Lấy tất cả sản phẩm đang kinh doanh và được duyệt (Status = APPROVED)
         List<Product> allProducts = productRepository.findByStatusAndIsDeletedFalse(ProductStatus.APPROVED);
@@ -237,11 +284,10 @@ public class RecommendationService {
         for (Product p : allProducts) {
             try {
                 RecommendationRequest request = new RecommendationRequest();
-                request.setUserId(userId);
                 request.setProductId(p.getId());
 
                 // Tính toán và lưu DB (Cơ chế Upsert trong hàm này sẽ tự lo việc Cập nhật)
-                this.createRecommendation(request);
+                this.createRecommendation(request, user);
             } catch (Exception e) {
                 log.error("Error creating fuzzy recommendation for User {} - Product {}: {}",
                         userId, p.getId(), e.getMessage());
