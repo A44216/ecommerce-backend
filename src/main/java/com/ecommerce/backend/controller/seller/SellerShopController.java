@@ -8,7 +8,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
-@PreAuthorize("hasRole('SELLER')")
 @RestController
 @RequestMapping("/api/seller/shops")
 @RequiredArgsConstructor
@@ -34,5 +33,10 @@ public class SellerShopController {
     @PatchMapping("/avatar")
     public SellerShopResponse updateAvatar(@RequestParam String avatar) {
         return sellerShopService.updateAvatar(avatar);
+    }
+
+    @DeleteMapping("/cancel")
+    public void cancelRegistration() {
+        sellerShopService.cancelShopRegistration();
     }
 }

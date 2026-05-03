@@ -7,8 +7,10 @@ import com.ecommerce.backend.dto.responses.seller.PageResponse;
 import com.ecommerce.backend.entity.Product;
 import com.ecommerce.backend.entity.ProductImage;
 import com.ecommerce.backend.enums.ProductStatus;
+import com.ecommerce.backend.enums.NotificationType;
 import com.ecommerce.backend.exception.ResourceNotFoundException;
 import com.ecommerce.backend.repository.ProductRepository;
+import com.ecommerce.backend.service.NotificationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -23,6 +25,7 @@ import java.util.List;
 public class AdminProductService {
 
     private final ProductRepository productRepository;
+    private final NotificationService notificationService;
 
     public PageResponse<AdminProductResponse> getProducts(
             int page,
@@ -160,6 +163,7 @@ public class AdminProductService {
         );
     }
 
+    @org.springframework.transaction.annotation.Transactional
     public void updateStatus(Integer id, ProductStatus status) {
 
         Product product = productRepository.findById(id)
@@ -172,7 +176,35 @@ public class AdminProductService {
         }
 
         product.setStatus(status);
-        productRepository.save(product);
+        Product savedProduct = productRepository.save(product);
+
+        // Gửi thông báo cho Seller (Bọc trong try-catch để an toàn tuyệt đối)
+        try {
+            if (savedProduct.getShop() != null && savedProduct.getShop().getUser() != null) {
+                String title = "Cập nhật trạng thái sản phẩm";
+                String message = "";
+
+                if (status == ProductStatus.APPROVED) {
+                    title = "Sản phẩm đã được duyệt";
+                    message = "Sản phẩm '" + savedProduct.getName() + "' của bạn đã được Admin phê duyệt và đang được hiển thị trên sàn.";
+                } else if (status == ProductStatus.REJECTED) {
+                    title = "Sản phẩm bị từ chối";
+                    message = "Rất tiếc, sản phẩm '" + savedProduct.getName() + "' của bạn đã bị từ chối phê duyệt. Vui lòng kiểm tra lại thông tin sản phẩm.";
+                }
+
+                if (!message.isEmpty()) {
+                    notificationService.createNotification(
+                            savedProduct.getShop().getUser().getId(),
+                            title,
+                            message,
+                            NotificationType.PRODUCT,
+                            savedProduct.getId()
+                    );
+                }
+            }
+        } catch (Exception e) {
+            System.err.println(">>> LỖI GỬI THÔNG BÁO CHO SELLER: " + e.getMessage());
+        }
     }
 
     public void deleteProduct(Integer id) {

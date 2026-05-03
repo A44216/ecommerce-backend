@@ -4,14 +4,20 @@ import com.ecommerce.backend.dto.requests.seller.shop.SellerShopRequest;
 import com.ecommerce.backend.dto.responses.seller.shop.SellerShopResponse;
 import com.ecommerce.backend.entity.Shop;
 import com.ecommerce.backend.entity.User;
+import com.ecommerce.backend.enums.NotificationType;
+import com.ecommerce.backend.enums.Role;
 import com.ecommerce.backend.enums.ShopStatus;
 import com.ecommerce.backend.exception.BadRequestException;
 import com.ecommerce.backend.repository.ShopRepository;
 import com.ecommerce.backend.repository.UserRepository;
+import com.ecommerce.backend.service.NotificationService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.Objects;
 
 @Service
@@ -20,6 +26,8 @@ public class SellerShopService {
 
     private final ShopRepository shopRepository;
     private final UserRepository userRepository;
+    private final NotificationService notificationService;
+    private final JdbcTemplate jdbcTemplate;
 
     // GET CURRENT USER (KHÔNG CACHE - FIX THREAD SAFETY)
     private User getCurrentUser() {
@@ -47,25 +55,40 @@ public class SellerShopService {
     }
 
     // CREATE SHOP
+    @Transactional
     public SellerShopResponse createShop(SellerShopRequest request) {
 
         Integer userId = getCurrentUserId();
-
-        if (shopRepository.findByUserId(userId).isPresent()) {
-            throw new BadRequestException("User already has a shop");
-        }
-
         User user = getCurrentUser();
-
+        
+        System.out.println(">>> ĐANG THỰC HIỆN XÓA SHOP CŨ CHO USER ID: " + userId);
+        // XÓA SẠCH bản ghi cũ (Dùng Repository Modifying Query)
+        shopRepository.deleteByUserIdNative(userId);
+        shopRepository.flush();
+        
         Shop shop = new Shop();
         mapRequest(shop, request, user);
-
         shop.setStatus(ShopStatus.PENDING);
 
-        return mapToDTO(shopRepository.save(shop));
+        Shop savedShop = shopRepository.save(shop);
+
+        // Thông báo cho Admin
+        List<User> admins = userRepository.findByRole(Role.ADMIN);
+        for (User admin : admins) {
+            notificationService.createNotification(
+                    admin.getId(),
+                    "Yêu cầu mở Shop mới",
+                    "Người dùng " + user.getFullName() + " vừa gửi yêu cầu đăng ký mở Shop: " + savedShop.getShopName() + ".",
+                    NotificationType.SHOP,
+                    savedShop.getId()
+            );
+        }
+
+        return mapToDTO(savedShop);
     }
 
     // UPDATE SHOP
+    @Transactional
     public SellerShopResponse updateShop(SellerShopRequest request) {
 
         Integer userId = getCurrentUserId();
@@ -76,6 +99,37 @@ public class SellerShopService {
         mapRequest(shop, request, shop.getUser());
 
         return mapToDTO(shopRepository.save(shop));
+    }
+
+    // CANCEL SHOP REGISTRATION
+    @Transactional
+    public void cancelShopRegistration() {
+        Integer userId = getCurrentUserId();
+        User user = getCurrentUser();
+        
+        Shop shop = shopRepository.findByUserId(userId)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy yêu cầu đăng ký Shop"));
+
+        if (shop.getStatus() != ShopStatus.PENDING) {
+            throw new BadRequestException("Chỉ có thể hủy yêu cầu khi đang ở trạng thái chờ duyệt!");
+        }
+
+        // XÓA HOÀN TOÀN bằng SQL thuần qua Repository
+        shopRepository.deleteByUserIdNative(userId);
+        shopRepository.flush();
+        System.out.println(">>> ĐÃ HỦY VÀ XÓA SHOP CỦA USER: " + userId);
+
+        // Thông báo cho Admin
+        List<User> admins = userRepository.findByRole(Role.ADMIN);
+        for (User admin : admins) {
+            notificationService.createNotification(
+                    admin.getId(),
+                    "Yêu cầu mở Shop đã bị hủy",
+                    "Người dùng " + user.getFullName() + " đã hủy yêu cầu đăng ký mở Shop: " + shop.getShopName() + ".",
+                    NotificationType.SHOP,
+                    shop.getId() // Truyền ID để Admin có thể bấm vào xem
+            );
+        }
     }
 
     // UPDATE AVATAR

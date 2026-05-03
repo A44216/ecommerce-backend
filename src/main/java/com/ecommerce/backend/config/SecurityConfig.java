@@ -33,6 +33,7 @@ public class SecurityConfig {
                 )
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/auth/**").permitAll()
+                        .requestMatchers("/api/seller/shops/**").authenticated() // Allow registration & cancel for any auth user
                         .requestMatchers("/api/seller/**").hasRole(Role.SELLER.name())
                         .requestMatchers("/api/admin/**").hasRole(Role.ADMIN.name())
 

@@ -33,6 +33,7 @@ public class Notification {
     private String body;  // Nội dung chi tiết
 
     @Enumerated(EnumType.STRING)
+    @Column(name = "type", length = 50)
     private NotificationType type;
 
     // Lưu lại ID của Đơn hàng để khi user bấm vào thông báo, App biết mở đơn hàng nào lên
