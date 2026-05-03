@@ -1,0 +1,26 @@
+package com.ecommerce.backend.repository;
+
+import com.ecommerce.backend.entity.ProductEvaluation;
+import com.ecommerce.backend.enums.ProductEvaluationType;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.stereotype.Repository;
+
+import java.util.List;
+import java.util.Optional;
+
+@Repository
+public interface ProductEvaluationRepository extends JpaRepository<ProductEvaluation, Integer> {
+
+    Optional<ProductEvaluation> findByProductIdAndType(Integer productId, ProductEvaluationType type);
+
+    @Query("""
+        SELECT pe FROM ProductEvaluation pe\s
+        JOIN FETCH pe.product p\s
+        WHERE pe.type = :type AND p.status = 'APPROVED'\s
+        ORDER BY pe.score DESC
+   \s""")
+    List<ProductEvaluation> findTopProductsByType(ProductEvaluationType type, Pageable pageable);
+
+}

@@ -52,7 +52,7 @@ public class User {
     private UserStatus status = UserStatus.ACTIVE;
 
     @CreationTimestamp
-    @Column(name = "created_at", updatable = false)
+    @Column(name = "created_at", updatable = false, nullable = false)
     private LocalDateTime createdAt;
 
     @Column(name = "google_id", length = 255, unique = true)

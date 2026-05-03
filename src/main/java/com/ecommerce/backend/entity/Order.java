@@ -96,7 +96,7 @@ public class Order {
     private String shippingAddress;
 
     @CreationTimestamp
-    @Column(name = "created_at", updatable = false)
+    @Column(name = "created_at", updatable = false, nullable = false)
     private LocalDateTime createdAt;
 
     @Column(name = "completed_at")

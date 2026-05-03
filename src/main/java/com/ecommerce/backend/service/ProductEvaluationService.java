@@ -1,74 +1,61 @@
 package com.ecommerce.backend.service;
 
-import com.ecommerce.backend.dto.requests.RecommendationRequest;
-import com.ecommerce.backend.dto.responses.RecommendationResponse;
+import com.ecommerce.backend.dto.requests.ProductEvaluationRequest;
+import com.ecommerce.backend.dto.responses.ProductEvaluationResponse;
 import com.ecommerce.backend.entity.Product;
-import com.ecommerce.backend.entity.Recommendation;
+import com.ecommerce.backend.entity.ProductEvaluation;
 import com.ecommerce.backend.entity.User;
 import com.ecommerce.backend.enums.ProductStatus;
-import com.ecommerce.backend.enums.RecommendationType;
+import com.ecommerce.backend.enums.ProductEvaluationType;
 import com.ecommerce.backend.exception.ResourceNotFoundException;
 import com.ecommerce.backend.repository.ProductRepository;
-import com.ecommerce.backend.repository.RecommendationRepository;
+import com.ecommerce.backend.repository.ProductEvaluationRepository;
 import com.ecommerce.backend.repository.UserRepository;
 import com.ecommerce.backend.util.SecurityUtils;
 import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
-public class RecommendationService {
+public class ProductEvaluationService {
 
-    private final RecommendationRepository recommendationRepository;
-    private final UserRepository userRepository;
+    private final ProductEvaluationRepository evaluationRepository;
     private final ProductRepository productRepository;
-    private final SecurityUtils securityUtils;
 
-    public RecommendationService(
-            RecommendationRepository recommendationRepository,
-            UserRepository userRepository,
-            ProductRepository productRepository,
-            SecurityUtils securityUtils
+    public ProductEvaluationService(
+            ProductEvaluationRepository evaluationRepository,
+            ProductRepository productRepository
     ) {
-        this.recommendationRepository = recommendationRepository;
-        this.userRepository = userRepository;
+        this.evaluationRepository = evaluationRepository;
         this.productRepository = productRepository;
-        this.securityUtils = securityUtils;
     }
 
-    public List<RecommendationResponse> getAllRecommendations() {
-        return recommendationRepository.findAll().stream().map(this::mapToDTO).toList();
-    }
-
-    public List<RecommendationResponse> getRecommendationsForCurrentUser() {
-        User user = securityUtils.getCurrentUser();
-
-        return recommendationRepository.findByUserId(user.getId()).stream()
-                .sorted((a, b) -> b.getScore().compareTo(a.getScore()))
-                .limit(20)
+    // Lấy danh sách hiển thị Trang chủ (Ví dụ: Top 20 Deal Hời nhất)
+    public List<ProductEvaluationResponse> getTopFuzzyDeals(int limit) {
+        return evaluationRepository.findTopProductsByType(
+                        ProductEvaluationType.FUZZY,
+                        PageRequest.of(0, limit)
+                ).stream()
                 .map(this::mapToDTO)
-                .toList();
+                .collect(Collectors.toList());
     }
 
-    public void deleteRecommendation(Integer id) {
-        Recommendation rec = recommendationRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Recommendation not found"));
-        recommendationRepository.delete(rec);
+    public void deleteEvaluation(Integer id) {
+        ProductEvaluation eval = evaluationRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Evaluation not found"));
+        evaluationRepository.delete(eval);
     }
 
     // BẮT ĐẦU: FUZZY LOGIC & XAI ENGINE
-    public RecommendationResponse createRecommendation(RecommendationRequest request, User user) {
-
-        // Nếu truyền vào null (gọi từ Controller),
-        if (user == null) {
-            user = securityUtils.getCurrentUser();
-        }
+    public ProductEvaluationResponse evaluateProduct(ProductEvaluationRequest request) {
 
         Product product = productRepository.findById(request.getProductId())
                 .orElseThrow(() -> new ResourceNotFoundException("Product not found"));
@@ -197,22 +184,21 @@ public class RecommendationService {
         // Lưu câu văn tự nhiên làm XAI
         String xaiReason = denominator > 0 ? dominantRule.reason : "Chưa đủ dữ liệu để đánh giá sản phẩm này.";
 
-        // --- ĐÃ SỬA: LOGIC UPSERT THAY VÌ LUÔN TẠO MỚI ---
-        Recommendation recommendation = recommendationRepository
-                .findByUserIdAndProductIdAndType(user.getId(), product.getId(), RecommendationType.FUZZY)
-                .orElse(new Recommendation());
+        // Upsert bằng Product ID và Type
+        ProductEvaluation evaluation = evaluationRepository
+                .findByProductIdAndType(product.getId(), ProductEvaluationType.FUZZY)
+                .orElse(new ProductEvaluation());
 
         // Ghi đè (Cập nhật) các thông số
-        recommendation.setUser(user);
-        recommendation.setProduct(product);
-        recommendation.setRatingScore(BigDecimal.valueOf(rScore));
-        recommendation.setSoldScore(BigDecimal.valueOf(sScore));
-        recommendation.setPriceScore(BigDecimal.valueOf(pScore));
-        recommendation.setScore(BigDecimal.valueOf(finalScore));
-        recommendation.setType(RecommendationType.FUZZY);
-        recommendation.setReason(xaiReason);
+        evaluation.setProduct(product);
+        evaluation.setRatingScore(BigDecimal.valueOf(rScore));
+        evaluation.setSoldScore(BigDecimal.valueOf(sScore));
+        evaluation.setPriceScore(BigDecimal.valueOf(pScore));
+        evaluation.setScore(BigDecimal.valueOf(finalScore));
+        evaluation.setType(ProductEvaluationType.FUZZY);
+        evaluation.setReason(xaiReason);
 
-        return mapToDTO(recommendationRepository.save(recommendation));
+        return mapToDTO(evaluationRepository.save(evaluation));
     }
 
     // HÀM TOÁN HỌC LIÊN THUỘC (MEMBERSHIP FUNCTIONS)
@@ -250,13 +236,13 @@ public class RecommendationService {
         }
     }
 
-    // Mapper DTO (Giữ nguyên của bạn)
-    private RecommendationResponse mapToDTO(Recommendation r) {
+    // Mapper DTO
+    private ProductEvaluationResponse mapToDTO(ProductEvaluation r) {
         String imageUrl = null;
         if (r.getProduct().getImages() != null && !r.getProduct().getImages().isEmpty()) {
             imageUrl = r.getProduct().getImages().getFirst().getImageUrl();
         }
-        return RecommendationResponse.builder()
+        return ProductEvaluationResponse.builder()
                 .productId(r.getProduct().getId())
                 .productName(r.getProduct().getName())
                 .imageUrl(imageUrl)
@@ -271,26 +257,18 @@ public class RecommendationService {
     }
 
     @Transactional
-    public void generateAllFuzzyRecommendationsForUser(Integer userId) {
-
-        // Lấy đối tượng User từ DB trước để tránh lỗi SecurityContext trong Scheduler
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
-
-        // Lấy tất cả sản phẩm đang kinh doanh và được duyệt (Status = APPROVED)
+    public void generateGlobalFuzzyEvaluations() {
         List<Product> allProducts = productRepository.findByStatusAndIsDeletedFalse(ProductStatus.APPROVED);
 
-        // Lặp qua từng sản phẩm để chấm điểm Fuzzy & XAI
         for (Product p : allProducts) {
             try {
-                RecommendationRequest request = new RecommendationRequest();
+                ProductEvaluationRequest request = new ProductEvaluationRequest();
                 request.setProductId(p.getId());
 
-                // Tính toán và lưu DB (Cơ chế Upsert trong hàm này sẽ tự lo việc Cập nhật)
-                this.createRecommendation(request, user);
+                // Không cần truyền user nữa
+                this.evaluateProduct(request);
             } catch (Exception e) {
-                log.error("Error creating fuzzy recommendation for User {} - Product {}: {}",
-                        userId, p.getId(), e.getMessage());
+                log.error("Error creating fuzzy evaluation for Product {}: {}", p.getId(), e.getMessage());
             }
         }
     }

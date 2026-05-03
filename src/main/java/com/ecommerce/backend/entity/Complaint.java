@@ -39,7 +39,7 @@ public class Complaint {
     private ComplaintStatus status = ComplaintStatus.PENDING;
 
     @CreationTimestamp
-    @Column(name = "created_at", updatable = false)
+    @Column(name = "created_at", updatable = false, nullable = false)
     private LocalDateTime createdAt;
 
     @Column(name = "resolved_at")

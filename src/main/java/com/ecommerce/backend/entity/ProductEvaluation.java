@@ -1,53 +1,45 @@
 package com.ecommerce.backend.entity;
 
-import com.ecommerce.backend.enums.RecommendationType;
+import com.ecommerce.backend.enums.ProductEvaluationType;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Entity
 @Table(
-        name = "recommendations",
+        name = "product_evaluations",
         uniqueConstraints = {
-                @UniqueConstraint(
-                        name = "unique_user_product_type",
-                        columnNames = {"user_id", "product_id", "type"}
-                )
+                @UniqueConstraint(name = "unique_product_type", columnNames = {"product_id", "type"})
         },
         indexes = {
-                @Index(name = "idx_recommendations_product", columnList = "product_id"),
-                @Index(name = "idx_recommendations_user", columnList = "user_id"),
-                @Index(name = "idx_recommendations_type", columnList = "type")
+                @Index(name = "idx_evaluations_type", columnList = "type")
         }
 )
 @Getter
 @Setter
-public class Recommendation {
+public class ProductEvaluation {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", nullable = false)
-    private User user;
-
-    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "product_id", nullable = false)
     private Product product;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 20)
+    private ProductEvaluationType type;
 
     @Column(nullable = false, precision = 5, scale = 4)
     private BigDecimal score;
 
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false, length = 20)
-    private RecommendationType type;
-
-    @Column(columnDefinition = "LONGTEXT")
+    @Column(nullable = false, columnDefinition = "LONGTEXT")
     private String reason;
 
     @Column(name = "sold_score", precision = 5, scale = 4, nullable = false)
@@ -60,9 +52,10 @@ public class Recommendation {
     private BigDecimal priceScore;
 
     @CreationTimestamp
-    @Column(name = "created_at", updatable = false)
+    @Column(name = "created_at", updatable = false, nullable = false)
     private LocalDateTime createdAt;
 
+    @UpdateTimestamp
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 

@@ -1,7 +1,6 @@
 package com.ecommerce.backend.enums;
 
-public enum RecommendationType {
+public enum ProductEvaluationType {
     FUZZY,
     TRENDING,
-    PERSONALIZED
 }

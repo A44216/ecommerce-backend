@@ -4,6 +4,7 @@ import com.ecommerce.backend.enums.ProductStatus;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
+import org.hibernate.annotations.BatchSize;
 import org.hibernate.annotations.CreationTimestamp;
 
 import java.math.BigDecimal;
@@ -87,13 +88,14 @@ public class Product {
     private Integer soldCount = 0;
 
     @CreationTimestamp
-    @Column(name = "created_at", updatable = false)
+    @Column(name = "created_at", updatable = false, nullable = false)
     private LocalDateTime createdAt;
 
     @Column(name = "is_deleted", nullable = false)
     private boolean isDeleted = false;
 
     @OneToMany(mappedBy = "product", fetch = FetchType.LAZY)
+    @BatchSize(size = 20)
     private List<ProductImage> images;
 
     @Column(name = "product_code", nullable = false, unique = true, length = 30)
