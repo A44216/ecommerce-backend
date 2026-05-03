@@ -1,6 +1,7 @@
 package com.ecommerce.backend.service;
 
 import com.ecommerce.backend.dto.requests.ProductEvaluationRequest;
+import com.ecommerce.backend.dto.responses.ProductBaseResponse;
 import com.ecommerce.backend.dto.responses.ProductEvaluationResponse;
 import com.ecommerce.backend.entity.Product;
 import com.ecommerce.backend.entity.ProductEvaluation;
@@ -9,13 +10,13 @@ import com.ecommerce.backend.enums.ProductEvaluationType;
 import com.ecommerce.backend.exception.ResourceNotFoundException;
 import com.ecommerce.backend.repository.ProductRepository;
 import com.ecommerce.backend.repository.ProductEvaluationRepository;
-import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -203,15 +204,20 @@ public class ProductEvaluationService {
 
     // Mapper DTO
     private ProductEvaluationResponse mapToDTO(ProductEvaluation r) {
-        String imageUrl = null;
-        if (r.getProduct().getImages() != null && !r.getProduct().getImages().isEmpty()) {
-            imageUrl = r.getProduct().getImages().getFirst().getImageUrl();
-        }
+        var p = r.getProduct();
+
+        // Tạo thông tin sản phẩm cơ bản
+        ProductBaseResponse productBase = new ProductBaseResponse(
+                p.getId(),
+                p.getName(),
+                p.getProductCode(),
+                p.getPrice(),
+                (p.getImages() != null && !p.getImages().isEmpty()) ? p.getImages().getFirst().getImageUrl() : null
+        );
+
         return ProductEvaluationResponse.builder()
-                .productId(r.getProduct().getId())
-                .productName(r.getProduct().getName())
-                .imageUrl(imageUrl)
-                .price(r.getProduct().getPrice())
+                .id(r.getId())
+                .product(productBase)
                 .score(r.getScore())
                 .soldScore(r.getSoldScore())
                 .ratingScore(r.getRatingScore())
@@ -257,7 +263,7 @@ public class ProductEvaluationService {
     // Chấm điểm Trending cho sản phẩm
     public ProductEvaluationResponse evaluateTrendingProduct(Integer productId) {
         Product product = productRepository.findById(productId).orElseThrow(() -> new ResourceNotFoundException("Product not found"));
-        java.time.LocalDateTime oneMonthAgo = java.time.LocalDateTime.now().minusDays(30);
+        java.time.LocalDateTime oneMonthAgo = LocalDateTime.now().minusDays(30);
         int salesInMonth = productRepository.countRecentSales(productId, oneMonthAgo);
 
         double salesFactor = Math.min((double) salesInMonth / 100.0, 1.0);

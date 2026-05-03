@@ -8,11 +8,8 @@ import java.math.BigDecimal;
 @Getter
 @Builder
 public class ProductEvaluationResponse {
-
-    private Integer productId;
-    private String productName;
-    private String imageUrl;
-    private BigDecimal price;
+    private Integer id;
+    private ProductBaseResponse product;
 
     private BigDecimal score;
     private BigDecimal soldScore;

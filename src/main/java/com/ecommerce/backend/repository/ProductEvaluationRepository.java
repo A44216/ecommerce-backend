@@ -18,6 +18,7 @@ public interface ProductEvaluationRepository extends JpaRepository<ProductEvalua
     @Query("""
         SELECT pe FROM ProductEvaluation pe\s
         JOIN FETCH pe.product p\s
+        JOIN FETCH p.category c
         WHERE pe.type = :type AND p.status = 'APPROVED'\s
         ORDER BY pe.score DESC
    \s""")

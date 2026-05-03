@@ -352,4 +352,16 @@ public interface OrderRepository extends JpaRepository<Order, Integer> {
             @Param("shopId") Integer shopId
     );
 
+    @Query(value = """
+        SELECT p.category_id
+        FROM orders o
+        JOIN order_items oi ON o.id = oi.order_id
+        JOIN products p ON oi.product_id = p.id
+        WHERE o.user_id = :userId AND o.status = 'COMPLETED'
+        GROUP BY p.category_id
+        ORDER BY COUNT(*) DESC
+        LIMIT 1
+    """, nativeQuery = true)
+    Optional<Integer> findFavoriteCategoryIdByUserId(@Param("userId") Integer userId);
+
 }
