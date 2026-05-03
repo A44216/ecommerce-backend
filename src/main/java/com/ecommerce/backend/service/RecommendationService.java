@@ -17,6 +17,8 @@ import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -34,36 +36,56 @@ public class RecommendationService {
         if (currentUser == null || currentUser.getStatus() != UserStatus.ACTIVE) return;
 
         Integer userId = currentUser.getId();
-        recommendationRepository.deleteByUserId(userId);
 
-        // Lấy danh mục yêu thích (đã có trong OrderRepository của bạn)
+        // 1. Lấy tất cả gợi ý hiện có của User này và đưa vào Map (Key là productId)
+        Map<Integer, Recommendation> existingRecsMap = recommendationRepository.findAllByUserId(userId)
+                .stream()
+                .collect(Collectors.toMap(r -> r.getProduct().getId(), r -> r));
+
+        // 2. Lấy danh mục yêu thích
         Integer favoriteCatId = orderRepository.findFavoriteCategoryIdByUserId(userId).orElse(null);
 
-        // Lấy Top sản phẩm từ Fuzzy Logic
+        // 3. Lấy Top sản phẩm từ Fuzzy Logic
         List<ProductEvaluation> topEvaluations = evaluationRepository.findTopProductsByType(
                 ProductEvaluationType.FUZZY, PageRequest.of(0, 50));
 
-        // Chuyển đổi sang danh sách Recommendation để saveAll một lần
-        List<Recommendation> recommendations = topEvaluations.stream().map(eval -> {
+        // 4. Xử lý logic Update hoặc Create
+        List<Recommendation> toSave = topEvaluations.stream().map(eval -> {
             double finalScore = eval.getScore().doubleValue();
             String reason = eval.getReason();
+            Integer productId = eval.getProduct().getId();
 
-            // Ưu tiên sở thích người dùng (Cộng 0.15 điểm)
             if (favoriteCatId != null && eval.getProduct().getCategory().getId().equals(favoriteCatId)) {
                 finalScore = Math.min(1.0, finalScore + 0.15);
                 reason = "Dựa trên sở thích của bạn: " + eval.getReason();
             }
 
-            return Recommendation.builder()
-                    .user(currentUser)
-                    .product(eval.getProduct())
-                    .score(BigDecimal.valueOf(finalScore))
-                    .reason(reason)
-                    .build();
+            // KIỂM TRA: Nếu đã tồn tại thì lấy bản ghi cũ ra update, nếu chưa thì tạo mới
+            Recommendation rec = existingRecsMap.getOrDefault(productId, new Recommendation());
+
+            if (rec.getId() == null) { // Tạo mới
+                rec.setUser(currentUser);
+                rec.setProduct(eval.getProduct());
+            }
+
+            rec.setScore(BigDecimal.valueOf(finalScore));
+            rec.setReason(reason);
+
+            // Đánh dấu bản ghi này vẫn còn trong Top 50 bằng cách xóa khỏi Map tạm
+            existingRecsMap.remove(productId);
+
+            return rec;
         }).toList();
 
-        recommendationRepository.saveAll(recommendations);
-        log.info("Đã cập nhật {} gợi ý cho người dùng {}", recommendations.size(), userId);
+        // 5. Lưu (Hibernate sẽ tự động INSERT cái mới và UPDATE cái cũ dựa trên ID)
+        recommendationRepository.saveAll(toSave);
+
+        // 6. XÓA các bản ghi cũ không còn nằm trong Top 50 nữa
+        if (!existingRecsMap.isEmpty()) {
+            recommendationRepository.deleteAll(existingRecsMap.values());
+        }
+
+        log.info("Đã cập nhật/tạo mới {} gợi ý cho người dùng {}", toSave.size(), userId);
     }
 
     public List<RecommendationResponse> getPersonalizedRecs(int limit) {

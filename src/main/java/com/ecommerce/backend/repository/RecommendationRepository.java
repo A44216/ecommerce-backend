@@ -13,6 +13,9 @@ import java.util.List;
 
 public interface RecommendationRepository extends JpaRepository<Recommendation, Integer> {
 
+    // Tìm tất cả gợi ý hiện có của User để xử lý trong Map
+    List<Recommendation> findAllByUserId(Integer userId);
+
     @EntityGraph(attributePaths = {"product"})
     List<Recommendation> findByUserIdOrderByScoreDesc(Integer userId, Pageable pageable);
 
