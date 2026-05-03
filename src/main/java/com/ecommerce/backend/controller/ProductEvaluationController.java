@@ -4,19 +4,18 @@ import com.ecommerce.backend.dto.requests.ProductEvaluationRequest;
 import com.ecommerce.backend.dto.responses.ProductEvaluationResponse;
 import com.ecommerce.backend.service.ProductEvaluationService;
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @RestController
 @RequestMapping("/api/product-evaluations")
+@RequiredArgsConstructor
+
 public class ProductEvaluationController {
 
     private final ProductEvaluationService service;
-
-    public ProductEvaluationController(ProductEvaluationService service) {
-        this.service = service;
-    }
 
     // Lấy danh sách Top Deal hiển thị lên trang chủ
     @GetMapping("/top-deals")
@@ -43,4 +42,11 @@ public class ProductEvaluationController {
     public void delete(@PathVariable Integer id) {
         service.deleteEvaluation(id);
     }
+
+    @GetMapping("/trending")
+    public List<ProductEvaluationResponse> getTrendingDeals(
+            @RequestParam(defaultValue = "20") int limit) {
+        return service.getTopTrendingDeals(limit);
+    }
+
 }

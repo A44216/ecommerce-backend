@@ -11,6 +11,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -192,5 +193,15 @@ public interface ProductRepository extends JpaRepository<Product, Integer> {
 
     @Query("SELECT MAX(p.price) FROM Product p WHERE p.category.id = :categoryId")
     BigDecimal findMaxPriceByCategoryId(@Param("categoryId") Integer categoryId);
+
+    @Query("""
+        SELECT COALESCE(SUM(oi.quantity), 0)\s
+        FROM OrderItem oi\s
+        JOIN oi.order o\s
+        WHERE oi.product.id = :productId\s
+        AND o.status = 'COMPLETED'\s
+        AND o.createdAt >= :startDate
+   \s""")
+    Integer countRecentSales(@Param("productId") Integer productId, @Param("startDate") LocalDateTime startDate);
 
 }
