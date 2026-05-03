@@ -22,13 +22,19 @@ public class SellerProductService {
     private final ProductRepository productRepository;
     private final CategoryRepository categoryRepository;
     private final SellerShopService sellerShopService;
+    private final com.ecommerce.backend.repository.UserRepository userRepository;
+    private final com.ecommerce.backend.service.NotificationService notificationService;
 
     public SellerProductService(ProductRepository productRepository,
                                 CategoryRepository categoryRepository,
-                                SellerShopService sellerShopService) {
+                                SellerShopService sellerShopService,
+                                com.ecommerce.backend.repository.UserRepository userRepository,
+                                com.ecommerce.backend.service.NotificationService notificationService) {
         this.productRepository = productRepository;
         this.categoryRepository = categoryRepository;
         this.sellerShopService = sellerShopService;
+        this.userRepository = userRepository;
+        this.notificationService = notificationService;
     }
 
     // ENTITY -> DTO
@@ -75,10 +81,7 @@ public class SellerProductService {
             product.setCategory(null);
         }
 
-        Integer shopId = sellerShopService.getMyShop().getId();
-
-        Shop shop = new Shop();
-        shop.setId(shopId);
+        Shop shop = sellerShopService.getMyShopEntity();
         product.setShop(shop);
 
         if (product.getId() == null) {
@@ -89,7 +92,7 @@ public class SellerProductService {
     // GET DETAIL
     public SellerProductResponse getProductById(Integer id) {
 
-        Integer shopId = sellerShopService.getMyShop().getId();
+        Integer shopId = sellerShopService.getMyShopEntity().getId();
 
         Product product = productRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Product not found"));
@@ -108,7 +111,7 @@ public class SellerProductService {
         mapRequestToProduct(product, request);
 
         // 1. Gán một mã ngẫu nhiên tạm thời để vượt qua lỗi NOT NULL
-        product.setProductCode("TEMP-" + java.util.UUID.randomUUID().toString());
+        product.setProductCode("TEMP-" + java.util.UUID.randomUUID().toString().substring(0, 8));
 
         // 2. save lần 1 để có ID
         product = productRepository.save(product);
@@ -119,13 +122,25 @@ public class SellerProductService {
         // 4. save lần 2
         product = productRepository.save(product);
 
+        // 5. Gửi thông báo cho toàn bộ Admin
+        java.util.List<com.ecommerce.backend.entity.User> admins = userRepository.findByRole(com.ecommerce.backend.enums.Role.ADMIN);
+        for (com.ecommerce.backend.entity.User admin : admins) {
+            notificationService.createNotification(
+                    admin.getId(),
+                    "Sản phẩm mới chờ duyệt",
+                    "Gian hàng " + product.getShop().getShopName() + " vừa tạo sản phẩm mới '" + product.getName() + "'. Vui lòng kiểm tra và phê duyệt.",
+                    com.ecommerce.backend.enums.NotificationType.SYSTEM,
+                    product.getId()
+            );
+        }
+
         return mapToDTO(product);
     }
 
     // UPDATE
     public SellerProductResponse updateProduct(Integer id, SellerProductRequest request) {
 
-        Integer shopId = sellerShopService.getMyShop().getId();
+        Integer shopId = sellerShopService.getMyShopEntity().getId();
 
         Product product = productRepository.findByIdAndIsDeletedFalse(id)
                 .orElseThrow(() -> new RuntimeException("Product not found"));
@@ -142,7 +157,7 @@ public class SellerProductService {
     // SOFT DELETE
     public void deleteProduct(Integer id) {
 
-        Integer shopId = sellerShopService.getMyShop().getId();
+        Integer shopId = sellerShopService.getMyShopEntity().getId();
 
         Product product = productRepository.findByIdAndIsDeletedFalse(id)
                 .orElseThrow(() -> new RuntimeException("Product not found"));
@@ -172,7 +187,7 @@ public class SellerProductService {
     // SUBMIT
     public void submitProduct(Integer id) {
 
-        Integer shopId = sellerShopService.getMyShop().getId();
+        Integer shopId = sellerShopService.getMyShopEntity().getId();
 
         Product product = productRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Product not found"));
@@ -201,7 +216,7 @@ public class SellerProductService {
 
         Pageable pageable = PageRequest.of(page, size, Sort.by("id").descending());
 
-        Integer shopId = sellerShopService.getMyShop().getId();
+        Integer shopId = sellerShopService.getMyShopEntity().getId();
 
         Page<Product> products = productRepository.filterProducts(
                 shopId,
@@ -227,7 +242,7 @@ public class SellerProductService {
 
         Pageable pageable = PageRequest.of(page, size, Sort.by("id").ascending());
 
-        Integer shopId = sellerShopService.getMyShop().getId();
+        Integer shopId = sellerShopService.getMyShopEntity().getId();
 
         Page<Product> products =
                 productRepository.findByShopIdAndCategoryIdAndIsDeletedFalse(
@@ -250,7 +265,7 @@ public class SellerProductService {
             return List.of();
         }
 
-        Integer shopId = sellerShopService.getMyShop().getId();
+        Integer shopId = sellerShopService.getMyShopEntity().getId();
         Pageable pageable = PageRequest.of(0, 5);
 
         return productRepository

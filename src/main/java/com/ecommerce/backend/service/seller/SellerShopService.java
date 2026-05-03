@@ -38,11 +38,12 @@ public class SellerShopService {
 
     // GET MY SHOP
     public SellerShopResponse getMyShop() {
+        return mapToDTO(getMyShopEntity());
+    }
 
-        Shop shop = shopRepository.findByUserIdFetchUser(getCurrentUserId())
+    public Shop getMyShopEntity() {
+        return shopRepository.findByUserIdFetchUser(getCurrentUserId())
                 .orElseThrow(() -> new RuntimeException("Shop not found"));
-
-        return mapToDTO(shop);
     }
 
     // CREATE SHOP

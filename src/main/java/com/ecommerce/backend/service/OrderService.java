@@ -277,6 +277,7 @@ public class OrderService {
         // ==========================================
         // 3. TẠO THÔNG BÁO TỰ ĐỘNG
         // ==========================================
+        // Thông báo cho người mua
         notificationService.createNotification(
                 savedOrder.getUser().getId(),
                 "Đặt hàng thành công!",
@@ -284,6 +285,17 @@ public class OrderService {
                 NotificationType.ORDER,
                 savedOrder.getId()
         );
+
+        // Thông báo cho người bán
+        if (savedOrder.getShop() != null && savedOrder.getShop().getUser() != null) {
+            notificationService.createNotification(
+                    savedOrder.getShop().getUser().getId(),
+                    "Đơn hàng mới",
+                    "Bạn vừa nhận được đơn hàng mới #" + savedOrder.getId() + " từ khách hàng " + savedOrder.getUser().getFullName() + ".",
+                    NotificationType.ORDER,
+                    savedOrder.getId()
+            );
+        }
 
         return mapToDTO(savedOrder);
     }
@@ -329,5 +341,211 @@ public class OrderService {
         );
 
         return mapToDTO(savedOrder);
+    }
+
+    @Transactional
+    public OrderResponse receiveOrder(Integer orderId) {
+        Order order = getOrderOrThrow(orderId);
+
+        if (order.getStatus() != OrderStatus.SHIPPING) {
+            throw new BadRequestException("Chỉ có thể xác nhận nhận hàng khi đơn hàng đang được giao!");
+        }
+
+        order.setStatus(OrderStatus.COMPLETED);
+        order.setCompletedAt(java.time.LocalDateTime.now());
+        
+        // Xử lý tiền và số lượng bán
+        completeOrderLogic(order);
+
+        Order savedOrder = repository.save(order);
+
+        // Thông báo cho Seller
+        if (savedOrder.getShop() != null && savedOrder.getShop().getUser() != null) {
+            notificationService.createNotification(
+                    savedOrder.getShop().getUser().getId(),
+                    "Khách đã nhận hàng",
+                    "Đơn hàng #" + savedOrder.getId() + " đã được khách xác nhận nhận hàng thành công.",
+                    NotificationType.ORDER,
+                    savedOrder.getId()
+            );
+        }
+
+        return mapToDTO(savedOrder);
+    }
+
+    @Transactional
+    public OrderResponse requestReturn(Integer orderId, String reason) {
+        Order order = getOrderOrThrow(orderId);
+
+        if (order.getStatus() != OrderStatus.SHIPPING && order.getStatus() != OrderStatus.COMPLETED) {
+            throw new BadRequestException("Không thể yêu cầu trả hàng cho đơn hàng ở trạng thái này!");
+        }
+
+        order.setStatus(OrderStatus.RETURN_REQUESTED);
+        Order savedOrder = repository.save(order);
+
+        // Thông báo cho Seller
+        if (savedOrder.getShop() != null && savedOrder.getShop().getUser() != null) {
+            notificationService.createNotification(
+                    savedOrder.getShop().getUser().getId(),
+                    "Yêu cầu trả hàng/hoàn tiền",
+                    "Khách hàng đã yêu cầu trả hàng cho đơn hàng #" + savedOrder.getId() + " với lý do: " + reason,
+                    NotificationType.ORDER,
+                    savedOrder.getId()
+            );
+        }
+
+        // Thông báo cho Admin
+        List<User> admins = userRepository.findByRole(com.ecommerce.backend.enums.Role.ADMIN);
+        for (User admin : admins) {
+            notificationService.createNotification(
+                    admin.getId(),
+                    "Tranh chấp trả hàng",
+                    "Đơn hàng #" + savedOrder.getId() + " đang có yêu cầu trả hàng/hoàn tiền cần xem xét.",
+                    NotificationType.SYSTEM,
+                    savedOrder.getId()
+            );
+        }
+
+        return mapToDTO(savedOrder);
+    }
+
+    @Transactional
+    public OrderResponse acceptReturn(Integer orderId) {
+        Order order = getOrderOrThrow(orderId);
+
+        if (order.getStatus() != OrderStatus.RETURN_REQUESTED) {
+            throw new BadRequestException("Đơn hàng không ở trạng thái yêu cầu trả hàng!");
+        }
+
+        order.setStatus(OrderStatus.RETURNED);
+        Order savedOrder = repository.save(order);
+
+        notificationService.createNotification(
+                savedOrder.getUser().getId(),
+                "Hoàn tiền thành công",
+                "Shop đã đồng ý yêu cầu trả hàng/hoàn tiền cho đơn hàng #" + savedOrder.getId() + ".",
+                NotificationType.ORDER,
+                savedOrder.getId()
+        );
+
+        return mapToDTO(savedOrder);
+    }
+
+    @Transactional
+    public OrderResponse rejectReturn(Integer orderId, String reason) {
+        Order order = getOrderOrThrow(orderId);
+
+        if (order.getStatus() != OrderStatus.RETURN_REQUESTED) {
+            throw new BadRequestException("Đơn hàng không ở trạng thái yêu cầu trả hàng!");
+        }
+
+        order.setStatus(OrderStatus.DISPUTED);
+        Order savedOrder = repository.save(order);
+
+        // Thông báo cho User
+        notificationService.createNotification(
+                savedOrder.getUser().getId(),
+                "Khiếu nại trả hàng",
+                "Shop đã từ chối yêu cầu trả hàng đơn #" + savedOrder.getId() + " với lý do: " + reason + ". Đơn hàng đã được chuyển cho Admin phân xử.",
+                NotificationType.ORDER,
+                savedOrder.getId()
+        );
+
+        // Thông báo cho Admin
+        List<User> admins = userRepository.findByRole(com.ecommerce.backend.enums.Role.ADMIN);
+        for (User admin : admins) {
+            notificationService.createNotification(
+                    admin.getId(),
+                    "Tranh chấp cần phân xử",
+                    "Đơn hàng #" + savedOrder.getId() + " đang có tranh chấp giữa Khách và Shop. Shop từ chối với lý do: " + reason,
+                    NotificationType.SYSTEM,
+                    savedOrder.getId()
+            );
+        }
+
+        return mapToDTO(savedOrder);
+    }
+
+    @Transactional
+    public OrderResponse resolveDispute(Integer orderId, String decision) {
+        Order order = getOrderOrThrow(orderId);
+
+        if (order.getStatus() != OrderStatus.DISPUTED) {
+            throw new BadRequestException("Đơn hàng không ở trạng thái tranh chấp!");
+        }
+
+        if ("REFUND".equalsIgnoreCase(decision)) {
+            order.setStatus(OrderStatus.RETURNED);
+            notificationService.createNotification(
+                    order.getUser().getId(),
+                    "Phán quyết tranh chấp",
+                    "Admin đã xử thắng cho bạn ở đơn hàng #" + order.getId() + ". Tiền sẽ được hoàn lại.",
+                    NotificationType.ORDER,
+                    order.getId()
+            );
+            notificationService.createNotification(
+                    order.getShop().getUser().getId(),
+                    "Phán quyết tranh chấp",
+                    "Admin đã xử hoàn tiền cho khách ở đơn hàng #" + order.getId() + ".",
+                    NotificationType.ORDER,
+                    order.getId()
+            );
+        } else if ("COMPLETED".equalsIgnoreCase(decision)) {
+            order.setStatus(OrderStatus.COMPLETED);
+            order.setCompletedAt(java.time.LocalDateTime.now());
+            
+            // Xử lý tiền và số lượng bán
+            completeOrderLogic(order);
+
+            notificationService.createNotification(
+                    order.getUser().getId(),
+                    "Phán quyết tranh chấp",
+                    "Admin đã xử từ chối hoàn tiền cho đơn hàng #" + order.getId() + ".",
+                    NotificationType.ORDER,
+                    order.getId()
+            );
+            notificationService.createNotification(
+                    order.getShop().getUser().getId(),
+                    "Phán quyết tranh chấp",
+                    "Admin đã xử thắng cho Shop ở đơn hàng #" + order.getId() + ". Tiền sẽ được chuyển cho bạn.",
+                    NotificationType.ORDER,
+                    order.getId()
+            );
+        } else {
+            throw new BadRequestException("Quyết định không hợp lệ!");
+        }
+
+        return mapToDTO(repository.save(order));
+    }
+
+    private void completeOrderLogic(Order order) {
+        // Chỉ xử lý nếu chưa PAID thì chuyển sang PAID (đối với COD)
+        if (order.getPaymentMethod() == com.ecommerce.backend.enums.PaymentMethod.COD) {
+            order.setPaymentStatus(com.ecommerce.backend.enums.PaymentStatus.PAID);
+        }
+
+        if (order.getPaymentStatus() == com.ecommerce.backend.enums.PaymentStatus.PAID) {
+            // Cập nhật doanh thu shop
+            com.ecommerce.backend.entity.Shop shop = order.getShop();
+            if (shop != null) {
+                shop.setTotalOrders(shop.getTotalOrders() + 1);
+                java.math.BigDecimal sellerRevenue = java.util.Optional.ofNullable(order.getSubtotal()).orElse(java.math.BigDecimal.ZERO)
+                        .subtract(java.util.Optional.ofNullable(order.getPlatformFeeAmount()).orElse(java.math.BigDecimal.ZERO));
+                shop.setTotalRevenue(shop.getTotalRevenue().add(sellerRevenue));
+                shopRepository.save(shop);
+            }
+
+            // Cập nhật số lượng đã bán
+            if (order.getItems() != null) {
+                for (com.ecommerce.backend.entity.OrderItem item : order.getItems()) {
+                    com.ecommerce.backend.entity.Product product = item.getProduct();
+                    if (product != null) {
+                        product.setSoldCount(product.getSoldCount() + item.getQuantity());
+                        productRepository.save(product);
+                    }
+                }
+            }
+        }
     }
 }
