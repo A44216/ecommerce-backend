@@ -185,6 +185,28 @@ public interface ProductRepository extends JpaRepository<Product, Integer> {
     List<Product> findByShopIdAndStatusAndIsDeletedFalse(Integer shopId, ProductStatus status);
 
     // Các hàm cho Xai và Fuzzy
+    // Query context 1 lần cho tất cả categories (tối ưu: thay 3N query bằng 1 query)
+    // Dùng recentSales thay vì soldCount để phản ánh xu hướng 30 ngày gần nhất
+    @Query("""
+        SELECT p.category.id,
+               COALESCE(MAX(recent.recentSales), 0),
+               MIN(p.price),
+               MAX(p.price)
+        FROM Product p
+        LEFT JOIN (
+            SELECT oi.product.id as pid,
+                   SUM(oi.quantity) as recentSales
+            FROM OrderItem oi
+            JOIN oi.order o
+            WHERE o.status = 'COMPLETED'
+            AND o.createdAt >= :startDate
+            GROUP BY oi.product.id
+        ) recent ON recent.pid = p.id
+        WHERE p.status = 'APPROVED' AND p.isDeleted = false
+        GROUP BY p.category.id
+    """)
+    List<Object[]> findAllCategoryContexts(@Param("startDate") LocalDateTime startDate);
+
     @Query("SELECT MAX(p.soldCount) FROM Product p WHERE p.category.id = :categoryId")
     Integer findMaxSoldCountByCategoryId(@Param("categoryId") Integer categoryId);
 
@@ -193,6 +215,21 @@ public interface ProductRepository extends JpaRepository<Product, Integer> {
 
     @Query("SELECT MAX(p.price) FROM Product p WHERE p.category.id = :categoryId")
     BigDecimal findMaxPriceByCategoryId(@Param("categoryId") Integer categoryId);
+
+    // Batch query: đếm sales cho nhiều sản phẩm trong 1 query (tối ưu: thay N query bằng 1 query)
+    @Query("""
+        SELECT oi.product.id, COALESCE(SUM(oi.quantity), 0)
+        FROM OrderItem oi
+        JOIN oi.order o
+        WHERE oi.product.id IN :productIds
+        AND o.status = 'COMPLETED'
+        AND o.createdAt >= :startDate
+        GROUP BY oi.product.id
+    """)
+    List<Object[]> countRecentSalesBatch(
+            @Param("productIds") List<Integer> productIds,
+            @Param("startDate") LocalDateTime startDate
+    );
 
     @Query("""
         SELECT COALESCE(SUM(oi.quantity), 0)\s

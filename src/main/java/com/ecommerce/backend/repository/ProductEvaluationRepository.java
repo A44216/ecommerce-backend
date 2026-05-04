@@ -20,7 +20,7 @@ public interface ProductEvaluationRepository extends JpaRepository<ProductEvalua
         JOIN FETCH pe.product p\s
         JOIN FETCH p.category c
         WHERE pe.type = :type AND p.status = 'APPROVED'\s
-        ORDER BY pe.score DESC
+        ORDER BY pe.score DESC, pe.id ASC
    \s""")
     List<ProductEvaluation> findTopProductsByType(ProductEvaluationType type, Pageable pageable);
 

@@ -18,9 +18,9 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -69,29 +69,173 @@ public class ProductEvaluationService {
         Product product = productRepository.findById(request.getProductId())
                 .orElseThrow(() -> new ResourceNotFoundException("Product not found"));
 
-        // 2. Lấy dữ liệu ngữ cảnh (Context) trực tiếp từ Repository cho sản phẩm này
+        // 2. Lấy dữ liệu ngữ cảnh (Context) - dùng dữ liệu 30 ngày gần nhất
         Integer catId = product.getCategory().getId();
-        int sMax = productRepository.findMaxSoldCountByCategoryId(catId) != null
-                ? productRepository.findMaxSoldCountByCategoryId(catId) : 1;
-        BigDecimal pMin = productRepository.findMinPriceByCategoryId(catId) != null
-                ? productRepository.findMinPriceByCategoryId(catId) : BigDecimal.ZERO;
-        BigDecimal pMax = productRepository.findMaxPriceByCategoryId(catId) != null
-                ? productRepository.findMaxPriceByCategoryId(catId) : BigDecimal.ONE;
+        LocalDateTime oneMonthAgo = LocalDateTime.now().minusDays(30);
 
-        // 3. Khởi tạo ngữ cảnh tạm thời
-        CategoryContext ctx = new CategoryContext(sMax, pMin, pMax);
+        // Batch query để lấy context (sMax, pMin, pMax) cho category
+        List<Object[]> contexts = productRepository.findAllCategoryContexts(oneMonthAgo);
+        CategoryContext ctx = new CategoryContext(1, BigDecimal.ZERO, BigDecimal.ONE);
+        for (Object[] row : contexts) {
+            if (row[0].equals(catId)) {
+                Integer sMax = ((Number) row[1]).intValue();
+                BigDecimal pMin = (BigDecimal) row[2];
+                BigDecimal pMax = (BigDecimal) row[3];
+                ctx = new CategoryContext(sMax > 0 ? sMax : 1, pMin != null ? pMin : BigDecimal.ZERO, pMax != null ? pMax : BigDecimal.ONE);
+                break;
+            }
+        }
 
-        // 4. Gọi hàm lõi tối ưu để thực hiện tính toán và lưu DB
-        ProductEvaluation evaluation = evaluateProductWithContext(product, ctx);
+        // 3. Lấy recent sales cho sản phẩm này
+        int recentSales = productRepository.countRecentSales(product.getId(), oneMonthAgo).intValue();
+
+        // 4. Gọi hàm lõi để thực hiện tính toán và lưu DB
+        ProductEvaluation evaluation = evaluateProductWithContext(product, ctx, recentSales);
 
         // 5. Trả về kết quả DTO
         return mapToDTO(evaluation);
     }
 
-    private ProductEvaluation evaluateProductWithContext(Product product, CategoryContext ctx) {
-        // BƯỚC 1: CHUẨN HÓA (Dùng trực tiếp dữ liệu từ ctx)
-        double rScore = product.getRatingAvg() != null ? product.getRatingAvg().doubleValue() / 5.0 : 0;
-        double sScore = product.getSoldCount() != null && ctx.sMax > 0 ? (double) product.getSoldCount() / ctx.sMax : 0;
+    // HÀM TOÁN HỌC LIÊN THUỘC (MEMBERSHIP FUNCTIONS)
+    private double fuzzyLeftShoulder(double x, double a, double b) {
+        if (x <= a) return 1.0;
+        if (x >= b) return 0.0;
+        return (b - x) / (b - a);
+    }
+
+    private double fuzzyTriangle(double x, double a, double b, double c) {
+        if (x <= a || x >= c) return 0.0;
+        if (x == b) return 1.0;
+        if (x < b) return (x - a) / (b - a);
+        return (c - x) / (c - b);
+    }
+
+    private double fuzzyRightShoulder(double x, double a, double b) {
+        if (x <= a) return 0.0;
+        if (x >= b) return 1.0;
+        return (x - a) / (b - a);
+    }
+
+    // Class nội bộ hỗ trợ tính toán luật XAI
+    private static class FuzzyRule {
+        String code;
+        String reason;
+        double centroidValue; // Điểm trọng tâm của tập mờ đầu ra (ci)
+        double firingStrength; // Mức độ kích hoạt của luật (α)
+
+        public FuzzyRule(String code, String reason, double centroidValue, double firingStrength) {
+            this.code = code;
+            this.reason = reason;
+            this.centroidValue = centroidValue;
+            this.firingStrength = firingStrength;
+        }
+    }
+
+    // Mapper DTO
+    private ProductEvaluationResponse mapToDTO(ProductEvaluation r) {
+        var p = r.getProduct();
+
+        // Tạo thông tin sản phẩm cơ bản
+        ProductBaseResponse productBase = new ProductBaseResponse(
+                p.getId(),
+                p.getName(),
+                p.getProductCode(),
+                p.getPrice(),
+                (p.getImages() != null && !p.getImages().isEmpty()) ? p.getImages().getFirst().getImageUrl() : null
+        );
+
+        return ProductEvaluationResponse.builder()
+                .id(r.getId())
+                .product(productBase)
+                .score(r.getScore())
+                .soldScore(r.getSoldScore())
+                .ratingScore(r.getRatingScore())
+                .priceScore(r.getPriceScore())
+                .type(r.getType().name())
+                .reason(r.getReason())
+                .build();
+    }
+
+    // Tối ưu: dùng sales count đã cache sẵn thay vì query lại từng sản phẩm
+    public ProductEvaluationResponse evaluateTrendingProductWithCache(Integer productId, int salesInMonth) {
+        Product product = productRepository.findById(productId).orElseThrow(() -> new ResourceNotFoundException("Product not found"));
+
+        double salesFactor = Math.min((double) salesInMonth / 100.0, 1.0);
+        double ratingFactor = product.getRatingAvg() != null ? product.getRatingAvg().doubleValue() / 5.0 : 0.5;
+
+        double trendingScore = (salesInMonth == 0) ? ratingFactor * 0.1 : (salesFactor * 0.8) + (ratingFactor * 0.2);
+
+        String xaiReason = (salesInMonth >= 50) ? "Xu hướng tháng: Đang cực hot với hơn " + salesInMonth + " lượt bán." :
+                (salesInMonth >= 10) ? "Đang tăng trưởng: Lượt mua tăng ổn định trong tháng." :
+                        (salesInMonth > 0) ? "Tiềm năng: Đang có lượt bán và phản hồi tốt." : "Sản phẩm mới: Đang chờ lượt trải nghiệm từ cộng đồng.";
+
+        ProductEvaluation evaluation = evaluationRepository.findByProductIdAndType(product.getId(), ProductEvaluationType.TRENDING).orElse(new ProductEvaluation());
+        evaluation.setProduct(product);
+        evaluation.setScore(BigDecimal.valueOf(trendingScore));
+        evaluation.setType(ProductEvaluationType.TRENDING);
+        evaluation.setReason(xaiReason);
+        evaluation.setSoldScore(BigDecimal.valueOf(salesFactor));
+        evaluation.setRatingScore(BigDecimal.valueOf(ratingFactor));
+        evaluation.setPriceScore(BigDecimal.ZERO);
+
+        return mapToDTO(evaluationRepository.save(evaluation));
+    }
+
+    public void generateGlobalFuzzyEvaluations() {
+        List<Product> allProducts = productRepository.findByStatusAndIsDeletedFalse(ProductStatus.APPROVED);
+        LocalDateTime oneMonthAgo = LocalDateTime.now().minusDays(30);
+
+        // Tối ưu 1: Load tất cả category context trong 1 query (thay 3N query)
+        Map<Integer, CategoryContext> contextMap = new ConcurrentHashMap<>();
+        List<Object[]> categoryContexts = productRepository.findAllCategoryContexts(oneMonthAgo);
+        for (Object[] row : categoryContexts) {
+            Integer catId = (Integer) row[0];
+            Integer sMax = ((Number) row[1]).intValue();
+            BigDecimal pMin = (BigDecimal) row[2];
+            BigDecimal pMax = (BigDecimal) row[3];
+            contextMap.put(catId, new CategoryContext(sMax, pMin, pMax));
+        }
+
+        // Tối ưu 2: Batch load sales count trong 1 query (thay N query)
+        List<Integer> productIds = allProducts.stream().map(Product::getId).toList();
+        Map<Integer, Integer> salesMap = new ConcurrentHashMap<>();
+        if (!productIds.isEmpty()) {
+            List<Object[]> salesResults = productRepository.countRecentSalesBatch(productIds, oneMonthAgo);
+            for (Object[] row : salesResults) {
+                salesMap.put((Integer) row[0], ((Number) row[1]).intValue());
+            }
+        }
+
+        log.info("Bắt đầu chấm điểm AI cho {} sản phẩm...", allProducts.size());
+
+        for (Product p : allProducts) {
+            try {
+                Integer catId = p.getCategory().getId();
+                CategoryContext ctx = contextMap.get(catId);
+                if (ctx == null) {
+                    ctx = new CategoryContext(1, BigDecimal.ZERO, BigDecimal.ONE);
+                }
+
+                // Lấy recent sales cho sản phẩm này (30 ngày)
+                int recentSales = salesMap.getOrDefault(p.getId(), 0);
+
+                // Chấm điểm Fuzzy với dữ liệu 30 ngày
+                this.evaluateProductWithContext(p, ctx, recentSales);
+
+                // Chấm điểm Trending với sales đã load sẵn
+                this.evaluateTrendingProductWithCache(p.getId(), recentSales);
+
+            } catch (Exception e) {
+                log.error("Lỗi tại ID {}: {}", p.getId(), e.getMessage());
+            }
+        }
+        log.info("Hoàn tất tiến trình chấm điểm.");
+    }
+
+    private ProductEvaluation evaluateProductWithContext(Product product, CategoryContext ctx, int recentSales) {
+        // BƯỚC 1: CHUẨN HÓA (Dùng dữ liệu 30 ngày gần nhất)
+        double rScore = product.getRatingAvg() != null ? product.getRatingAvg().doubleValue() / 5.0 : 0.5;
+        double sScore = ctx.sMax > 0 ? (double) recentSales / ctx.sMax : 0;
 
         double pScore = 0.5;
         if (ctx.pMax != null && ctx.pMin != null && ctx.pMax.compareTo(ctx.pMin) > 0 && product.getPrice() != null) {
@@ -165,127 +309,6 @@ public class ProductEvaluationService {
         evaluation.setReason(xaiReason);
 
         return evaluationRepository.save(evaluation);
-    }
-
-    // HÀM TOÁN HỌC LIÊN THUỘC (MEMBERSHIP FUNCTIONS)
-    private double fuzzyLeftShoulder(double x, double a, double b) {
-        if (x <= a) return 1.0;
-        if (x >= b) return 0.0;
-        return (b - x) / (b - a);
-    }
-
-    private double fuzzyTriangle(double x, double a, double b, double c) {
-        if (x <= a || x >= c) return 0.0;
-        if (x == b) return 1.0;
-        if (x < b) return (x - a) / (b - a);
-        return (c - x) / (c - b);
-    }
-
-    private double fuzzyRightShoulder(double x, double a, double b) {
-        if (x <= a) return 0.0;
-        if (x >= b) return 1.0;
-        return (x - a) / (b - a);
-    }
-
-    // Class nội bộ hỗ trợ tính toán luật XAI
-    private static class FuzzyRule {
-        String code;
-        String reason;
-        double centroidValue; // Điểm trọng tâm của tập mờ đầu ra (ci)
-        double firingStrength; // Mức độ kích hoạt của luật (α)
-
-        public FuzzyRule(String code, String reason, double centroidValue, double firingStrength) {
-            this.code = code;
-            this.reason = reason;
-            this.centroidValue = centroidValue;
-            this.firingStrength = firingStrength;
-        }
-    }
-
-    // Mapper DTO
-    private ProductEvaluationResponse mapToDTO(ProductEvaluation r) {
-        var p = r.getProduct();
-
-        // Tạo thông tin sản phẩm cơ bản
-        ProductBaseResponse productBase = new ProductBaseResponse(
-                p.getId(),
-                p.getName(),
-                p.getProductCode(),
-                p.getPrice(),
-                (p.getImages() != null && !p.getImages().isEmpty()) ? p.getImages().getFirst().getImageUrl() : null
-        );
-
-        return ProductEvaluationResponse.builder()
-                .id(r.getId())
-                .product(productBase)
-                .score(r.getScore())
-                .soldScore(r.getSoldScore())
-                .ratingScore(r.getRatingScore())
-                .priceScore(r.getPriceScore())
-                .type(r.getType().name())
-                .reason(r.getReason())
-                .build();
-    }
-
-    public void generateGlobalFuzzyEvaluations() {
-        List<Product> allProducts = productRepository.findByStatusAndIsDeletedFalse(ProductStatus.APPROVED);
-        Map<Integer, CategoryContext> contextMap = new HashMap<>();
-
-        log.info("Bắt đầu chấm điểm AI cho {} sản phẩm...", allProducts.size());
-
-        for (Product p : allProducts) {
-            try {
-                Integer catId = p.getCategory().getId();
-
-                // KIỂM TRA CACHE: Chỉ truy vấn DB nếu danh mục này chưa có dữ liệu Max/Min
-                if (!contextMap.containsKey(catId)) {
-                    int sMax = productRepository.findMaxSoldCountByCategoryId(catId) != null ? productRepository.findMaxSoldCountByCategoryId(catId) : 1;
-                    BigDecimal pMin = productRepository.findMinPriceByCategoryId(catId) != null ? productRepository.findMinPriceByCategoryId(catId) : BigDecimal.ZERO;
-                    BigDecimal pMax = productRepository.findMaxPriceByCategoryId(catId) != null ? productRepository.findMaxPriceByCategoryId(catId) : BigDecimal.ONE;
-
-                    contextMap.put(catId, new CategoryContext(sMax, pMin, pMax));
-                    log.info("==> Nạp Cache danh mục ID: {}", catId);
-                }
-
-                CategoryContext ctx = contextMap.get(catId);
-
-                // Chấm điểm Fuzzy và Trending
-                this.evaluateProductWithContext(p, ctx);
-                this.evaluateTrendingProduct(p.getId());
-
-            } catch (Exception e) {
-                log.error("Lỗi tại ID {}: {}", p.getId(), e.getMessage());
-            }
-        }
-        log.info("Hoàn tất tiến trình chấm điểm.");
-    }
-
-    // Chấm điểm Trending cho sản phẩm
-    public ProductEvaluationResponse evaluateTrendingProduct(Integer productId) {
-        Product product = productRepository.findById(productId).orElseThrow(() -> new ResourceNotFoundException("Product not found"));
-        java.time.LocalDateTime oneMonthAgo = LocalDateTime.now().minusDays(30);
-        int salesInMonth = productRepository.countRecentSales(productId, oneMonthAgo);
-
-        double salesFactor = Math.min((double) salesInMonth / 100.0, 1.0);
-        double ratingFactor = product.getRatingAvg() != null ? product.getRatingAvg().doubleValue() / 5.0 : 0.5;
-
-        // SỬA: Nếu sales = 0 thì điểm gần như bằng 0
-        double trendingScore = (salesInMonth == 0) ? ratingFactor * 0.1 : (salesFactor * 0.8) + (ratingFactor * 0.2);
-
-        String xaiReason = (salesInMonth >= 50) ? "Xu hướng tháng: Đang cực hot với hơn " + salesInMonth + " lượt bán." :
-                (salesInMonth >= 10) ? "Đang tăng trưởng: Lượt mua tăng ổn định trong tháng." :
-                        (salesInMonth > 0) ? "Tiềm năng: Đang có lượt bán và phản hồi tốt." : "Sản phẩm mới: Đang chờ lượt trải nghiệm từ cộng đồng.";
-
-        ProductEvaluation evaluation = evaluationRepository.findByProductIdAndType(product.getId(), ProductEvaluationType.TRENDING).orElse(new ProductEvaluation());
-        evaluation.setProduct(product);
-        evaluation.setScore(BigDecimal.valueOf(trendingScore));
-        evaluation.setType(ProductEvaluationType.TRENDING);
-        evaluation.setReason(xaiReason);
-        evaluation.setSoldScore(BigDecimal.valueOf(salesFactor));
-        evaluation.setRatingScore(BigDecimal.valueOf(ratingFactor));
-        evaluation.setPriceScore(BigDecimal.ZERO);
-
-        return mapToDTO(evaluationRepository.save(evaluation));
     }
 
     private static class CategoryContext {
