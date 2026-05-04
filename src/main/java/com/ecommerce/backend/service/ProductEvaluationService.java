@@ -185,7 +185,7 @@ public class ProductEvaluationService {
         List<Product> allProducts = productRepository.findByStatusAndIsDeletedFalse(ProductStatus.APPROVED);
         LocalDateTime oneMonthAgo = LocalDateTime.now().minusDays(30);
 
-        // Tối ưu 1: Load tất cả category context trong 1 query (thay 3N query)
+        // Tối ưu 1: Load tất cả category context trong 1 query
         Map<Integer, CategoryContext> contextMap = new ConcurrentHashMap<>();
         List<Object[]> categoryContexts = productRepository.findAllCategoryContexts(oneMonthAgo);
         for (Object[] row : categoryContexts) {
@@ -196,13 +196,31 @@ public class ProductEvaluationService {
             contextMap.put(catId, new CategoryContext(sMax, pMin, pMax));
         }
 
-        // Tối ưu 2: Batch load sales count trong 1 query (thay N query)
+        // Tối ưu 2: Batch load sales count trong 1 query
         List<Integer> productIds = allProducts.stream().map(Product::getId).toList();
         Map<Integer, Integer> salesMap = new ConcurrentHashMap<>();
         if (!productIds.isEmpty()) {
             List<Object[]> salesResults = productRepository.countRecentSalesBatch(productIds, oneMonthAgo);
             for (Object[] row : salesResults) {
                 salesMap.put((Integer) row[0], ((Number) row[1]).intValue());
+            }
+        }
+
+        // Tối ưu 3: Batch load tất cả FUZZY evaluations trong 1 query
+        Map<Integer, ProductEvaluation> fuzzyEvalMap = new ConcurrentHashMap<>();
+        if (!productIds.isEmpty()) {
+            List<ProductEvaluation> fuzzyEvals = evaluationRepository.findAllByProductIdsAndType(productIds, ProductEvaluationType.FUZZY);
+            for (ProductEvaluation eval : fuzzyEvals) {
+                fuzzyEvalMap.put(eval.getProduct().getId(), eval);
+            }
+        }
+
+        // Tối ưu 4: Batch load tất cả TRENDING evaluations trong 1 query
+        Map<Integer, ProductEvaluation> trendingEvalMap = new ConcurrentHashMap<>();
+        if (!productIds.isEmpty()) {
+            List<ProductEvaluation> trendingEvals = evaluationRepository.findAllByProductIdsAndType(productIds, ProductEvaluationType.TRENDING);
+            for (ProductEvaluation eval : trendingEvals) {
+                trendingEvalMap.put(eval.getProduct().getId(), eval);
             }
         }
 
@@ -216,14 +234,13 @@ public class ProductEvaluationService {
                     ctx = new CategoryContext(1, BigDecimal.ZERO, BigDecimal.ONE);
                 }
 
-                // Lấy recent sales cho sản phẩm này (30 ngày)
                 int recentSales = salesMap.getOrDefault(p.getId(), 0);
 
-                // Chấm điểm Fuzzy với dữ liệu 30 ngày
-                this.evaluateProductWithContext(p, ctx, recentSales);
+                // Chấm điểm Fuzzy với dữ liệu 30 ngày (dùng map thay vì query)
+                this.evaluateFuzzyWithMap(p, ctx, recentSales, fuzzyEvalMap);
 
-                // Chấm điểm Trending với sales đã load sẵn
-                this.evaluateTrendingProductWithCache(p.getId(), recentSales);
+                // Chấm điểm Trending với sales đã load sẵn (dùng map thay vì query)
+                this.evaluateTrendingWithMap(p, recentSales, trendingEvalMap);
 
             } catch (Exception e) {
                 log.error("Lỗi tại ID {}: {}", p.getId(), e.getMessage());
@@ -307,6 +324,103 @@ public class ProductEvaluationService {
         evaluation.setScore(BigDecimal.valueOf(finalScore));
         evaluation.setType(ProductEvaluationType.FUZZY);
         evaluation.setReason(xaiReason);
+
+        return evaluationRepository.save(evaluation);
+    }
+
+    // Tối ưu: evaluate Fuzzy dùng map thay vì query từng sản phẩm
+    private ProductEvaluation evaluateFuzzyWithMap(Product product, CategoryContext ctx, int recentSales,
+                                                   Map<Integer, ProductEvaluation> evalMap) {
+        // BƯỚC 1: CHUẨN HÓA (Dùng dữ liệu 30 ngày gần nhất)
+        double rScore = product.getRatingAvg() != null ? product.getRatingAvg().doubleValue() / 5.0 : 0.5;
+        double sScore = ctx.sMax > 0 ? (double) recentSales / ctx.sMax : 0;
+
+        double pScore = 0.5;
+        if (ctx.pMax != null && ctx.pMin != null && ctx.pMax.compareTo(ctx.pMin) > 0 && product.getPrice() != null) {
+            pScore = product.getPrice().subtract(ctx.pMin)
+                    .divide(ctx.pMax.subtract(ctx.pMin), 4, RoundingMode.HALF_UP).doubleValue();
+        }
+
+        // BƯỚC 2: MỜ HÓA (FUZZIFICATION)
+        double muPoorR = fuzzyLeftShoulder(rScore, 0.0, 0.4);
+        double muAvgR = fuzzyTriangle(rScore, 0.2, 0.5, 0.8);
+        double muGoodR = fuzzyRightShoulder(rScore, 0.6, 1.0);
+
+        double muLowS = fuzzyLeftShoulder(sScore, 0.0, 0.4);
+        double muMediumS = fuzzyTriangle(sScore, 0.2, 0.5, 0.8);
+        double muHighS = fuzzyRightShoulder(sScore, 0.6, 1.0);
+
+        double muCheapP = fuzzyLeftShoulder(pScore, 0.0, 0.4);
+        double muFairP = fuzzyTriangle(pScore, 0.2, 0.5, 0.8);
+        double muExpensiveP = fuzzyRightShoulder(pScore, 0.6, 1.0);
+
+        // BƯỚC 3 & 4: SUY LUẬN LUẬT MAMDANI VÀ TRÍCH XUẤT XAI
+        List<FuzzyRule> rules = new ArrayList<>();
+
+        rules.add(new FuzzyRule("L1", "Deal cực hời: Sản phẩm có giá cực tốt so với các mặt hàng cùng loại, bán rất chạy và được đánh giá rất cao!", 0.95, Math.min(Math.min(muGoodR, muHighS), muCheapP)));
+        rules.add(new FuzzyRule("L2", "Lựa chọn an toàn: Mức giá hợp lý đúng với mặt bằng chung, chất lượng đã được nhiều người dùng kiểm chứng.", 0.80, Math.min(Math.min(muGoodR, muMediumS), muFairP)));
+        rules.add(new FuzzyRule("L3", "Thuộc phân khúc cao cấp: Chất lượng vượt trội nhưng có mức giá khá cao, phù hợp với nhu cầu chuyên biệt.", 0.50, Math.min(Math.min(muGoodR, muLowS), muExpensiveP)));
+        rules.add(new FuzzyRule("L4", "Tuy có mức giá rẻ và lượt mua cao, nhưng sản phẩm nhận nhiều phản hồi tiêu cực. Hãy cân nhắc kỹ!", 0.30, Math.min(Math.min(muPoorR, muHighS), muCheapP)));
+        rules.add(new FuzzyRule("L5", "Sản phẩm không được khuyến nghị: Mức giá cao nhưng chất lượng đánh giá rất thấp.", 0.15, Math.min(Math.min(muPoorR, muLowS), muExpensiveP)));
+        rules.add(new FuzzyRule("L6", "Sản phẩm cao cấp được tin dùng: Dù mức giá cao nhưng chất lượng tuyệt vời và lượt bán khủng đã khẳng định giá trị sản phẩm.", 0.80, Math.min(Math.min(muGoodR, muHighS), muExpensiveP)));
+        rules.add(new FuzzyRule("L7", "Lựa chọn phân khúc cao cấp: Sản phẩm có chất lượng tốt, phù hợp cho người dùng ưu tiên trải nghiệm hàng đầu.", 0.68, Math.min(Math.min(muGoodR, muMediumS), muExpensiveP)));
+        rules.add(new FuzzyRule("L8", "Món hời mới: Sản phẩm có giá rất tốt và đánh giá cao, dù chưa có nhiều lượt bán nhưng rất đáng để trải nghiệm.", 0.68, Math.min(Math.min(muGoodR, muLowS), muCheapP)));
+        rules.add(new FuzzyRule("L9", "Sản phẩm quốc dân: Mức giá hợp lý, lượt bán ổn định và nhận được sự tin tưởng từ đông đảo cộng đồng.", 0.80, Math.min(Math.min(muAvgR, muHighS), muFairP)));
+        rules.add(new FuzzyRule("L10", "Lựa chọn tiết kiệm: Giá thành rẻ, chất lượng ở mức ổn định, phù hợp với các nhu cầu mua sắm cơ bản.", 0.50, Math.min(Math.min(muAvgR, muMediumS), muCheapP)));
+        rules.add(new FuzzyRule("L11", "Sản phẩm đắt khách: Giá siêu rẻ, bán rất chạy nhưng chất lượng chỉ ở mức trung bình. Phù hợp dùng tạm.", 0.68, Math.min(Math.min(muAvgR, muHighS), muCheapP)));
+        rules.add(new FuzzyRule("L12", "Sản phẩm nhận nhiều phản hồi chưa tốt từ người dùng, bạn nên cân nhắc kỹ trước khi quyết định mua hàng.", 0.30, Math.min(muPoorR, 1.0)));
+        rules.add(new FuzzyRule("L13", "Sản phẩm có chất lượng ở mức cơ bản, đáp ứng được các nhu cầu mua sắm và sử dụng phổ thông.", 0.50, Math.min(muAvgR, 1.0)));
+        rules.add(new FuzzyRule("L14", "Sản phẩm có chất lượng tốt, nhận được nhiều phản hồi tích cực và sự tin tưởng từ cộng đồng người dùng.", 0.68, Math.min(muGoodR, 1.0)));
+
+        FuzzyRule dominantRule = rules.getFirst();
+        for (FuzzyRule rule : rules) {
+            if (rule.firingStrength > dominantRule.firingStrength) dominantRule = rule;
+        }
+
+        double numerator = 0;
+        double denominator = 0;
+        for (FuzzyRule rule : rules) {
+            numerator += rule.firingStrength * rule.centroidValue;
+            denominator += rule.firingStrength;
+        }
+
+        double finalScore = denominator > 0 ? numerator / denominator : 0.5;
+        String xaiReason = denominator > 0 ? dominantRule.reason : "Hệ thống đang phân tích thêm dữ liệu để đánh giá.";
+
+        // Dùng map thay vì query
+        ProductEvaluation evaluation = evalMap.getOrDefault(product.getId(), new ProductEvaluation());
+        evaluation.setProduct(product);
+        evaluation.setRatingScore(BigDecimal.valueOf(rScore));
+        evaluation.setSoldScore(BigDecimal.valueOf(sScore));
+        evaluation.setPriceScore(BigDecimal.valueOf(pScore));
+        evaluation.setScore(BigDecimal.valueOf(finalScore));
+        evaluation.setType(ProductEvaluationType.FUZZY);
+        evaluation.setReason(xaiReason);
+
+        return evaluationRepository.save(evaluation);
+    }
+
+    // Tối ưu: evaluate Trending dùng map thay vì query từng sản phẩm
+    private ProductEvaluation evaluateTrendingWithMap(Product product, int salesInMonth,
+                                                      Map<Integer, ProductEvaluation> evalMap) {
+        double salesFactor = Math.min((double) salesInMonth / 100.0, 1.0);
+        double ratingFactor = product.getRatingAvg() != null ? product.getRatingAvg().doubleValue() / 5.0 : 0.5;
+
+        double trendingScore = (salesInMonth == 0) ? ratingFactor * 0.1 : (salesFactor * 0.8) + (ratingFactor * 0.2);
+
+        String xaiReason = (salesInMonth >= 50) ? "Xu hướng tháng: Đang cực hot với hơn " + salesInMonth + " lượt bán." :
+                (salesInMonth >= 10) ? "Đang tăng trưởng: Lượt mua tăng ổn định trong tháng." :
+                        (salesInMonth > 0) ? "Tiềm năng: Đang có lượt bán và phản hồi tốt." : "Sản phẩm mới: Đang chờ lượt trải nghiệm từ cộng đồng.";
+
+        // Dùng map thay vì query
+        ProductEvaluation evaluation = evalMap.getOrDefault(product.getId(), new ProductEvaluation());
+        evaluation.setProduct(product);
+        evaluation.setScore(BigDecimal.valueOf(trendingScore));
+        evaluation.setType(ProductEvaluationType.TRENDING);
+        evaluation.setReason(xaiReason);
+        evaluation.setSoldScore(BigDecimal.valueOf(salesFactor));
+        evaluation.setRatingScore(BigDecimal.valueOf(ratingFactor));
+        evaluation.setPriceScore(BigDecimal.ZERO);
 
         return evaluationRepository.save(evaluation);
     }

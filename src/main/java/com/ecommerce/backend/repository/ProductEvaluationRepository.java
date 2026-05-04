@@ -24,4 +24,10 @@ public interface ProductEvaluationRepository extends JpaRepository<ProductEvalua
    \s""")
     List<ProductEvaluation> findTopProductsByType(ProductEvaluationType type, Pageable pageable);
 
+    @Query("""
+        SELECT pe FROM ProductEvaluation pe\s
+        WHERE pe.product.id IN :productIds AND pe.type = :type
+        """)
+    List<ProductEvaluation> findAllByProductIdsAndType(List<Integer> productIds, ProductEvaluationType type);
+
 }
