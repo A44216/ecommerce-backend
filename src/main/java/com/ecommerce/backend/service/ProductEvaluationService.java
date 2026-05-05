@@ -234,13 +234,19 @@ public class ProductEvaluationService {
                     ctx = new CategoryContext(1, BigDecimal.ZERO, BigDecimal.ONE);
                 }
 
+                double pScore = 0.5;
+                if (ctx.pMax != null && ctx.pMin != null && ctx.pMax.compareTo(ctx.pMin) > 0 && p.getPrice() != null) {
+                    pScore = p.getPrice().subtract(ctx.pMin)
+                            .divide(ctx.pMax.subtract(ctx.pMin), 4, RoundingMode.HALF_UP).doubleValue();
+                }
+
                 int recentSales = salesMap.getOrDefault(p.getId(), 0);
 
                 // Chấm điểm Fuzzy với dữ liệu 30 ngày (dùng map thay vì query)
                 this.evaluateFuzzyWithMap(p, ctx, recentSales, fuzzyEvalMap);
 
                 // Chấm điểm Trending với sales đã load sẵn (dùng map thay vì query)
-                this.evaluateTrendingWithMap(p, recentSales, trendingEvalMap);
+                this.evaluateTrendingWithMap(p, recentSales, pScore, trendingEvalMap);
 
             } catch (Exception e) {
                 log.error("Lỗi tại ID {}: {}", p.getId(), e.getMessage());
@@ -401,7 +407,7 @@ public class ProductEvaluationService {
     }
 
     // Tối ưu: evaluate Trending dùng map thay vì query từng sản phẩm
-    private ProductEvaluation evaluateTrendingWithMap(Product product, int salesInMonth,
+    private ProductEvaluation evaluateTrendingWithMap(Product product, int salesInMonth, double pScore,
                                                       Map<Integer, ProductEvaluation> evalMap) {
         double salesFactor = Math.min((double) salesInMonth / 100.0, 1.0);
         double ratingFactor = product.getRatingAvg() != null ? product.getRatingAvg().doubleValue() / 5.0 : 0.5;
@@ -420,7 +426,7 @@ public class ProductEvaluationService {
         evaluation.setReason(xaiReason);
         evaluation.setSoldScore(BigDecimal.valueOf(salesFactor));
         evaluation.setRatingScore(BigDecimal.valueOf(ratingFactor));
-        evaluation.setPriceScore(BigDecimal.ZERO);
+        evaluation.setPriceScore(BigDecimal.valueOf(pScore));
 
         return evaluationRepository.save(evaluation);
     }

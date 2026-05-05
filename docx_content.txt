@@ -1,0 +1,248 @@
+[0] BỘ GIÁO DỤC ĐÀO TẠO
+[1] TRƯỜNG ĐẠI HỌC THĂNG LONG
+[2] ---o0o---
+[3] BÁO CÁO THỰC TẬP
+TỐT NGHIỆP
+[4] ĐỀ TÀI:
+[5] NGHIÊN CỨU XAI VÀ FUZZY LOGIC
+XÂY DỰNG ỨNG DỤNG MINH HỌA
+[7] Giáo viên hướng dẫn	: Nguyễn Hùng Cường
+[8] Sinh viên thực hiện	: Đặng Bá Huy
+[9] Mã sinh viên	: A44216
+[10] Chuyên ngành	: Công nghệ thông tin
+[11] HÀ NỘI – 2026
+[12] MỤC LỤC
+[13] LỜI MỞ ĐẦU	1
+[14] PHẦN 1.	CƠ SỞ LÝ THUYẾT	2
+[15] 1.1.	Tổng quan về Trí tuệ nhân tạo có thể giải thích (Explainable AI - XAI)	2
+[16] 1.1.1.	Khái niệm cơ bản và sự ra đời của XAI	2
+[17] 1.1.2.	Hạn chế của mô hình "hộp đen" (Black-box) trong AI truyền thống	2
+[18] 1.1.3.	Tầm quan trọng của tính minh bạch và khả năng giải thích	3
+[19] 1.2.	Tổng quan về Logic mờ (Fuzzy Logic)	3
+[20] 1.2.1.	Khái niệm về tập mờ (Fuzzy sets) và hàm liên thuộc (Membership function)	3
+[21] 1.2.2.	Các biến ngôn ngữ và tập luật IF-THEN mô phỏng tư duy con người	3
+[22] 1.2.3.	Hệ thống suy luận mờ (Fuzzy Inference System) và các phương pháp giải mờ (Defuzzification)	4
+[23] 1.3.	Khả năng giải thích của Logic mờ (Sự giao thoa với XAI)	4
+[24] 1.3.1.	Tính minh bạch nội tại của hệ luật IF-THEN (White-box model)	4
+[25] 1.3.2.	Khả năng ứng dụng thực tiễn trong hệ thống thương mại điện tử	5
+[26] PHẦN 2.	PHÂN TÍCH, THIẾT KẾ VÀ XÂY DỰNG ỨNG DỤNG MINH HỌA	6
+[27] 2.1.	Đặt vấn đề và Lựa chọn bài toán minh họa	6
+[28] 2.1.1.	Mô tả bài toán thương mại điện tử trên nền tảng di động	6
+[29] 2.1.2.	Lý do áp dụng XAI và Logic mờ cho bài toán trên thiết bị di động	6
+[30] 2.2.	Công nghệ sử dụng	7
+[31] 2.2.1.	Phát triển Frontend: Nền tảng Android và ngôn ngữ Java	7
+[32] 2.2.2.	Phát triển Backend: Xây dựng API và xử lý logic với Spring Boot	7
+[33] 2.2.3.	Công cụ và thư viện hỗ trợ thuật toán Logic mờ	7
+[34] 2.3.	Phân tích và Thiết kế hệ thống Logic mờ	8
+[35] 2.3.1.	Xác định và chuẩn hóa các thông số đầu vào (Input) và đầu ra (Output)	8
+[36] 2.3.2.	Định nghĩa hàm liên thuộc (Membership Functions) và Mờ hóa (Fuzzification)	9
+[37] 2.3.3.	Xây dựng cơ sở luật mờ (Fuzzy Rule Base) tích hợp tính năng Giải thích (XAI)	12
+[38] 2.3.4.	Quá trình Suy luận và Kiến trúc xử lý luồng dữ liệu Backend	14
+[39] 2.3.5.	Kịch bản tính toán minh họa thực tế (Case Study)	16
+[40] 2.4.	Triển khai ứng dụng minh họa và Tích hợp XAI	19
+[41] 2.4.1.	Thiết kế giao diện người dùng (UI/UX) trên Android	19
+[42] 2.4.2.	Cài đặt và xử lý thuật toán Logic mờ qua hệ thống Backend	19
+[43] 2.4.3.	Trích xuất lời giải thích (XAI) và luồng hiển thị trên thiết bị di động	19
+[44] 2.5.	Đánh giá và Thử nghiệm	19
+[45] 2.5.1.	Thiết lập kịch bản và dữ liệu thử nghiệm thực tế	19
+[46] 2.5.2.	Đánh giá tính chính xác của thuật toán và trải nghiệm người dùng (UX)	19
+[47] PHẦN 3.	NHẬN XÉT VÀ ĐỀ XUẤT	20
+[48] 3.1.	Kết quả đạt được	20
+[49] 3.1.1.	Về mặt lý thuyết nghiên cứu	20
+[50] 3.1.2.	Về mặt thực hành và ứng dụng	20
+[51] 3.1.3.	Về kỹ năng mềm và tư duy giải quyết vấn đề	20
+[52] 3.2.	Những điểm còn hạn chế	20
+[53] 3.2.1.	Hạn chế về mặt dữ liệu và độ bao phủ của bộ luật mờ	20
+[54] 3.2.2.	Hạn chế trong quá trình triển khai hệ thống	20
+[55] 3.3.	Đề xuất và Hướng phát triển	20
+[56] 3.3.1.	Đề xuất phương án tối ưu hóa tập luật mờ	20
+[57] 3.3.2.	Hướng mở rộng chức năng ứng dụng cho hệ thống quy mô lớn	20
+[58] TÀI LIỆU THAM KHẢO	21
+[59] PHỤ LỤC	22
+[60] DANH MỤC VIẾT TẮT
+[62] DANH MỤC CÁC BẢNG BIỂU, HÌNH VẼ, ĐỒ THỊ, CÔNG THỨC
+[65] LỜI MỞ ĐẦU
+[66] Trong những năm gần đây, Trí tuệ nhân tạo (Artificial Intelligence – AI) đã và đang phát triển mạnh mẽ, trở thành nền tảng quan trọng trong rất nhiều lĩnh vực như: thương mại điện tử, y tế, tài chính và giáo dục. Các hệ thống AI hiện đại, đặc biệt là các mô hình học máy và học sâu, mang lại hiệu quả cao trong việc xử lý và dự đoán dữ liệu. Tuy nhiên, một hạn chế lớn của các mô hình này là tính "hộp đen" (black-box), khiến cho việc hiểu và giải thích kết quả trở nên khó khăn đối với con người.
+[67] Xuất phát từ thực tế đó, khái niệm Explainable Artificial Intelligence (XAI) ra đời nhằm mục tiêu làm cho các hệ thống AI trở nên minh bạch và dễ hiểu hơn, giúp người dùng có thể nắm bắt được lý do phía sau các quyết định của mô hình. Bên cạnh đó, Logic mờ (Fuzzy Logic) là một phương pháp tính toán mô phỏng tư duy con người, cho phép xử lý các dữ liệu không chắc chắn và mang tính tương đối, đồng thời có khả năng diễn giải rõ ràng thông qua các luật IF–THEN.
+[68] Với mong muốn được nghiên cứu chuyên sâu về nền tảng thuật toán của Trí tuệ nhân tạo trong một môi trường học thuật bài bản, em đã quyết định lựa chọn thực tập tại trường. Tại đây, dưới sự định hướng của giảng viên hướng dẫn, em đã thực hiện đề tài: "Nghiên cứu XAI và Fuzzy Logic – Xây dựng ứng dụng minh họa". Lĩnh vực thương mại điện tử được lựa chọn làm bài toán minh họa vì đây là môi trường mà hệ thống gợi ý (Recommender System) đóng vai trò sống còn. Tuy nhiên, khách hàng thường thiếu sự tin tưởng do không hiểu vì sao một sản phẩm lại được đề xuất. Việc áp dụng XAI kết hợp Logic mờ vào phân hệ Customer sẽ cho thấy rõ giá trị thực tiễn của đề tài trong việc minh bạch hóa dữ liệu và nâng cao trải nghiệm người dùng.
+[69] Thông qua quá trình thực tập tại trường và hoàn thành đề tài, em mong muốn củng cố kiến thức chuyên ngành, rèn luyện kỹ năng nghiên cứu khoa học và lập trình, đồng thời hiểu rõ hơn về cách các hệ thống trí tuệ nhân tạo có thể được giải thích và ứng dụng trong thực tiễn.
+[70] Do kiến thức và thời gian thực hiện còn hạn chế, bài báo cáo không tránh khỏi những thiếu sót. Em rất mong nhận được sự đánh giá và góp ý của thầy/cô để hoàn thiện hơn.
+[71] Em xin chân thành cảm ơn!		
+[73] CƠ SỞ LÝ THUYẾT
+[74] Tổng quan về Trí tuệ nhân tạo có thể giải thích (Explainable AI - XAI)
+[75] Khái niệm cơ bản và sự ra đời của XAI
+[76] Trí tuệ nhân tạo (Artificial Intelligence – AI) trong những năm gần đây đã có sự phát triển vượt bậc, đặc biệt nhờ vào sự tiến bộ của các mô hình học máy (Machine Learning) và học sâu (Deep Learning). Các mô hình này có khả năng xử lý lượng dữ liệu lớn và đưa ra dự đoán với độ chính xác cao, từ đó được ứng dụng rộng rãi trong nhiều lĩnh vực như thương mại điện tử, y tế, tài chính, giáo dục và công nghiệp.
+[77] Tuy nhiên, một vấn đề quan trọng của các mô hình AI hiện đại là tính thiếu minh bạch trong quá trình ra quyết định. Phần lớn các mô hình học sâu hoạt động như một "hộp đen" (black-box), nghĩa là người dùng chỉ quan sát được đầu vào và đầu ra mà không hiểu rõ cách thức mô hình đưa ra kết quả.
+[78] Để giải quyết vấn đề này, khái niệm Explainable Artificial Intelligence (XAI) đã được nghiên cứu và phát triển. XAI được hiểu là một tập hợp các phương pháp nhằm giúp con người có thể hiểu, giải thích và tin tưởng hơn vào các quyết định do hệ thống trí tuệ nhân tạo đưa ra. Theo Arrieta et al. (2019), XAI hướng đến việc xây dựng các mô hình AI không chỉ chính xác mà còn minh bạch và có thể giải thích được trong từng quyết định.
+[80] Hạn chế của mô hình "hộp đen" (Black-box) trong AI truyền thống
+[81] Trong các mô hình học sâu hiện nay, đặc biệt là mạng nơ-ron nhân tạo (Neural Networks), quá trình xử lý dữ liệu diễn ra qua nhiều lớp ẩn phức tạp. Mặc dù điều này giúp mô hình đạt được độ chính xác cao, nhưng đồng thời cũng khiến cho việc giải thích cách thức ra quyết định trở nên rất khó khăn. Hiện tượng này được gọi là "black-box problem".
+[82] Ví dụ, trong lĩnh vực tài chính, một hệ thống AI có thể từ chối cấp khoản vay cho một khách hàng nhưng không cung cấp lý do rõ ràng. Trong y tế, nếu một mô hình đưa ra chẩn đoán sai mà không thể giải thích, hậu quả có thể rất nghiêm trọng. Tương tự trong thương mại điện tử, nếu một mô hình học sâu liên tục gợi ý các sản phẩm đắt đỏ mà không đưa ra cơ sở, khách hàng có thể cảm thấy hệ thống đang thiên vị để ép doanh số, dẫn đến sự thiếu tin tưởng và trải nghiệm người dùng kém (bad UX).
+[83] Do đó, nhu cầu về các phương pháp giúp giải thích mô hình AI ngày càng trở nên cấp thiết, từ đó thúc đẩy sự phát triển của XAI.
+[84] Tầm quan trọng của tính minh bạch và khả năng giải thích
+[85] Tính minh bạch trong trí tuệ nhân tạo đóng vai trò nền tảng trong việc xây dựng lòng tin giữa con người và hệ thống AI. Khi một mô hình có khả năng giải thích, người dùng có thể hiểu được lý do đằng sau quyết định, từ đó dễ dàng chấp nhận và sử dụng kết quả hơn.
+[86] Ngoài ra, khả năng giải thích còn giúp các nhà phát triển kiểm tra, đánh giá và cải thiện mô hình. Khi hiểu được cách mô hình hoạt động, họ có thể phát hiện các sai lệch dữ liệu (bias), tối ưu thuật toán và nâng cao hiệu suất hệ thống. Trong bối cảnh AI ngày càng được ứng dụng vào các hệ thống quan trọng, tính minh bạch không chỉ là một yếu tố kỹ thuật mà còn là yêu cầu về đạo đức và pháp lý.
+[88] Tổng quan về Logic mờ (Fuzzy Logic)
+[89] Khái niệm về tập mờ (Fuzzy sets) và hàm liên thuộc (Membership function)
+[90] Logic mờ (Fuzzy Logic) được giới thiệu lần đầu bởi Lotfi A. Zadeh vào năm 1965 nhằm giải quyết các bài toán có tính không chắc chắn và mơ hồ trong thực tế. Khác với logic cổ điển chỉ cho phép hai giá trị đúng (1) hoặc sai (0), logic mờ cho phép một giá trị có thể thuộc về một tập hợp với mức độ nhất định nằm trong khoảng liên tục từ 0 đến 1.
+[91] Khái niệm trung tâm trong logic mờ là tập mờ (fuzzy set), trong đó mỗi phần tử không chỉ đơn thuần là thuộc hoặc không thuộc tập hợp, mà còn có một mức độ thuộc gọi là hàm liên thuộc (membership function). Hàm này biểu diễn mức độ phù hợp của một giá trị đối với một khái niệm ngôn ngữ nào đó, ví dụ như "giá cao", "đánh giá trung bình" hoặc "doanh số thấp". Điều này giúp logic mờ có khả năng mô phỏng các khái niệm gần với tư duy con người, vốn thường không mang tính tuyệt đối.
+[93] Các biến ngôn ngữ và tập luật IF-THEN mô phỏng tư duy con người
+[94] Trong logic mờ, các biến ngôn ngữ được sử dụng để biểu diễn các khái niệm gần với ngôn ngữ tự nhiên. Thay vì sử dụng các giá trị số cứng nhắc, hệ thống sử dụng các trạng thái như "cao", "thấp", "tốt", "xấu", giúp việc mô hình hóa trở nên tự nhiên hơn.
+[95] Các biến này được kết hợp thành các luật IF–THEN (NẾU - THÌ) để mô phỏng cách con người ra quyết định. Ví dụ: NẾU giá sản phẩm thấp VÀ đánh giá cao THÌ khả năng mua hàng cao. Nhờ cách biểu diễn này, hệ thống logic mờ trở nên dễ hiểu và có khả năng giải thích rõ ràng hơn rất nhiều so với các thuật toán học máy truyền thống.
+[96] Hệ thống suy luận mờ (Fuzzy Inference System) và các phương pháp giải mờ (Defuzzification)
+[97] Một hệ thống suy luận mờ (Fuzzy Inference System – FIS) thường bao gồm ba bước chính:
+[98] Đầu tiên là quá trình mờ hóa dữ liệu đầu vào (fuzzification), trong đó các giá trị số thực tế được chuyển đổi thành giá trị mờ thông qua hàm liên thuộc.
+[99] Tiếp theo là quá trình suy luận (inference) dựa trên tập luật IF–THEN để đưa ra kết quả mờ.
+[100] Cuối cùng là quá trình giải mờ (defuzzification), trong đó kết quả mờ được chuyển đổi ngược lại thành giá trị rõ ràng để sử dụng.
+[101] Một trong những phương pháp giải mờ phổ biến là phương pháp trọng tâm (centroid), trong đó giá trị đầu ra được tính dựa trên trung bình có trọng số của toàn bộ diện tích tập mờ. Đây là cơ sở toán học cực kỳ quan trọng để lập trình các thuật toán xử lý trên hệ thống máy chủ (Backend API), giúp tính toán nhanh chóng và trả về điểm số gợi ý chính xác cho ứng dụng di động.
+[103] Khả năng giải thích của Logic mờ (Sự giao thoa với XAI)
+[104] Tính minh bạch nội tại của hệ luật IF-THEN (White-box model)
+[105] Một ưu điểm lớn của logic mờ là tính minh bạch trong cấu trúc. Khác với các mô hình học sâu phức tạp, logic mờ có thể được biểu diễn bằng các luật IF–THEN bằng văn bản rõ ràng, giúp người dùng dễ dàng hiểu được quá trình ra quyết định.
+[106] Do đó, logic mờ thường được xem là một dạng mô hình "hộp trắng" (white-box), trong đó toàn bộ quá trình xử lý có thể được theo dõi, truy xuất và giải thích một cách trực tiếp. Điều này giúp logic mờ trở thành một nền tảng lý tưởng để kết hợp với XAI trong các hệ thống yêu cầu tính minh bạch cao.
+[108] Khả năng ứng dụng thực tiễn trong hệ thống thương mại điện tử
+[109] Trong lĩnh vực thương mại điện tử, logic mờ có thể được ứng dụng để xây dựng hệ thống gợi ý sản phẩm dựa trên nhiều yếu tố đa chiều như giá cả, mức độ đánh giá và nhu cầu người dùng. Do các yếu tố này thường mang tính tương đối và khó định lượng chính xác tuyệt đối, logic mờ trở nên rất phù hợp.
+[110] Khi kết hợp với XAI, hệ thống không chỉ đưa ra gợi ý sản phẩm mà còn có khả năng giải thích lý do đưa ra quyết định một cách minh bạch. Ví dụ: Dưới một sản phẩm được gợi ý, ứng dụng sẽ hiển thị thông điệp "Sản phẩm này được đề xuất cho bạn vì có mức giá rất rẻ và nhận được đánh giá cao từ cộng đồng".
+[111] Đối với phân hệ khách hàng (Customer), việc cung cấp các lời giải thích dạng này giúp phá bỏ rào cản tâm lý e ngại, gia tăng tỷ lệ chuyển đổi mua hàng (conversion rate), nâng cao độ tin cậy và giữ chân người dùng tương tác lâu dài với ứng dụng.
+[112] PHÂN TÍCH, THIẾT KẾ VÀ XÂY DỰNG ỨNG DỤNG MINH HỌA
+[113] Đặt vấn đề và Lựa chọn bài toán minh họa
+[114] Mô tả bài toán thương mại điện tử trên nền tảng di động
+[115] Trong bối cảnh thương mại điện tử phát triển mạnh mẽ, việc xây dựng các hệ thống gợi ý sản phẩm thông minh (Recommender Systems) trên nền tảng di động trở thành một yêu cầu thiết yếu. Người dùng hiện nay thường bị quá tải thông tin khi tiếp cận với một lượng lớn hàng hóa, dẫn đến khó khăn trong việc ra quyết định mua sắm.
+[116] Ứng dụng được xây dựng trong khuôn khổ đề tài là một nền tảng thương mại điện tử hoàn chỉnh, bao gồm các phân hệ cho Quản trị viên (Admin), Người bán (Seller) và Khách hàng (Customer). Tuy nhiên, trọng tâm của báo cáo này tập trung giải quyết bài toán cốt lõi bên phía Customer: Xây dựng hệ thống gợi ý có khả năng đánh giá và đề xuất sản phẩm dựa trên các tiêu chí đa chiều như mức giá, điểm đánh giá trung bình, và số lượng đã bán.
+[117] Khác với các hệ thống gợi ý truyền thống chỉ trả về kết quả dựa trên các thuật toán "hộp đen", hệ thống trong đề tài hướng đến việc tích hợp Logic mờ và XAI nhằm cung cấp cho người dùng những lời giải thích rõ ràng, minh bạch cho mỗi sản phẩm được đề xuất.
+[119] Lý do áp dụng XAI và Logic mờ cho bài toán trên thiết bị di động
+[120] Việc áp dụng XAI và Logic mờ vào phân hệ khách hàng xuất phát từ nhu cầu thực tiễn về tối ưu hóa trải nghiệm người dùng (UX) và nâng cao độ tin cậy.
+[121] Thứ nhất, logic mờ cho phép hệ thống tính toán và xử lý các yếu tố đầu vào mang tính tương đối, không chắc chắn (như "giá rẻ", "đánh giá cao", "bán chạy") – vốn là ngôn ngữ tự nhiên thường thấy trong tư duy mua sắm của con người.
+[122] Thứ hai, XAI giúp hệ thống không chỉ đưa ra kết quả vô tri mà còn cung cấp cơ sở cho quyết định đó. Ví dụ: Khách hàng sẽ nhận được thông điệp giải thích rằng sản phẩm được gợi ý do có mức giá hợp lý và nhận được nhiều đánh giá tích cực. Trên nền tảng thiết bị di động (nơi không gian hiển thị hạn chế và người dùng lướt nhanh), việc cung cấp các đoạn giải thích ngắn gọn, súc tích nhờ tập luật IF-THEN của logic mờ sẽ giúp tăng mức độ thuyết phục, từ đó cải thiện tỷ lệ chuyển đổi đơn hàng.
+[124] Công nghệ sử dụng
+[125] Phát triển Frontend: Nền tảng Android và ngôn ngữ Java
+[126] Phần giao diện người dùng (Frontend) của ứng dụng được phát triển Native trên nền tảng Android, sử dụng ngôn ngữ lập trình Java. Android cung cấp môi trường mạnh mẽ để phát triển các ứng dụng thương mại điện tử với khả năng tùy biến UI/UX cao và hiệu năng mượt mà.
+[127] Các thành phần giao diện chính bao gồm màn hình danh sách sản phẩm, chi tiết sản phẩm và đặc biệt là khu vực hiển thị kết quả XAI (ví dụ: các tooltip hoặc bottom sheet giải thích lý do gợi ý sản phẩm). Ngôn ngữ Java đảm bảo tính ổn định cao, khả năng quản lý vòng đời ứng dụng tốt và dễ dàng thực hiện các tác vụ bất đồng bộ khi gọi API từ máy chủ.
+[128] Phát triển Backend: Xây dựng API và xử lý logic với Spring Boot
+[129] Phần máy chủ (Backend) của hệ thống được xây dựng bằng Spring Boot, một framework mạnh mẽ của Java chuyên dụng để phát triển các dịch vụ RESTful API.
+[130] Backend đảm nhiệm toàn bộ khối lượng tính toán nặng của hệ thống. Thay vì để thiết bị di động xử lý, Spring Boot sẽ tiếp nhận dữ liệu đầu vào, thực hiện các thuật toán cốt lõi của hệ thống suy luận mờ (bao gồm Fuzzification, đối chiếu tập luật Inference, và Defuzzification). Sau khi xử lý, Spring Boot sẽ đóng gói kết quả (gồm danh sách sản phẩm và chuỗi văn bản giải thích XAI) dưới dạng JSON gọn nhẹ và trả về cho ứng dụng Android hiển thị.
+[131] Công cụ và thư viện hỗ trợ thuật toán Logic mờ
+[132] Để triển khai thuật toán logic mờ, thay vì phụ thuộc hoàn toàn vào các thư viện đóng gói sẵn có thể gây khó khăn cho việc trích xuất lời giải thích, hệ thống ưu tiên tự xây dựng các cấu trúc dữ liệu nền tảng bằng Java.
+[133] Việc tự định nghĩa các tập mờ, hàm liên thuộc và hệ cơ sở luật (Fuzzy Rule Base) trực tiếp trong mã nguồn Spring Boot giúp hệ thống có độ tùy biến tối đa cho nghiệp vụ thương mại điện tử. Quan trọng hơn, kiến trúc này cho phép dễ dàng truy xuất ngược lại các luật IF-THEN đã được kích hoạt trong quá trình suy luận, từ đó tổng hợp thành các câu giải thích ngôn ngữ tự nhiên (XAI) một cách chính xác và trơn tru nhất.
+[135] Phân tích và Thiết kế hệ thống Logic mờ
+[136] Hệ thống gợi ý trong đề tài không sử dụng các thuật toán học máy "hộp đen" truyền thống mà áp dụng mô hình Hệ chuyên gia dựa trên Logic mờ (Fuzzy Expert System). Mô hình này cho phép biểu diễn tri thức định tính của con người và xuất ra các lý do minh bạch (XAI) cho từng quyết định gợi ý, từ đó trực tiếp nâng cao trải nghiệm mua sắm của khách hàng.
+[138] Xác định và chuẩn hóa các thông số đầu vào (Input) và đầu ra (Output)
+[139] Dựa trên cấu trúc cơ sở dữ liệu của hệ thống, thuật toán sử dụng 3 tham số đầu vào được trích xuất từ bảng products để tính toán. Do tính chất mỗi sản phẩm chỉ thuộc một danh mục (category_id) duy nhất, các giá trị này cần được chuẩn hóa (Normalization) để triệt tiêu sự khập khiễng giữa các ngành hàng khác nhau.
+[140] Biến đầu vào 1: Điểm đánh giá (Rating Score - R)
+[141] Dữ liệu gốc: Cột rating_avg (thang điểm từ 1.0 đến 5.0)
+[142] Chuẩn hóa: Chia điểm số cho 5.0 để đưa về khoảng [0, 1]
+[144] Tập mờ ngôn ngữ: Tệ (Poor), Trung bình (Average), Tốt (Good)
+[145] Biến đầu vào 2: Độ phổ biến (Popularity / Sold Score - S)
+[146] Dữ liệu gốc: Cột sold_count
+[147] Chuẩn hóa: Hệ thống sẽ tìm sản phẩm có lượt bán cao nhất trong cùng category_id (). Giá trị đầu vào đưa vào thuật toán sẽ là tỷ lệ 
+[148] (Đảm bảo S luôn nằm trong khoảng 0 đến 1).
+[149] Tập mờ ngôn ngữ: Thấp (Low), Vừa (Medium), Cao (High)
+[150] Biến đầu vào 3: Mức giá tương đối (Price Score – P)
+[151] Dữ liệu gốc: Cột price
+[152] Chuẩn hóa: Để đáp ứng yêu cầu thuật toán Logic mờ và ràng buộc giá trị [0, 1] của cơ sở dữ liệu, hệ thống sử dụng phương pháp Chuẩn hóa Min-Max (Min-Max Normalization) trong từng danh mục (category_id):
+[154] (Trong đó: và  lần lượt là giá thấp nhất và cao nhất trong danh mục)
+[155] Tập mờ ngôn ngữ: Rẻ (Cheap), Hợp lý (Fair), Đắt (Expensive). Nếu P tiến gần về 0, sản phẩm thuộc nhóm Rẻ nhất thị trường. Nếu P nằm quanh mức 0.5, sản phẩm có mức giá hợp lý(nằm ở trung bình của phổ giá). Nếu P tiến gần về 1, sản phẩm thuộc phân khúc Đắt đỏ/Cao cấp.
+[156] Biến đầu ra (Output):
+[157] Điểm gợi ý định lượng: Biến score lưu trong bảng product_evaluations. Theo thiết kế cơ sở dữ liệu, giá trị này được giới hạn trong khoảng từ 0 đến 1 (kiểu decimal(5,4))
+[158] Các điểm số thành phần đã chuẩn hóa: Hệ thống lưu trữ thêm các giá trị đầu vào sau khi mờ hóa gồm sold_score, rating_score, price_score (khoảng giá trị từ 0 đến 1) để phục vụ việc truy xuất, đối soát logic và kiểm thử.
+[159] Lời giải thích định tính (XAI): Biến reason (kiểu longtext), là chuỗi văn bản tự nhiên giải thích lý do hệ thống đưa ra con số score tương ứng
+[161] Định nghĩa hàm liên thuộc (Membership Functions) và Mờ hóa (Fuzzification)
+[162] Để hệ thống máy tính hiểu được các khái niệm định tính, các giá trị số thực sau khi chuẩn hóa (  [0, 1]) phải được chuyển thành các giá trị mờ thông qua hàm liên thuộc    đại diện cho mức độ thuộc về một tập mờ (giá trị từ 0 đến 1).
+[163] Để tối ưu hóa tốc độ tính toán cho Backend Spring Boot, hệ thống sử dụng kết hợp 2 dạng hàm tuyến tính đơn giản:
+[164]  Hàm hình thang trái (Left-Shoulder Trapezoidal Function)
+[165] Áp dụng cho các tập mờ nằm ở biên dưới của phổ giá trị (Ví dụ: "Tệ", "Thấp", "Rẻ"). Công thức toán học như sau:
+[167] (Ý nghĩa: Nếu giá trị x rất nhỏ, nhỏ hơn mốc a, nó chắc chắn thuộc về tập này 100% ( = 1). Nếu x tăng dần tới b, mức độ thuộc về tập này sẽ giảm dần về 0).
+[168] Hàm hình tam giác (Triangular Function)
+[169] Áp dụng cho các tập mờ nằm ở giữa phổ giá trị (Ví dụ: "Trung bình", "Vừa", "Hợp lý"). Công thức toán học được xác định bởi 3 mốc (a, b, c):
+[171] (Ý nghĩa: Mức độ kích hoạt tăng dần từ mốc a lên đỉnh tại mốc b ( = 1), sau đó giảm dần về 0 tại mốc c).
+[172] Hàm hình thang phải (Right-Shoulder Trapezoidal Function)
+[173] Áp dụng cho các tập mờ nằm ở biên trên của phổ giá trị (Ví dụ: "Tốt", "Cao", "Đắt"). Công thức toán học như sau:
+[175] (Ý nghĩa: Nếu giá trị x nhỏ hơn mốc a, mức độ thuộc về tập này là 0. Khi x tăng dần từ a đến b, mức độ thuộc về tập này tăng dần. Khi x vượt qua mốc b, nó chắc chắn thuộc về tập này 100% (μ = 1)).
+[176] Áp dụng vào hệ thống: Khi Spring Boot quét qua các sản phẩm, nó sẽ đưa các giá trị đã chuẩn hóa (P, R, S) vào các khối lệnh if/else được viết dựa trên các công thức toán học trên để tính ra chính xác mức độ kích hoạt  cho từng tập ngôn ngữ, làm đầu vào cho khối suy luận luật XAI.
+[178] Hình  2.1. Biểu đồ mô phỏng các hàm liên thuộc cho biến Đánh giá (Rating Score) trên phổ giá trị chuẩn hóa
+[181] Hình  2.2. Biểu đồ mô phỏng các hàm liên thuộc cho biến Độ phổ biến (Sold Score) trên phổ giá trị chuẩn hóa
+[184] Hình  2.3. Biểu đồ mô phỏng các hàm liên thuộc cho biến Mức giá tương đối (Price Score) trên phổ giá trị chuẩn hóa
+[186] Xây dựng cơ sở luật mờ (Fuzzy Rule Base) tích hợp tính năng Giải thích (XAI)
+[187] Sức mạnh của XAI nằm ở việc mỗi luật suy luận được gắn chặt với một khuôn mẫu ngôn ngữ tự nhiên (Natural Language Generation - NLG Template). Hệ thống được thiết kế theo mô hình hệ luật phân cấp ưu tiên (Priority-based Hierarchy). 
+[188] Hệ thống tập trung xây dựng 14 luật mờ chiến lược, đảm bảo phủ kín các kịch bản thực tế và triệt tiêu hoàn toàn các "điểm mù" dữ liệu. Cấu trúc ma trận luật được thiết kế theo định dạng: IF (R is ...) AND (S is ...) AND (P is ...) THEN (Score is ...) WITH REASON (...). 
+[189] Các luật được chia làm hai nhóm chức năng:
+[190] Nhóm luật Chuyên biệt (L1 – L11): Phối hợp điều kiện đa biến để đưa ra lời giải thích chi tiết cho các nhóm sản phẩm đặc thù (Deal hời, Hàng cao cấp, Sản phẩm quốc dân...). 
+[191] Nhóm luật Bao quát (L12 – L14): Đóng vai trò là lưới bảo vệ toán học dựa trên biến số quan trọng nhất (Rating), sử dụng tham số Any, đảm bảo hệ thống luôn đưa ra được quyết định trong mọi điều kiện dữ liệu biên.
+[192] Lưu ý về mặt toán học cho tham số "Any": Trong các luật bao quát (L12, L13, L14), việc sử dụng tham số "Any" đồng nghĩa với việc biến đầu vào đó không làm ảnh hưởng đến giới hạn của phép toán giao (AND). Về mặt toán học, mức độ liên thuộc của biến "Any" luôn được mặc định đạt mức tối đa (= 1). Trong quá trình suy luận, do hệ thống sử dụng toán tử MIN cho phép hội, giá trị 1 của "Any" sẽ không làm giảm mức độ hoàn thành (Firing strength) của luật. Điều này đảm bảo luật được kích hoạt và chi phối hoàn toàn bởi các biến quan trọng nhất đã được xác định rõ (ví dụ: biến Đánh giá R trong các luật từ L12 đến L14).
+[194] Cơ chế giải quyết xung đột (Conflict Resolution): Trong quá trình suy luận, nếu có nhiều luật cùng đạt mức độ kích hoạt cao nhất bằng nhau (Ví dụ: L1 và L14 cùng bị kích hoạt), thuật toán sẽ luôn ưu tiên chọn luật thuộc Nhóm Chuyên biệt (L1-L11) làm Luật chi phối (Dominant Rule) để trích xuất câu giải thích. Điều này đảm bảo người dùng luôn nhận được lý do cụ thể nhất thay vì các câu chung chung.
+[196] Bảng 2.1. Ma trận luật XAI phân cấp hoàn thiện
+[198] Quá trình Suy luận và Kiến trúc xử lý luồng dữ liệu Backend
+[199] Quá trình suy luận sử dụng phương pháp Mamdani với toán tử MIN cho phép hội (AND) và toán tử MAX cho phép tuyển (OR).
+[200] Giả sử luật L1 được kích hoạt, mức độ hoàn thành của luật (Firing strength)  được tính bằng:
+[202] Giải mờ (Defuzzification): Để tối ưu hóa hiệu năng tính toán trên máy chủ, thay vì tính phân nguyên bản, hệ thống sử dụng phương pháp Giải mờ Trung bình có trọng số (Weighted Average Method - một biến thể thực tiễn của Centroid) để tính ra điểm score cuối cùng:
+[204] (Trong đó: n là tổng số luật được kích hoạt,  là điểm trọng tâm của tập mờ đầu ra tương ứng với luật thứ i, và  là mức độ hoàn thành/Firing strength của luật thứ i).
+[206] Tối ưu hóa kiến trúc (System Architecture): Việc tính toán XAI không diễn ra theo thời gian thực (Real-time) để tránh làm sập server khi có hàng nghìn người dùng truy cập. Spring Boot Backend được thiết lập một Cron Job chạy ngầm vào ban đêm. Thuật toán quét toàn bộ bảng products, chạy qua Engine Fuzzy Logic, và INSERT/UPDATE trực tiếp kết quả vào bảng product_evaluations. Khi ứng dụng di động phía khách hàng (Customer App) tải trang chủ, API chỉ việc thực hiện lệnh SELECT, giúp tốc độ phản hồi tính bằng mili-giây.
+[207] Để hiện thực hóa công thức tính toán trên hệ thống Backend bằng ngôn ngữ Java, các khoảng giá trị định tính (như Rất cao, Cao, Trung bình...) cần được ánh xạ sang các con số cụ thể gọi là giá trị trọng tâm ( ). Các giá trị này được lựa chọn là trung điểm của các khoảng ngôn ngữ nhằm đảm bảo tính ổn định và khách quan cho kết quả giải mờ cuối cùng.
+[208] Bảng 2.2. Ánh xạ mức độ gợi ý định tính sang giá trị trọng tâm phục vụ giải mờ
+[210] Kịch bản tính toán minh họa thực tế (Case Study)
+[211] Để chứng minh tính đúng đắn của thuật toán, phần này mô phỏng quá trình hệ thống xử lý một sản phẩm cụ thể.
+[212] Ngữ cảnh dữ liệu: Sản phẩm: Áo thun nam Cotton (Thuộc danh mục Thời trang nam).
+[213] Giá bán (price): 150.000 VNĐ. Giá thấp nhất danh mục : 100.000 VNĐ. Giá cao nhất danh mục  300.000 VNĐ.
+[214] Điểm đánh giá (rating_avg): 4.2 sao.
+[215] Lượt bán (sold_count): 800 chiếc. Lượt bán cao nhất danh mục : 1000 chiếc
+[216] Bước 1: Chuẩn hóa đầu vào
+[217] Để không vi phạm các ràng buộc (Constraint CHECK) của cơ sở dữ liệu và đồng nhất đầu vào cho thuật toán Logic mờ, hệ thống tiến hành chuẩn hóa các tham số thực tế về khoảng giá trị từ 0 đến 1:
+[218] Mức giá tương đối (P - price_score): Áp dụng Min-Max Normalization: (150.000 - 100.000) / (300.000 - 100.000) = 0.25 (Kết quả gần 0, thể hiện sản phẩm có mức giá rẻ).
+[219] Điểm đánh giá (R - rating_score): 4.2 / 5.0 = 0.84 (Điểm số tương đối trên thang 1).
+[220] Độ phổ biến (S - sold_score): 800 / 1000 = 0.80 (Tỷ lệ bán được so với sản phẩm bán chạy nhất).
+[221] Bước 2: Mờ hóa dữ liệu qua hàm liên thuộc
+[222] Đưa các giá trị đã chuẩn hóa trên vào các hàm toán học định nghĩa ở phần 2.3.2, hệ thống tính ra mức độ kích hoạt () của các tập mờ:
+[223] Điểm đánh giá (R = 0.84): Kích hoạt tập "Tốt - Good" ( = 0.7), tập "Trung bình - Average" ( = 0.3)
+[224] Lượt bán (S = 0.80): Kích hoạt tập "Cao - High" ( = 0.8), tập "Vừa - Medium" ( =  0.2)
+[225] Giá cả (P=0.25): Kích hoạt tập "Rẻ - Cheap" ( = 0.9), tập "Hợp lý - Fair" ( = 0.1)
+[226] Bước 3: Suy luận luật và Áp dụng toán tử MIN
+[227] Hệ thống đối chiếu với ma trận cơ sở luật. Có nhiều luật bị kích hoạt đồng thời với các mức độ hoàn thành (Firing strength) khác nhau, ví dụ:
+[228] Luật L1: IF R is Good (0.7) AND S is High (0.8) AND P is Cheap (0.9) THEN Score is Rất cao
+[229]   Trọng số = MIN(0.7, 0.8, 0.9) = 0.7
+[230] Luật L2: IF R is Good (0.7) AND S is Medium (0.2) AND P is Fair (0.1) THEN Score is Cao
+[231]   Trọng số = MIN(0.7, 0.2, 0.1) = 0.1
+[232] Luật L9: IF R is Average (0.3) AND S is High (0.8) AND P is Fair (0.1) THEN Score is Khá
+[233]   Trọng số = MIN(0.3, 0.8, 0.1) = 0.1
+[234] Luật L10: IF R is Average (0.3) AND S is Medium (0.2) AND P is Cheap (0.9) THEN Score is Trung bình
+[235]   Trọng số = MIN(0.3, 0.2, 0.9) = 0.2
+[236] Luật L14: IF R is Good (0.7) AND S is Any (1.0) AND P is Any (1.0) THEN Score is Khá
+[237]   Trọng số = MIN(0.7, 1.0, 1.0) = 0.7
+[238] Bước 4: Trích xuất lời giải thích XAI (Conflict Resolution)
+[239] Luật L1 có trọng số kích hoạt cao nhất ( = 0.7). Áp dụng cơ chế phân cấp ưu tiên, hệ thống chọn luật L1(Thuộc nhóm chuyên biệt) làm Luật chi phối (Dominant Rule). Backend trích xuất chuỗi ngôn ngữ của L1 để ghi vào cột reason: "Deal cực hời: Sản phẩm có giá cực tốt so với các mặt hàng cùng loại, bán rất chạy và được đánh giá rất cao!"
+[240] Bước 5: Giải mờ tính điểm số cuối
+[241] Giả sử hệ thống quy định điểm trọng tâm () của các tập mờ đầu ra như sau: Rất cao (0.95), Cao (0.80), Khá (0.75), Trung bình (0.50). Áp dụng công thức Giải mờ Trung bình có trọng số (Weighted Average Method) dựa trên các mức độ hoàn thành () đã tính ở Bước 3:
+[242]  =  
+[243] Kết quả cuối cùng: Hệ thống thực hiện lệnh INSERT/UPDATE sản phẩm Áo thun nam vào bảng product_evaluations với các trường dữ liệu như sau:
+[244] score = 0.78
+[245] type = 'FUZZY'
+[246] rating_score = 0.84 (tương ứng 4.2/5)
+[247] sold_score = 0.80
+[248] price_score = 0.25
+[249] reason = "Deal cực hời: Sản phẩm có giá cực tốt so với các mặt hàng cùng loại, bán rất chạy và được đánh giá rất cao!"
+[250] Dữ liệu này đảm bảo tuân thủ 100% các ràng buộc kiểu decimal(5,4) trong CSDL. Khi người dùng truy cập ứng dụng di động, giao diện sẽ gọi API lấy thông tin này để hiển thị sản phẩm kèm theo nhãn giải thích (XAI) một cách nhanh chóng.
+[251] Triển khai ứng dụng minh họa và Tích hợp XAI
+[252] Thiết kế giao diện người dùng (UI/UX) trên Android
+[253] Cài đặt và xử lý thuật toán Logic mờ qua hệ thống Backend
+[254] Trích xuất lời giải thích (XAI) và luồng hiển thị trên thiết bị di động
+[255] Đánh giá và Thử nghiệm
+[256] Thiết lập kịch bản và dữ liệu thử nghiệm thực tế
+[257] Đánh giá tính chính xác của thuật toán và trải nghiệm người dùng (UX)
+[258] NHẬN XÉT VÀ ĐỀ XUẤT
+[259] Kết quả đạt được
+[260] Về mặt lý thuyết nghiên cứu
+[261] Về mặt thực hành và ứng dụng
+[262] Về kỹ năng mềm và tư duy giải quyết vấn đề
+[263] Những điểm còn hạn chế
+[264] Hạn chế về mặt dữ liệu và độ bao phủ của bộ luật mờ
+[265] Hạn chế trong quá trình triển khai hệ thống
+[266] Đề xuất và Hướng phát triển
+[267] Đề xuất phương án tối ưu hóa tập luật mờ
+[268] Hướng mở rộng chức năng ứng dụng cho hệ thống quy mô lớn
+[269] TÀI LIỆU THAM KHẢO
+[270] [1] Arrieta, A. B., Díaz-Rodríguez, N., Del Ser, J., Bennetot, A., Tabik, S., Barbado, A., … Herrera, F. (2019). Explainable Artificial Intelligence (XAI): Concepts, taxonomies, opportunities and challenges toward responsible AI. Information Fusion, 58, 82-115.
+[271] [2] Zadeh, L. A. (1965). Fuzzy Sets. Information and Control, 8(3), 338–353.
+[272] [3] Turban, E., Outland, J., King, D., Lee, J. K., Liang, T. P., & Turban, D. C. (2018). Electronic Commerce 2018: A Managerial and Social Networks Perspective. Springer.
+[273] [4] IBM (2024). What is Explainable AI (XAI)?. Truy cập tại: https://www.ibm.com/topics/explainable-ai
+[274] [5] DARPA (2016). Explainable Artificial Intelligence (XAI) Program Overview. Truy cập tại: https://www.darpa.mil/program/explainable-artificial-intelligence
+[275] [6] MathWorks (2024). Fuzzy Logic Toolbox Documentation. Truy cập tại: https://www.mathworks.com/products/fuzzy-logic.html
+[276] [7] DataCamp (2024). Fuzzy Logic in Artificial Intelligence. Truy cập tại: https://www.datacamp.com/tutorial/fuzzy-logic-in-ai
+[277] [8] GeeksforGeeks (2024). Introduction to Fuzzy Logic in AI. Truy cập tại: https://www.geeksforgeeks.org/fuzzy-logic-introduction/
+[280] PHỤ LỤC
