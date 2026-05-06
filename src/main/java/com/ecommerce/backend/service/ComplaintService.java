@@ -36,6 +36,7 @@ public class ComplaintService {
                 .userId(complaint.getUser().getId())
                 .content(complaint.getContent())
                 .status(complaint.getStatus())
+                .complaintCode(complaint.getComplaintCode())
                 .createdAt(complaint.getCreatedAt())
                 .resolvedAt(complaint.getResolvedAt())
                 .build();
@@ -72,6 +73,7 @@ public class ComplaintService {
         
         complaint.setContent(request.getContent());
         complaint.setStatus(ComplaintStatus.PENDING); // Mặc định là PENDING khi mới tạo
+        complaint.setComplaintCode(generateComplaintCode());
 
         return mapToDTO(complaintRepository.save(complaint));
     }
@@ -93,6 +95,7 @@ public class ComplaintService {
         complaint.setUser(user);
         complaint.setContent(request.getContent());
         complaint.setStatus(ComplaintStatus.PENDING);
+        complaint.setComplaintCode(generateComplaintCode());
 
         complaintRepository.save(complaint);
     }
@@ -109,8 +112,13 @@ public class ComplaintService {
         res.setId(c.getId());
         res.setContent(c.getContent());
         res.setStatus(c.getStatus());
+        res.setComplaintCode(c.getComplaintCode());
         res.setCreatedAt(c.getCreatedAt());
         return res;
 
+    }
+
+    private String generateComplaintCode() {
+        return "CMP-" + System.currentTimeMillis() + "-" + java.util.UUID.randomUUID().toString().substring(0, 4).toUpperCase();
     }
 }

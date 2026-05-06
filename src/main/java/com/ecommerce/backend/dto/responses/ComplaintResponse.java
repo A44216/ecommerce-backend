@@ -20,6 +20,7 @@ public class ComplaintResponse {
 
     private ComplaintStatus status;
 
+    private String complaintCode;
     private LocalDateTime createdAt;
     private LocalDateTime resolvedAt;
 
