@@ -6,6 +6,7 @@ import com.ecommerce.backend.dto.responses.seller.PageResponse;
 import com.ecommerce.backend.enums.OrderStatus;
 import com.ecommerce.backend.enums.PaymentMethod;
 import com.ecommerce.backend.enums.PaymentStatus;
+import com.ecommerce.backend.service.OrderService;
 import com.ecommerce.backend.service.admin.AdminOrderService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -21,6 +22,7 @@ import java.util.List;
 public class AdminOrderController {
 
     private final AdminOrderService adminOrderService;
+    private final OrderService orderService;
 
     @GetMapping
     public ResponseEntity<PageResponse<AdminOrderResponse>> getOrders(
@@ -64,7 +66,7 @@ public class AdminOrderController {
     }
 
     @PutMapping("/{id}/resolve-dispute")
-    public ResponseEntity<?> resolveDispute(@PathVariable Integer id, @RequestParam String decision, com.ecommerce.backend.service.OrderService orderService) {
+    public ResponseEntity<?> resolveDispute(@PathVariable Integer id, @RequestParam String decision) {
         return ResponseEntity.ok(orderService.resolveDispute(id, decision));
     }
 
