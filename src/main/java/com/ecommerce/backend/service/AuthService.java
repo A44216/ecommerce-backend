@@ -276,8 +276,13 @@ public class AuthService {
             return res;
 
         } catch (Exception e) {
+            // In lỗi chi tiết ra Log Railway để bạn xem
+            System.err.println("Google Auth Error: " + e.getMessage());
             e.printStackTrace();
-            throw new BadRequestException("GOOGLE_AUTHENTICATION_FAILED: " + e.getMessage());
+
+            // Trả về lỗi rõ ràng cho Mobile
+            throw new BadRequestException("GOOGLE_AUTHENTICATION_FAILED: " +
+                    (e.getMessage() != null ? e.getMessage() : "Unknown error"));
         }
     }
 
