@@ -31,11 +31,26 @@ public class ProductEvaluationController {
         return service.evaluateProduct(request);
     }
 
-    // Ép hệ thống chạy lại toàn bộ thuật toán Fuzzy ngay lập tức
+    // Ép hệ thống chạy lại toàn bộ thuật toán đánh giá (Cả Fuzzy và Trending) ngay lập tức
     @PostMapping("/generate-all")
     public String generateAll() {
         service.generateGlobalFuzzyEvaluations();
-        return "Đã kích hoạt chạy thuật toán đánh giá Fuzzy cho toàn bộ sản phẩm!";
+        service.generateGlobalTrendingEvaluations();
+        return "Đã kích hoạt chạy thuật toán đánh giá Fuzzy và Trending cho toàn bộ sản phẩm!";
+    }
+
+    // Ép hệ thống chạy lại chỉ thuật toán Deal Hời (Fuzzy) ngay lập tức
+    @PostMapping("/generate-fuzzy")
+    public String generateFuzzy() {
+        service.generateGlobalFuzzyEvaluations();
+        return "Đã kích hoạt chạy thuật toán Deal Hời (Fuzzy) cho toàn bộ sản phẩm!";
+    }
+
+    // Ép hệ thống chạy lại chỉ thuật toán Xu Hướng (Trending) ngay lập tức
+    @PostMapping("/generate-trending")
+    public String generateTrending() {
+        service.generateGlobalTrendingEvaluations();
+        return "Đã kích hoạt chạy thuật toán Xu Hướng (Trending) cho toàn bộ sản phẩm!";
     }
 
     @DeleteMapping("/{id}")

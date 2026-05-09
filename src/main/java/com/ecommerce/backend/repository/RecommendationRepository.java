@@ -17,7 +17,8 @@ public interface RecommendationRepository extends JpaRepository<Recommendation, 
     List<Recommendation> findAllByUserId(Integer userId);
 
     @EntityGraph(attributePaths = {"product"})
-    List<Recommendation> findByUserIdOrderByScoreDesc(Integer userId, Pageable pageable);
+    @Query("SELECT r FROM Recommendation r WHERE r.user.id = :userId ORDER BY r.score DESC, r.product.createdAt DESC")
+    List<Recommendation> findByUserIdOrderByScoreDesc(@Param("userId") Integer userId, Pageable pageable);
 
     @Modifying
     @Transactional

@@ -33,4 +33,25 @@ public class ProductEvaluationScheduler {
             log.error("Có lỗi xảy ra trong quá trình chạy Cronjob Fuzzy: {}", e.getMessage(), e);
         }
     }
+
+    /**
+     * Tự động cập nhật gợi ý Xu Hướng (Trending)
+     * Chạy mỗi 3 tiếng một lần để liên tục bắt trend
+     */
+    @Scheduled(cron = "0 0 */3 * * *")
+    public void updateTrendingEvaluations() {
+        log.info("Bắt đầu tiến trình cập nhật điểm AI Xu Hướng (Trending) cho toàn bộ sản phẩm...");
+
+        long startTime = System.currentTimeMillis();
+
+        try {
+            evaluationService.generateGlobalTrendingEvaluations();
+
+            long endTime = System.currentTimeMillis();
+            log.info("Tiến trình cập nhật Trending thành công! Tổng thời gian chạy: {} ms", (endTime - startTime));
+
+        } catch (Exception e) {
+            log.error("Có lỗi xảy ra trong quá trình chạy Cronjob Trending: {}", e.getMessage(), e);
+        }
+    }
 }
