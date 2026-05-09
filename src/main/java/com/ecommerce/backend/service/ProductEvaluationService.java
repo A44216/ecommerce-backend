@@ -165,7 +165,12 @@ public class ProductEvaluationService {
         Product product = productRepository.findById(productId).orElseThrow(() -> new ResourceNotFoundException("Product not found"));
 
         double salesFactor = Math.min((double) salesInMonth / 100.0, 1.0);
-        double ratingFactor = product.getRatingAvg() != null ? product.getRatingAvg().doubleValue() / 5.0 : 0.5;
+        
+        int ratingCount = product.getRatingCount() != null ? product.getRatingCount() : 0;
+        double ratingFactor = 0.5;
+        if (ratingCount > 0) {
+            ratingFactor = product.getRatingAvg() != null ? product.getRatingAvg().doubleValue() / 5.0 : 0.5;
+        }
 
         long daysSinceCreation = product.getCreatedAt() != null ? java.time.temporal.ChronoUnit.DAYS.between(product.getCreatedAt(), LocalDateTime.now()) : 30;
         boolean isNewArrival = daysSinceCreation <= 14;
@@ -315,15 +320,43 @@ public class ProductEvaluationService {
     }
 
     private ProductEvaluation evaluateProductWithContext(Product product, CategoryContext ctx, int totalSales) {
-        // BƯỚC 1: CHUẨN HÓA (Dùng dữ liệu all-time sales)
-        double rScore = product.getRatingAvg() != null ? product.getRatingAvg().doubleValue() / 5.0 : 0.5;
-        double sScore = ctx.sMax > 0 ? (double) totalSales / ctx.sMax : 0;
-
         double pScore = 0.5;
         if (ctx.pMax != null && ctx.pMin != null && ctx.pMax.compareTo(ctx.pMin) > 0 && product.getPrice() != null) {
             pScore = product.getPrice().subtract(ctx.pMin)
                     .divide(ctx.pMax.subtract(ctx.pMin), 4, RoundingMode.HALF_UP).doubleValue();
         }
+
+        int ratingCount = product.getRatingCount() != null ? product.getRatingCount() : 0;
+        
+        if (ratingCount == 0 && totalSales == 0) {
+            long daysSinceCreation = product.getCreatedAt() != null ? java.time.temporal.ChronoUnit.DAYS.between(product.getCreatedAt(), LocalDateTime.now()) : 30;
+            boolean isNewArrival = daysSinceCreation <= 14;
+            
+            String xaiReason = isNewArrival ? 
+                "Sản phẩm mới ra mắt: Đang chờ những đánh giá đầu tiên từ cộng đồng người dùng." : 
+                "Chưa có đủ dữ liệu đánh giá: Sản phẩm đang chờ được khám phá và trải nghiệm.";
+                
+            ProductEvaluation evaluation = evaluationRepository
+                    .findByProductIdAndType(product.getId(), ProductEvaluationType.FUZZY)
+                    .orElse(new ProductEvaluation());
+
+            evaluation.setProduct(product);
+            evaluation.setRatingScore(BigDecimal.valueOf(0.5));
+            evaluation.setSoldScore(BigDecimal.ZERO);
+            evaluation.setPriceScore(BigDecimal.valueOf(pScore));
+            evaluation.setScore(BigDecimal.valueOf(0.5));
+            evaluation.setType(ProductEvaluationType.FUZZY);
+            evaluation.setReason(xaiReason);
+
+            return evaluationRepository.save(evaluation);
+        }
+
+        // BƯỚC 1: CHUẨN HÓA (Dùng dữ liệu all-time sales)
+        double rScore = 0.5;
+        if (ratingCount > 0) {
+            rScore = product.getRatingAvg() != null ? product.getRatingAvg().doubleValue() / 5.0 : 0.5;
+        }
+        double sScore = ctx.sMax > 0 ? (double) totalSales / ctx.sMax : 0;
 
         // BƯỚC 2: MỜ HÓA (FUZZIFICATION)
         double muPoorR = fuzzyLeftShoulder(rScore, 0.0, 0.4);
@@ -396,15 +429,40 @@ public class ProductEvaluationService {
     // Tối ưu: evaluate Fuzzy dùng map thay vì query từng sản phẩm
     private ProductEvaluation evaluateFuzzyWithMap(Product product, CategoryContext ctx, int totalSales,
                                                    Map<Integer, ProductEvaluation> evalMap) {
-        // BƯỚC 1: CHUẨN HÓA (Dùng dữ liệu all-time)
-        double rScore = product.getRatingAvg() != null ? product.getRatingAvg().doubleValue() / 5.0 : 0.5;
-        double sScore = ctx.sMax > 0 ? (double) totalSales / ctx.sMax : 0;
-
         double pScore = 0.5;
         if (ctx.pMax != null && ctx.pMin != null && ctx.pMax.compareTo(ctx.pMin) > 0 && product.getPrice() != null) {
             pScore = product.getPrice().subtract(ctx.pMin)
                     .divide(ctx.pMax.subtract(ctx.pMin), 4, RoundingMode.HALF_UP).doubleValue();
         }
+
+        int ratingCount = product.getRatingCount() != null ? product.getRatingCount() : 0;
+
+        if (ratingCount == 0 && totalSales == 0) {
+            long daysSinceCreation = product.getCreatedAt() != null ? java.time.temporal.ChronoUnit.DAYS.between(product.getCreatedAt(), LocalDateTime.now()) : 30;
+            boolean isNewArrival = daysSinceCreation <= 14;
+            
+            String xaiReason = isNewArrival ? 
+                "Sản phẩm mới ra mắt: Đang chờ những đánh giá đầu tiên từ cộng đồng người dùng." : 
+                "Chưa có đủ dữ liệu đánh giá: Sản phẩm đang chờ được khám phá và trải nghiệm.";
+
+            ProductEvaluation evaluation = evalMap.getOrDefault(product.getId(), new ProductEvaluation());
+            evaluation.setProduct(product);
+            evaluation.setRatingScore(BigDecimal.valueOf(0.5));
+            evaluation.setSoldScore(BigDecimal.ZERO);
+            evaluation.setPriceScore(BigDecimal.valueOf(pScore));
+            evaluation.setScore(BigDecimal.valueOf(0.5));
+            evaluation.setType(ProductEvaluationType.FUZZY);
+            evaluation.setReason(xaiReason);
+
+            return evaluationRepository.save(evaluation);
+        }
+
+        // BƯỚC 1: CHUẨN HÓA (Dùng dữ liệu all-time)
+        double rScore = 0.5;
+        if (ratingCount > 0) {
+            rScore = product.getRatingAvg() != null ? product.getRatingAvg().doubleValue() / 5.0 : 0.5;
+        }
+        double sScore = ctx.sMax > 0 ? (double) totalSales / ctx.sMax : 0;
 
         // BƯỚC 2: MỜ HÓA (FUZZIFICATION)
         double muPoorR = fuzzyLeftShoulder(rScore, 0.0, 0.4);
@@ -469,7 +527,12 @@ public class ProductEvaluationService {
     private ProductEvaluation evaluateTrendingWithMap(Product product, int salesInMonth, double pScore,
                                                       Map<Integer, ProductEvaluation> evalMap) {
         double salesFactor = Math.min((double) salesInMonth / 100.0, 1.0);
-        double ratingFactor = product.getRatingAvg() != null ? product.getRatingAvg().doubleValue() / 5.0 : 0.5;
+        
+        int ratingCount = product.getRatingCount() != null ? product.getRatingCount() : 0;
+        double ratingFactor = 0.5;
+        if (ratingCount > 0) {
+            ratingFactor = product.getRatingAvg() != null ? product.getRatingAvg().doubleValue() / 5.0 : 0.5;
+        }
 
         long daysSinceCreation = product.getCreatedAt() != null ? java.time.temporal.ChronoUnit.DAYS.between(product.getCreatedAt(), LocalDateTime.now()) : 30;
         boolean isNewArrival = daysSinceCreation <= 14;
