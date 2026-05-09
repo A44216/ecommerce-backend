@@ -1,6 +1,7 @@
 package com.ecommerce.backend.scheduler;
 
 import com.ecommerce.backend.service.ProductEvaluationService;
+import com.ecommerce.backend.service.RecommendationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -12,6 +13,7 @@ import org.springframework.stereotype.Component;
 public class ProductEvaluationScheduler {
 
     private final ProductEvaluationService evaluationService;
+    private final RecommendationService recommendationService;
 
     /**
      * Tự động cập nhật gợi ý Fuzzy Logic & XAI cho toàn bộ hệ thống
@@ -25,6 +27,9 @@ public class ProductEvaluationScheduler {
 
         try {
             evaluationService.generateGlobalFuzzyEvaluations();
+
+            log.info("Bắt đầu tạo Recommendations cho tất cả users...");
+            recommendationService.generateRecommendationsForAllUsers();
 
             long endTime = System.currentTimeMillis();
             log.info("Tiến trình cập nhật Fuzzy thành công! Tổng thời gian chạy: {} ms", (endTime - startTime));
