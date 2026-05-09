@@ -49,6 +49,7 @@ public class AdminShopService {
                 shops.getTotalPages());
     }
 
+    @Transactional(readOnly = true)
     public AdminShopDetailResponse getShopById(Integer id) {
         Shop shop = shopRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Shop not found"));
