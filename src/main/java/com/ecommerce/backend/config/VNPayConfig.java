@@ -75,9 +75,13 @@ public class VNPayConfig {
                 ipAdress = request.getRemoteAddr();
             }
         } catch (Exception e) {
-            ipAdress = "Invalid IP:" + e.getMessage();
+            ipAdress = "127.0.0.1";
         }
-        return ipAdress;
+        
+        if (ipAdress != null && ipAdress.contains(":")) {
+            return "127.0.0.1";
+        }
+        return ipAdress != null ? ipAdress : "127.0.0.1";
     }
 
     public static String getRandomNumber(int len) {
