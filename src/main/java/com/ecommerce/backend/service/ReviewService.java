@@ -9,11 +9,12 @@ import com.ecommerce.backend.repository.ProductRepository;
 import com.ecommerce.backend.repository.ReviewRepository;
 import com.ecommerce.backend.repository.UserRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
+@Transactional(readOnly = true)
 public class ReviewService {
 
     private final ReviewRepository reviewRepository;
@@ -69,6 +70,7 @@ public class ReviewService {
     }
 
     // tạo review
+    @Transactional
     public ReviewResponse createReview(ReviewRequest request) {
 
         User user = userRepository.findById(request.getUserId())
@@ -87,6 +89,7 @@ public class ReviewService {
     }
 
     // xóa review
+    @Transactional
     public void deleteReview(Integer id) {
         reviewRepository.deleteById(id);
     }

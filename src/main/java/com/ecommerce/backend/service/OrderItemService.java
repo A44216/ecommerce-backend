@@ -9,10 +9,12 @@ import com.ecommerce.backend.repository.OrderItemRepository;
 import com.ecommerce.backend.repository.OrderRepository;
 import com.ecommerce.backend.repository.ProductRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
 @Service
+@Transactional(readOnly = true)
 public class OrderItemService {
 
     private final OrderItemRepository orderItemRepository;
@@ -61,6 +63,7 @@ public class OrderItemService {
                 .toList();
     }
 
+    @Transactional
     public OrderItemResponse createOrderItem(OrderItemRequest request) {
 
         Order order = orderRepository.findById(request.getOrderId())
@@ -79,6 +82,7 @@ public class OrderItemService {
         return mapToDTO(orderItemRepository.save(item));
     }
 
+    @Transactional
     public void deleteOrderItem(Integer id) {
 
         if (!orderItemRepository.existsById(id)) {

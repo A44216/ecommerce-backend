@@ -24,6 +24,7 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class UserService {
 
     private final UserRepository userRepository;
@@ -63,6 +64,7 @@ public class UserService {
         return mapToResponse(user);
     }
 
+    @Transactional
     public UserResponse createUser(UserRequest request) {
         User user = new User();
         user.setFullName(request.getFullName());
@@ -76,6 +78,7 @@ public class UserService {
         return mapToResponse(user);
     }
 
+    @Transactional
     public UserResponse updateUser(Integer id, UserRequest request) {
         User user = userRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("User not found"));
         user.setFullName(request.getFullName());
@@ -86,10 +89,12 @@ public class UserService {
         return mapToResponse(user);
     }
 
+    @Transactional
     public void deleteUser(Integer id) {
         userRepository.deleteById(id);
     }
 
+    @Transactional
     public UserResponse loginWithGoogle(GoogleLoginRequest request) {
         var userOpt = userRepository.findByGoogleId(request.getGoogleId());
         if (userOpt.isPresent()) {
@@ -140,12 +145,14 @@ public class UserService {
         return mapToResponse(user);
     }
 
+    @Transactional
     public UserResponse updateUserAvatar(Integer id, String avatarUrl) {
         User user = userRepository.findById(id).orElseThrow(() -> new RuntimeException("User not found"));
         user.setAvatar(avatarUrl);
         return mapToResponse(userRepository.save(user));
     }
 
+    @Transactional
     public UserResponse updateProfile(Integer id, UpdateProfileRequest request) {
         User user = userRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("User not found"));
 

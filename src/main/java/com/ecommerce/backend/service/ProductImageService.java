@@ -8,10 +8,12 @@ import com.ecommerce.backend.exception.ResourceNotFoundException;
 import com.ecommerce.backend.repository.ProductImageRepository;
 import com.ecommerce.backend.repository.ProductRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
 @Service
+@Transactional(readOnly = true)
 public class ProductImageService {
 
     private final ProductImageRepository productImageRepository;
@@ -38,6 +40,7 @@ public class ProductImageService {
     }
 
     // Thêm ảnh mới cho sản phẩm
+    @Transactional
     public ProductImageResponse addProductImage(ProductImageRequest request) {
         // Kiểm tra xem sản phẩm có tồn tại không
         Product product = productRepository.findById(request.getProductId())
@@ -51,6 +54,7 @@ public class ProductImageService {
     }
 
     // Xóa ảnh
+    @Transactional
     public void deleteProductImage(Integer id) {
         if (!productImageRepository.existsById(id)) {
             throw new ResourceNotFoundException("Product image not found");

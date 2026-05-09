@@ -24,6 +24,7 @@ import java.util.Objects;
 
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class SellerShopService {
 
     private final ShopRepository shopRepository;
@@ -120,6 +121,7 @@ public class SellerShopService {
     }
 
     // UPDATE AVATAR
+    @Transactional
     public SellerShopResponse updateAvatar(String avatar) {
 
         Shop shop = shopRepository.findByUserIdFetchUser(securityUtils.getCurrentUserId())

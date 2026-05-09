@@ -33,6 +33,7 @@ import java.util.Random;
 
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class AuthService {
 
     @org.springframework.beans.factory.annotation.Value("${google.client.id}")
@@ -217,6 +218,7 @@ public class AuthService {
     }
 
 
+    @Transactional
     public LoginResponse googleLogin(GoogleLoginRequest request) {
         try {
             // 1. Xác thực ID Token với Google
@@ -388,6 +390,7 @@ public class AuthService {
         userRepository.save(user);
     }
 
+    @Transactional
     public void sendUnlinkEmailOtp(SendOtpRequest request) {
         String input = request.getEmail().trim().toLowerCase();
 

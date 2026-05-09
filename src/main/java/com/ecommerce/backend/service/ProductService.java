@@ -12,10 +12,12 @@ import com.ecommerce.backend.repository.CategoryRepository;
 import com.ecommerce.backend.repository.ProductRepository;
 import jakarta.validation.constraints.NotNull;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
 @Service
+@Transactional(readOnly = true)
 public class ProductService {
 
     private final ProductRepository productRepository;
@@ -219,6 +221,7 @@ public class ProductService {
     // CÁC HÀM THAO TÁC DATA (THÊM, SỬA, XÓA, KHÔI PHỤC)
     // ==========================================
 
+    @Transactional
     public ProductResponse createProduct(ProductRequest request) {
         Product product = new Product();
         mapRequestToProduct(product, request);
@@ -230,6 +233,7 @@ public class ProductService {
         return mapToDTO(saved);
     }
 
+    @Transactional
     public ProductResponse updateProduct(Integer id, ProductRequest request) {
         // Dùng hàm cũ để Seller có thể lấy ra sửa dù sản phẩm đang bị PENDING hay REJECTED
         Product product = productRepository.findByIdAndIsDeletedFalse(id)
@@ -244,6 +248,7 @@ public class ProductService {
         return mapToDTO(updated);
     }
 
+    @Transactional
     public void deleteProduct(Integer id) {
         Product product = productRepository.findByIdAndIsDeletedFalse(id)
                 .orElseThrow(() -> new RuntimeException("Product not found"));
@@ -251,6 +256,7 @@ public class ProductService {
         productRepository.save(product);
     }
 
+    @Transactional
     public void restoreProduct(Integer id) {
         Product product = productRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Product not found"));

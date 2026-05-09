@@ -7,10 +7,12 @@ import com.ecommerce.backend.entity.User;
 import com.ecommerce.backend.repository.AddressRepository;
 import com.ecommerce.backend.repository.UserRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
 @Service
+@Transactional(readOnly = true)
 public class AddressService {
 
     private final AddressRepository addressRepository;
@@ -74,6 +76,7 @@ public class AddressService {
     }
 
     // tạo address
+    @Transactional
     public AddressResponse createAddress(AddressRequest request) {
 
         User user = getUserOrThrow(request.getUserId());
@@ -95,6 +98,7 @@ public class AddressService {
     }
 
     // update address
+    @Transactional
     public AddressResponse updateAddress(Integer id, AddressRequest request) {
 
         Address address = getAddressOrThrow(id);
@@ -113,6 +117,7 @@ public class AddressService {
     }
 
     // delete address
+    @Transactional
     public void deleteAddress(Integer id) {
         Address address = getAddressOrThrow(id);
         addressRepository.delete(address);

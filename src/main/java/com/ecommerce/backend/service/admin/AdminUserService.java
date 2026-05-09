@@ -16,10 +16,12 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
 @Service
+@Transactional(readOnly = true)
 public class AdminUserService {
 
     private final UserRepository userRepository;
@@ -59,6 +61,7 @@ public class AdminUserService {
     }
 
     // CHANGE STATUS (ACTIVE -> BLOCKED or vice versa)
+    @Transactional
     public void changeStatus(Integer id, UserStatus newStatus) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
@@ -68,6 +71,7 @@ public class AdminUserService {
     }
 
     // UPDATE ROLE
+    @Transactional
     public void updateRole(Integer id, Role newRole) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));

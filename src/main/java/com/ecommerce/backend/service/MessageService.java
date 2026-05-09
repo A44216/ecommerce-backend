@@ -17,6 +17,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
+@Transactional(readOnly = true)
 public class MessageService {
 
     private final MessageRepository repository;
@@ -71,6 +72,7 @@ public class MessageService {
     }
 
     // xoá tin nhắn
+    @Transactional
     public void deleteMessage(Integer id) {
         repository.deleteById(id);
     }

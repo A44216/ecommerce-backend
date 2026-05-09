@@ -9,10 +9,12 @@ import com.ecommerce.backend.enums.Role;
 import com.ecommerce.backend.repository.ShopRepository;
 import com.ecommerce.backend.repository.UserRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
 @Service
+@Transactional(readOnly = true)
 public class ShopService {
 
     private final ShopRepository shopRepository;
@@ -101,6 +103,7 @@ public class ShopService {
     }
 
     // cập nhật shop
+    @org.springframework.transaction.annotation.Transactional
     public ShopResponse updateShop(Integer id, ShopRequest request) {
 
         Shop shop = shopRepository.findById(id)
@@ -114,6 +117,7 @@ public class ShopService {
     }
 
     // xóa
+    @org.springframework.transaction.annotation.Transactional
     public void deleteShop(Integer id) {
         shopRepository.deleteById(id);
     }

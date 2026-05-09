@@ -4,6 +4,7 @@ import com.ecommerce.backend.dto.responses.ConversationResponse;
 import com.ecommerce.backend.entity.Conversation;
 import com.ecommerce.backend.repository.ConversationRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import com.ecommerce.backend.dto.requests.ConversationRequest;
@@ -16,6 +17,7 @@ import com.ecommerce.backend.repository.UserRepository;
 import java.util.Optional;
 
 @Service
+@Transactional(readOnly = true)
 public class ConversationService {
 
     private final ConversationRepository repository;
@@ -69,6 +71,7 @@ public class ConversationService {
     // ==========================================
     // TẠO MỚI HOẶC TRẢ VỀ PHÒNG CHAT CŨ
     // ==========================================
+    @Transactional
     public ConversationResponse createConversation(ConversationRequest request) {
         // 1. Kiểm tra xem 2 người này đã có phòng chat chưa
         Optional<Conversation> existingOpt = repository.findByCustomerIdAndShopId(request.getCustomerId(), request.getShopId());
@@ -94,6 +97,7 @@ public class ConversationService {
     }
 
     // xoá
+    @Transactional
     public void delete(Integer id) {
         repository.deleteById(id);
     }

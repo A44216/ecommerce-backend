@@ -13,12 +13,14 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
+@Transactional(readOnly = true)
 public class AdminCouponService {
 
     private final CouponRepository couponRepository;
@@ -79,6 +81,7 @@ public class AdminCouponService {
     }
 
     // CREATE
+    @Transactional
     public AdminCouponResponse createCoupon(AdminCouponRequest request) {
 
         if (couponRepository.existsByCodeAndIsDeletedFalse(request.getCode())) {
@@ -104,6 +107,7 @@ public class AdminCouponService {
     }
 
     // UPDATE
+    @Transactional
     public AdminCouponResponse updateCoupon(Integer id, AdminCouponRequest request) {
 
         Coupon coupon = couponRepository.findById(id)
@@ -135,6 +139,7 @@ public class AdminCouponService {
     }
 
     // SOFT DELETE
+    @Transactional
     public void deleteCoupon(Integer id) {
 
         Coupon coupon = couponRepository.findById(id)
@@ -148,6 +153,7 @@ public class AdminCouponService {
     }
 
     // RESTORE
+    @Transactional
     public void restoreCoupon(Integer id) {
 
         Coupon coupon = couponRepository.findById(id)
@@ -161,6 +167,7 @@ public class AdminCouponService {
     }
 
     // ENABLE
+    @Transactional
     public void enableCoupon(Integer id) {
 
         Coupon coupon = couponRepository.findById(id)
@@ -178,6 +185,7 @@ public class AdminCouponService {
     }
 
     // DISABLE
+    @Transactional
     public void disableCoupon(Integer id) {
 
         Coupon coupon = couponRepository.findById(id)

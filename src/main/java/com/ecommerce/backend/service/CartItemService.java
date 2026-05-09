@@ -16,6 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 
 @Service
+@Transactional(readOnly = true)
 public class CartItemService {
 
     private final CartItemRepository cartItemRepository;
@@ -116,6 +117,7 @@ public class CartItemService {
         return mapToDTO(cartItemRepository.save(cartItem));
     }
 
+    @Transactional
     public CartItemResponse updateQuantity(Integer id, int quantity) {
 
         CartItem item = getCartItemOrThrow(id);
@@ -129,6 +131,7 @@ public class CartItemService {
         return mapToDTO(cartItemRepository.save(item));
     }
 
+    @Transactional
     public void deleteCartItem(Integer id) {
 
         CartItem item = getCartItemOrThrow(id);

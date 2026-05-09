@@ -13,10 +13,12 @@ import com.ecommerce.backend.repository.CategoryRepository;
 import com.ecommerce.backend.repository.ProductRepository;
 import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
 @Service
+@Transactional(readOnly = true)
 public class SellerProductService {
 
     private final ProductRepository productRepository;
@@ -105,6 +107,7 @@ public class SellerProductService {
     }
 
     // CREATE
+    @Transactional
     public SellerProductResponse createProduct(SellerProductRequest request) {
 
         Product product = new Product();
@@ -138,6 +141,7 @@ public class SellerProductService {
     }
 
     // UPDATE
+    @Transactional
     public SellerProductResponse updateProduct(Integer id, SellerProductRequest request) {
 
         Integer shopId = sellerShopService.getMyShopEntity().getId();
@@ -155,6 +159,7 @@ public class SellerProductService {
     }
 
     // SOFT DELETE
+    @Transactional
     public void deleteProduct(Integer id) {
 
         Integer shopId = sellerShopService.getMyShopEntity().getId();
@@ -171,6 +176,7 @@ public class SellerProductService {
     }
 
     // RESTORE
+    @Transactional
     public void restoreProduct(Integer id) {
 
         Product product = productRepository.findById(id)
@@ -185,6 +191,7 @@ public class SellerProductService {
     }
 
     // SUBMIT
+    @Transactional
     public void submitProduct(Integer id) {
 
         Integer shopId = sellerShopService.getMyShopEntity().getId();

@@ -10,6 +10,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -17,6 +18,7 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class SellerReviewService {
 
     private final ReviewRepository reviewRepository;
@@ -91,6 +93,7 @@ public class SellerReviewService {
     }
 
 
+    @Transactional
     public void replyReview(Integer reviewId, SellerReplyRequest request) {
 
         Integer shopId = sellerShopService.getMyShop().getId();

@@ -17,11 +17,13 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class AdminProductService {
 
     private final ProductRepository productRepository;
@@ -207,6 +209,7 @@ public class AdminProductService {
         }
     }
 
+    @Transactional
     public void deleteProduct(Integer id) {
 
         Product product = productRepository.findById(id)
@@ -218,6 +221,7 @@ public class AdminProductService {
         productRepository.save(product);
     }
 
+    @Transactional
     public void restoreProduct(Integer id) {
 
         Product product = productRepository.findById(id)

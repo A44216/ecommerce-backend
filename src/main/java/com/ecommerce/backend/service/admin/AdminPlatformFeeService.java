@@ -5,10 +5,12 @@ import com.ecommerce.backend.dto.responses.admin.platformfee.AdminPlatformFeeRes
 import com.ecommerce.backend.entity.PlatformFee;
 import com.ecommerce.backend.repository.PlatformFeeRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 
 @Service
+@Transactional(readOnly = true)
 public class AdminPlatformFeeService {
 
     private final PlatformFeeRepository platformFeeRepository;
@@ -29,6 +31,7 @@ public class AdminPlatformFeeService {
         return mapToResponse(currentFee);
     }
 
+    @Transactional
     public AdminPlatformFeeResponse updateCurrentFee(AdminPlatformFeeRequest request) {
         PlatformFee currentFee = platformFeeRepository.findByIsActiveTrue()
                 .orElseGet(() -> {

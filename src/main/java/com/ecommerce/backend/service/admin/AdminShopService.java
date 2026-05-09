@@ -27,6 +27,7 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class AdminShopService {
 
     private final ShopRepository shopRepository;

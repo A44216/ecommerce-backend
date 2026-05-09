@@ -13,6 +13,7 @@ import com.ecommerce.backend.repository.ProductEvaluationRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -25,6 +26,7 @@ import java.util.stream.Collectors;
 
 @Slf4j
 @Service
+@Transactional(readOnly = true)
 public class ProductEvaluationService {
 
     private final ProductEvaluationRepository evaluationRepository;
@@ -58,12 +60,14 @@ public class ProductEvaluationService {
                 .collect(Collectors.toList());
     }
 
+    @Transactional
     public void deleteEvaluation(Integer id) {
         ProductEvaluation eval = evaluationRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Evaluation not found"));
         evaluationRepository.delete(eval);
     }
 
+    @Transactional
     public ProductEvaluationResponse evaluateProduct(ProductEvaluationRequest request) {
         // 1. Tìm sản phẩm
         Product product = productRepository.findById(request.getProductId())
@@ -157,6 +161,7 @@ public class ProductEvaluationService {
     }
 
     // Tối ưu: dùng sales count đã cache sẵn thay vì query lại từng sản phẩm
+    @Transactional
     public ProductEvaluationResponse evaluateTrendingProductWithCache(Integer productId, int salesInMonth) {
         Product product = productRepository.findById(productId).orElseThrow(() -> new ResourceNotFoundException("Product not found"));
 
@@ -181,6 +186,7 @@ public class ProductEvaluationService {
         return mapToDTO(evaluationRepository.save(evaluation));
     }
 
+    @Transactional
     public void generateGlobalFuzzyEvaluations() {
         List<Product> allProducts = productRepository.findByStatusAndIsDeletedFalse(ProductStatus.APPROVED);
         LocalDateTime oneMonthAgo = LocalDateTime.now().minusDays(30);

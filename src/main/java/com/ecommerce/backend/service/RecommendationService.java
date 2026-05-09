@@ -23,6 +23,7 @@ import java.util.stream.Collectors;
 @Slf4j
 @Service
 @RequiredArgsConstructor
+@org.springframework.transaction.annotation.Transactional(readOnly = true)
 public class RecommendationService {
 
     private final RecommendationRepository recommendationRepository;

@@ -17,6 +17,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
+@Transactional(readOnly = true)
 public class ComplaintService {
 
     private final ComplaintRepository complaintRepository;
@@ -64,6 +65,7 @@ public class ComplaintService {
     }
 
     // tạo khiếu nại mới
+    @Transactional
     public ComplaintResponse createComplaint(ComplaintRequest request) {
         User user = userRepository.findById(request.getUserId())
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
@@ -79,6 +81,7 @@ public class ComplaintService {
     }
 
     // xóa khiếu nại
+    @Transactional
     public void deleteComplaint(Integer id) {
         if (!complaintRepository.existsById(id)) {
             throw new ResourceNotFoundException("Complaint not found");

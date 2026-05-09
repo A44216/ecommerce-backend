@@ -8,10 +8,12 @@ import com.ecommerce.backend.exception.BadRequestException;
 import com.ecommerce.backend.exception.ResourceNotFoundException;
 import com.ecommerce.backend.repository.CouponRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
 @Service
+@Transactional(readOnly = true)
 public class CouponService {
 
     private final CouponRepository couponRepository;
@@ -69,6 +71,7 @@ public class CouponService {
     }
 
     // tạo mã mới
+    @Transactional
     public CouponResponse createCoupon(CouponRequest request) {
         if (couponRepository.existsByCode(request.getCode())) {
             throw new BadRequestException("Coupon code already exists");
@@ -83,6 +86,7 @@ public class CouponService {
     }
 
     // cập nhật mã
+    @Transactional
     public CouponResponse updateCoupon(Integer id, CouponRequest request) {
         Coupon coupon = couponRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Coupon not found"));
@@ -97,6 +101,7 @@ public class CouponService {
     }
 
     // xóa mã
+    @Transactional
     public void deleteCoupon(Integer id) {
         if (!couponRepository.existsById(id)) {
             throw new ResourceNotFoundException("Coupon not found");
