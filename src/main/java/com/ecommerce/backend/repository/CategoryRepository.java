@@ -31,4 +31,7 @@ public interface CategoryRepository extends JpaRepository<Category, Integer> {
     // ADMIN AUTOCOMPLETE
     List<Category> findTop5ByNameContainingIgnoreCaseOrderByNameAsc(String name);
 
+    @org.springframework.data.jpa.repository.Query("SELECT DISTINCT p.category FROM Product p WHERE p.shop.id = :shopId AND p.category.isDeleted = false AND p.isDeleted = false AND p.status = 'APPROVED'")
+    List<Category> findCategoriesByShopId(@org.springframework.data.repository.query.Param("shopId") Integer shopId);
+
 }

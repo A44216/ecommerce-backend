@@ -38,6 +38,9 @@ public class ShopService {
                 .ownerName(shop.getUser().getFullName()) // truyền đúng tên chủ shop
                 .status(shop.getStatus()) // truyền nguyên object ShopStatus, không dùng .name()
                 .createdAt(shop.getCreatedAt()) // bổ sung trường thứ 6 bị thiếu
+                .avatar(shop.getAvatar())
+                .ratingAvg(shop.getRatingAvg())
+                .ratingCount(shop.getRatingCount())
                 .build();
     }
 

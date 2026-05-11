@@ -18,4 +18,8 @@ public class ShopResponse {
     private String ownerName;
     private ShopStatus status;
     private LocalDateTime createdAt;
+    
+    private String avatar;
+    private java.math.BigDecimal ratingAvg;
+    private Integer ratingCount;
 }

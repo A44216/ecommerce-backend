@@ -20,4 +20,6 @@ public class MessageResponse {
 
     private LocalDateTime createdAt;
 
+    private Boolean isRead;
+
 }

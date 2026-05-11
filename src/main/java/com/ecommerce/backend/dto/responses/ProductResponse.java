@@ -20,6 +20,7 @@ public class ProductResponse {
     private String description;
 
     private String categoryName;
+    private Integer categoryId;
     private Integer shopId;
     private String shopName;
 

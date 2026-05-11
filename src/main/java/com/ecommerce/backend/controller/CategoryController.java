@@ -54,4 +54,10 @@ public class CategoryController {
     public void deleteCategory(@PathVariable Integer id) {
         categoryService.deleteCategory(id);
     }
+
+    // category theo shop
+    @GetMapping("/shop/{shopId}")
+    public List<CategoryResponse> getCategoriesByShopId(@PathVariable Integer shopId) {
+        return categoryService.getCategoriesByShopId(shopId);
+    }
 }

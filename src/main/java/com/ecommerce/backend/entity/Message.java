@@ -38,4 +38,7 @@ public class Message {
     @CreationTimestamp
     @Column(name = "created_at", updatable = false, nullable = false)
     private LocalDateTime createdAt;
+
+    @Column(name = "is_read", nullable = false)
+    private Boolean isRead = false;
 }

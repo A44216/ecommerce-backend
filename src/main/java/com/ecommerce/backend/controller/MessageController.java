@@ -37,4 +37,19 @@ public class MessageController {
     public void deleteMessage(@PathVariable Integer id) {
         service.deleteMessage(id);
     }
+
+    @GetMapping("/unread-count/customer/{customerId}")
+    public Integer getUnreadCountForCustomer(@PathVariable Integer customerId) {
+        return service.countUnreadForCustomer(customerId);
+    }
+
+    @GetMapping("/unread-count/shop/{shopId}")
+    public Integer getUnreadCountForShop(@PathVariable Integer shopId) {
+        return service.countUnreadForShop(shopId);
+    }
+
+    @PutMapping("/read/{conversationId}")
+    public void markMessagesAsRead(@PathVariable Integer conversationId, @RequestParam Integer userId) {
+        service.markMessagesAsRead(conversationId, userId);
+    }
 }

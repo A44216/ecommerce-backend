@@ -81,4 +81,12 @@ public class CategoryService {
     public void deleteCategory(Integer id) {
         categoryRepository.delete(getCategoryOrThrow(id));
     }
+
+    @Transactional(readOnly = true)
+    public List<CategoryResponse> getCategoriesByShopId(Integer shopId) {
+        return categoryRepository.findCategoriesByShopId(shopId)
+                .stream()
+                .map(this::mapToDTO)
+                .toList();
+    }
 }

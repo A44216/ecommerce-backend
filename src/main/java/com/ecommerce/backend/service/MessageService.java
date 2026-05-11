@@ -38,7 +38,8 @@ public class MessageService {
                 message.getSender().getId(),
                 message.getSender().getUsername(),
                 message.getMessage(),
-                message.getCreatedAt()
+                message.getCreatedAt(),
+                message.getIsRead()
         );
     }
 
@@ -75,5 +76,18 @@ public class MessageService {
     @Transactional
     public void deleteMessage(Integer id) {
         repository.deleteById(id);
+    }
+
+    public Integer countUnreadForCustomer(Integer customerId) {
+        return repository.countUnreadForCustomer(customerId);
+    }
+
+    public Integer countUnreadForShop(Integer shopId) {
+        return repository.countUnreadForShop(shopId);
+    }
+
+    @Transactional
+    public void markMessagesAsRead(Integer conversationId, Integer userId) {
+        repository.markMessagesAsRead(conversationId, userId);
     }
 }
