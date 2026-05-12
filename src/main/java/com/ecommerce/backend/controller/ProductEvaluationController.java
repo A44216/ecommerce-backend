@@ -20,7 +20,7 @@ public class ProductEvaluationController {
     // Lấy danh sách Top Deal hiển thị lên trang chủ
     @GetMapping("/top-deals")
     public List<ProductEvaluationResponse> getTopDeals(
-            @RequestParam(defaultValue = "20") int limit) {
+            @RequestParam(defaultValue = "200") int limit) {
         return service.getTopFuzzyDeals(limit);
     }
 

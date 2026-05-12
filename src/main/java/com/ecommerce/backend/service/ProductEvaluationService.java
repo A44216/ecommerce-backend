@@ -393,7 +393,7 @@ public class ProductEvaluationService {
         rules.add(new FuzzyRule("L13", "Sản phẩm có chất lượng ở mức cơ bản, đáp ứng được các nhu cầu mua sắm và sử dụng phổ thông.", 0.50, Math.min(muAvgR, muAny)));
         rules.add(new FuzzyRule("L14", "Sản phẩm có chất lượng tốt, nhận được nhiều phản hồi tích cực và sự tin tưởng từ cộng đồng người dùng.", 0.68, Math.min(muGoodR, muAny)));
 
-        // Chọn Luật chi phối
+        // Chọn Luật chi phối2
         FuzzyRule dominantRule = rules.getFirst();
         for (FuzzyRule rule : rules) {
             if (rule.firingStrength > dominantRule.firingStrength) dominantRule = rule;
