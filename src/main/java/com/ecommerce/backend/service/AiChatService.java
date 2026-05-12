@@ -88,8 +88,13 @@ public class AiChatService {
         HttpEntity<Map<String, Object>> request = new HttpEntity<>(body, headers);
 
         try {
-            Map<String, Object> response = restTemplate.postForObject(url, request, Map.class);
+            System.out.println(">>> Đang gọi Gemini API...");
+            org.springframework.http.ResponseEntity<Map> responseEntity = 
+                restTemplate.postForEntity(url, request, Map.class);
             
+            Map<String, Object> response = responseEntity.getBody();
+            System.out.println(">>> Kết quả Gemini API: " + responseEntity.getStatusCode());
+
             // Parse response (đơn giản hóa)
             if (response != null && response.containsKey("candidates")) {
                 List<Map<String, Object>> candidates = (List<Map<String, Object>>) response.get("candidates");
@@ -98,12 +103,17 @@ public class AiChatService {
                     Map<String, Object> resContent = (Map<String, Object>) candidate.get("content");
                     List<Map<String, Object>> parts = (List<Map<String, Object>>) resContent.get("parts");
                     if (!parts.isEmpty()) {
-                        return (String) parts.get(0).get("text");
+                        String aiText = (String) parts.get(0).get("text");
+                        return aiText.trim();
                     }
                 }
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            System.err.println(">>> LỖI GỌI GEMINI API: " + e.getMessage());
+            if (e instanceof org.springframework.web.client.HttpClientErrorException) {
+                String errorBody = ((org.springframework.web.client.HttpClientErrorException) e).getResponseBodyAsString();
+                System.err.println(">>> CHI TIẾT LỖI: " + errorBody);
+            }
         }
 
         return "Cảm ơn bạn đã nhắn tin! Shop đã nhận được thông tin và sẽ phản hồi sớm nhất có thể. 🤖";
