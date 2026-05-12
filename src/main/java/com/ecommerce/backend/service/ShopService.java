@@ -41,7 +41,16 @@ public class ShopService {
                 .avatar(shop.getAvatar())
                 .ratingAvg(shop.getRatingAvg())
                 .ratingCount(shop.getRatingCount())
+                .isAiReplyEnabled(shop.getIsAiReplyEnabled())
                 .build();
+    }
+
+    @Transactional
+    public ShopResponse toggleAiReply(Integer shopId, Boolean enabled) {
+        Shop shop = shopRepository.findById(shopId)
+                .orElseThrow(() -> new RuntimeException("Shop not found"));
+        shop.setIsAiReplyEnabled(enabled);
+        return mapToDTO(shopRepository.save(shop));
     }
 
     // REQUEST -> ENTITY

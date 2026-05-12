@@ -41,4 +41,7 @@ public class Message {
 
     @Column(name = "is_read", nullable = false)
     private Boolean isRead = false;
+
+    @Column(name = "is_ai_generated", nullable = false)
+    private Boolean isAiGenerated = false;
 }

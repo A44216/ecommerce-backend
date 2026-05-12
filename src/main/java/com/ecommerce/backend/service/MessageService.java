@@ -23,11 +23,13 @@ public class MessageService {
     private final MessageRepository repository;
     private final ConversationRepository conversationRepository;
     private final UserRepository userRepository;
+    private final AiChatService aiChatService;
 
-    public MessageService(MessageRepository repository, ConversationRepository conversationRepository, UserRepository userRepository) {
+    public MessageService(MessageRepository repository, ConversationRepository conversationRepository, UserRepository userRepository, AiChatService aiChatService) {
         this.repository = repository;
         this.conversationRepository = conversationRepository;
         this.userRepository = userRepository;
+        this.aiChatService = aiChatService;
     }
 
     private MessageResponse mapToDTO(Message message) {
@@ -39,7 +41,8 @@ public class MessageService {
                 message.getSender().getUsername(),
                 message.getMessage(),
                 message.getCreatedAt(),
-                message.getIsRead()
+                message.getIsRead(),
+                message.getIsAiGenerated()
         );
     }
 
@@ -69,7 +72,32 @@ public class MessageService {
 
         message = repository.save(message);
 
+        // Kích hoạt AI Auto-reply nếu người gửi là Customer và Shop có bật AI
+        if (conversation.getCustomer().getId().equals(sender.getId()) && 
+            conversation.getShop().getIsAiReplyEnabled()) {
+            triggerAiAutoReply(conversation, request.getMessage());
+        }
+
         return mapToDTO(message);
+    }
+
+    @org.springframework.scheduling.annotation.Async
+    public void triggerAiAutoReply(Conversation conversation, String userMessage) {
+        // Giả lập độ trễ nhỏ để tạo cảm giác tự nhiên
+        try { Thread.sleep(2000); } catch (InterruptedException e) {}
+
+        String aiResponse = aiChatService.generateResponse(conversation.getShop(), userMessage);
+
+        Message aiMessage = new Message();
+        aiMessage.setConversation(conversation);
+        aiMessage.setSender(conversation.getShop().getUser()); // Shop owner gửi
+        aiMessage.setMessage(aiResponse);
+        aiMessage.setCreatedAt(LocalDateTime.now());
+        aiMessage.setIsAiGenerated(true);
+
+        repository.save(aiMessage);
+        
+        // Lưu ý: Trong thực tế bạn có thể cần gửi qua WebSocket ở đây để người dùng thấy ngay lập tức
     }
 
     // xoá tin nhắn

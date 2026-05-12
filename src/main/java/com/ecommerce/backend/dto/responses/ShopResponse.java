@@ -22,4 +22,5 @@ public class ShopResponse {
     private String avatar;
     private java.math.BigDecimal ratingAvg;
     private Integer ratingCount;
+    private Boolean isAiReplyEnabled;
 }

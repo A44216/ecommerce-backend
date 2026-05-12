@@ -67,4 +67,7 @@ public class Shop {
     @Column(name = "email", length = 100)
     private String email;
 
+    @Column(name = "is_ai_reply_enabled", nullable = false)
+    private Boolean isAiReplyEnabled = false;
+
 }

@@ -22,4 +22,6 @@ public class MessageResponse {
 
     private Boolean isRead;
 
+    private Boolean isAiGenerated;
+
 }

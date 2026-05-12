@@ -22,6 +22,8 @@ public interface ProductRepository extends JpaRepository<Product, Integer> {
 
     Integer countByShopIdAndIsDeletedFalse(Integer shopId);
 
+    List<Product> findTop5ByShopIdAndIsDeletedFalseAndStatusOrderByCreatedAtDesc(Integer shopId, ProductStatus status);
+
     @EntityGraph(attributePaths = {"images", "category", "shop"})
     Page<Product> findByShopIdAndCategoryIdAndIsDeletedFalse(
             Integer shopId, Integer categoryId, Pageable pageable

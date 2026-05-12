@@ -54,4 +54,9 @@ public class ShopController {
     public void deleteShop(@PathVariable Integer id) {
         shopService.deleteShop(id);
     }
+
+    @PutMapping("/{id}/ai-reply")
+    public ShopResponse toggleAiReply(@PathVariable Integer id, @RequestParam Boolean enabled) {
+        return shopService.toggleAiReply(id, enabled);
+    }
 }
