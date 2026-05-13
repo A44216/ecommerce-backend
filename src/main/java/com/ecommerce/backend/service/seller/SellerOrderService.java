@@ -11,7 +11,9 @@ import com.ecommerce.backend.entity.Shop;
 import com.ecommerce.backend.enums.OrderStatus;
 import com.ecommerce.backend.enums.PaymentMethod;
 import com.ecommerce.backend.enums.PaymentStatus;
+import com.ecommerce.backend.enums.NotificationType;
 import com.ecommerce.backend.repository.OrderRepository;
+import com.ecommerce.backend.service.NotificationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;
@@ -29,6 +31,7 @@ public class SellerOrderService {
 
     private final OrderRepository orderRepository;
     private final SellerShopService sellerShopService;
+    private final NotificationService notificationService;
 
     public PageResponse<SellerOrderResponse> getOrders(
             List<OrderStatus> statuses,
@@ -131,6 +134,41 @@ public class SellerOrderService {
         }
 
         order.setStatus(status);
+
+        // --- GỬI THÔNG BÁO CHO KHÁCH HÀNG ---
+        String title = "";
+        String body = "";
+
+        switch (status) {
+            case CONFIRMED:
+                title = "Đơn hàng đã được xác nhận";
+                body = "Đơn hàng #" + order.getId() + " đã được Shop xác nhận và đang chuẩn bị hàng.";
+                break;
+            case SHIPPING:
+                title = "Đơn hàng đang được giao";
+                body = "Đơn hàng #" + order.getId() + " đang được giao đến bạn.";
+                break;
+            case COMPLETED:
+                if (oldStatus != OrderStatus.COMPLETED) {
+                    title = "Giao hàng thành công";
+                    body = "Đơn hàng #" + order.getId() + " đã được giao thành công. Cảm ơn bạn đã mua hàng!";
+                }
+                break;
+            case CANCELED:
+                title = "Đơn hàng đã bị hủy";
+                body = "Đơn hàng #" + order.getId() + " đã bị hủy bởi Shop.";
+                break;
+        }
+
+        if (!title.isEmpty()) {
+            notificationService.createNotification(
+                    order.getUser().getId(),
+                    title,
+                    body,
+                    NotificationType.ORDER,
+                    order.getId()
+            );
+        }
 
         // chỉ set completedAt lần đầu khi chuyển sang COMPLETED
         if (status == OrderStatus.COMPLETED && oldStatus != OrderStatus.COMPLETED) {

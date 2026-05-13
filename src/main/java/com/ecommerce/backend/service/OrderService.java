@@ -308,6 +308,39 @@ public class OrderService {
 
         order.setStatus(status);
 
+        // --- GỬI THÔNG BÁO CHO KHÁCH HÀNG ---
+        String title = "";
+        String body = "";
+
+        switch (status) {
+            case CONFIRMED:
+                title = "Đơn hàng đã được xác nhận";
+                body = "Đơn hàng #" + order.getId() + " đã được Shop xác nhận và đang chuẩn bị hàng.";
+                break;
+            case SHIPPING:
+                title = "Đơn hàng đang được giao";
+                body = "Đơn hàng #" + order.getId() + " đang được giao đến bạn.";
+                break;
+            case COMPLETED:
+                title = "Giao hàng thành công";
+                body = "Đơn hàng #" + order.getId() + " đã được giao thành công. Cảm ơn bạn đã mua hàng!";
+                break;
+            case CANCELED:
+                title = "Đơn hàng đã bị hủy";
+                body = "Đơn hàng #" + order.getId() + " đã bị hủy.";
+                break;
+        }
+
+        if (!title.isEmpty()) {
+            notificationService.createNotification(
+                    order.getUser().getId(),
+                    title,
+                    body,
+                    NotificationType.ORDER,
+                    order.getId()
+            );
+        }
+
         return mapToDTO(repository.save(order));
     }
 
