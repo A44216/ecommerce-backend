@@ -88,23 +88,26 @@ public class AiChatService {
         HttpEntity<Map<String, Object>> request = new HttpEntity<>(body, headers);
 
         try {
-            System.out.println(">>> Đang gọi Gemini API...");
+            System.out.println(">>> Đang gọi Gemini API với Prompt:\n" + prompt);
             org.springframework.http.ResponseEntity<Map> responseEntity = 
                 restTemplate.postForEntity(url, request, Map.class);
             
             Map<String, Object> response = responseEntity.getBody();
             System.out.println(">>> Kết quả Gemini API: " + responseEntity.getStatusCode());
+            System.out.println(">>> Response Body: " + response);
 
             // Parse response (đơn giản hóa)
             if (response != null && response.containsKey("candidates")) {
                 List<Map<String, Object>> candidates = (List<Map<String, Object>>) response.get("candidates");
-                if (!candidates.isEmpty()) {
+                if (candidates != null && !candidates.isEmpty()) {
                     Map<String, Object> candidate = candidates.get(0);
                     Map<String, Object> resContent = (Map<String, Object>) candidate.get("content");
-                    List<Map<String, Object>> parts = (List<Map<String, Object>>) resContent.get("parts");
-                    if (!parts.isEmpty()) {
-                        String aiText = (String) parts.get(0).get("text");
-                        return aiText.trim();
+                    if (resContent != null && resContent.containsKey("parts")) {
+                        List<Map<String, Object>> parts = (List<Map<String, Object>>) resContent.get("parts");
+                        if (parts != null && !parts.isEmpty()) {
+                            String aiText = (String) parts.get(0).get("text");
+                            return aiText.trim();
+                        }
                     }
                 }
             }
@@ -112,7 +115,7 @@ public class AiChatService {
             System.err.println(">>> LỖI GỌI GEMINI API: " + e.getMessage());
             if (e instanceof org.springframework.web.client.HttpClientErrorException) {
                 String errorBody = ((org.springframework.web.client.HttpClientErrorException) e).getResponseBodyAsString();
-                System.err.println(">>> CHI TIẾT LỖI: " + errorBody);
+                System.err.println(">>> CHI TIẾT LỖI TỪ GOOGLE: " + errorBody);
             }
         }
 
