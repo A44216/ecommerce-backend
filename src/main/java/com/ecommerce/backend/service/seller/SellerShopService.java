@@ -147,6 +147,7 @@ public class SellerShopService {
                 .ratingCount(shop.getRatingCount())
                 .phone(shop.getPhone())
                 .email(shop.getEmail())
+                .isAiReplyEnabled(shop.getIsAiReplyEnabled())
                 .build();
     }
 

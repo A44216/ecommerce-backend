@@ -25,4 +25,5 @@ public class SellerShopResponse {
     private Integer ratingCount;
     private String phone;
     private String email;
+    private Boolean isAiReplyEnabled;
 }
