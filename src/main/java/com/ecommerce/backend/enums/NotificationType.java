@@ -8,5 +8,6 @@ public enum NotificationType {
     AWARDS,     // Giải thưởng
     FOOD,       // Giao đồ ăn
     SHOP,       // Thông báo về Shop (Đăng ký, Duyệt shop...)
-    PRODUCT     // Thông báo về Sản phẩm (Duyệt sản phẩm, bị từ chối...)
+    PRODUCT,    // Thông báo về Sản phẩm (Duyệt sản phẩm, bị từ chối...)
+    COMPLAINT   // Thông báo về Khiếu nại
 }
