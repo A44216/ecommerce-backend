@@ -3,6 +3,7 @@ package com.ecommerce.backend.controller.admin;
 import com.ecommerce.backend.dto.requests.admin.profile.AdminProfileInfoRequest;
 import com.ecommerce.backend.dto.responses.admin.profile.AdminProfileInfoResponse;
 import com.ecommerce.backend.service.admin.AdminProfileService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
@@ -24,7 +25,7 @@ public class AdminProfileController {
     @PutMapping
     public AdminProfileInfoResponse updateProfile(
             Authentication authentication,
-            @RequestBody AdminProfileInfoRequest request
+            @Valid @RequestBody AdminProfileInfoRequest request
     ) {
         return adminProfileService.updateProfile(authentication, request);
     }

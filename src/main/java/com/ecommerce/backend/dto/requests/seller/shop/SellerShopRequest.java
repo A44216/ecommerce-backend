@@ -19,11 +19,11 @@ public class SellerShopRequest {
     @Size(max = 255, message = "Address is too long")
     private String address;
 
-    @Pattern(regexp = "^0[0-9]{9,10}$", message = "Invalid phone number")
+    @Pattern(regexp = "^$|^0[0-9]{9,10}$", message = "Invalid phone number")
     private String phone;
 
     @Size(max = 100, message = "Email must be less than 100 characters")
-    @Email
+    @Email(regexp = "^$|^[a-zA-Z0-9_!#$%&'*+/=?`{|}~^.-]+@[a-zA-Z0-9.-]+$")
     private String email;
 
     @Size(max = 255, message = "Avatar URL is too long")
