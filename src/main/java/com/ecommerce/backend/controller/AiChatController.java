@@ -13,6 +13,7 @@ import com.ecommerce.backend.repository.ConversationRepository;
 import com.ecommerce.backend.repository.MessageRepository;
 import com.ecommerce.backend.repository.UserRepository;
 import org.springframework.http.ResponseEntity;
+import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 
 @RestController
@@ -42,6 +43,8 @@ public class AiChatController {
                 .orElseThrow(() -> new RuntimeException("Conversation not found"));
         User sender = userRepository.findById(request.getSenderId())
                 .orElseThrow(() -> new RuntimeException("User not found"));
+        User shopOwner = userRepository.findById(shop.getUser().getId())
+                .orElseThrow(() -> new RuntimeException("Shop owner not found"));
 
         // Lưu tin nhắn của User
         Message userMsg = new Message();
@@ -52,13 +55,13 @@ public class AiChatController {
         userMsg.setIsAiChat(true);
         messageRepository.save(userMsg);
 
-        // Sinh response AI
+        // Sinh response AI (Gọi API ngoài, có thể mất vài giây)
         String aiResponse = aiChatService.generateResponse(shop, request.getMessage());
 
         // Lưu tin nhắn của AI
         Message aiMsg = new Message();
         aiMsg.setConversation(conversation);
-        aiMsg.setSender(shop.getUser()); // AI đại diện cho Shop
+        aiMsg.setSender(shopOwner); // AI đại diện cho Shop
         aiMsg.setMessage(aiResponse);
         aiMsg.setCreatedAt(LocalDateTime.now());
         aiMsg.setIsAiGenerated(true);
