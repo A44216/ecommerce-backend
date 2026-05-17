@@ -6,6 +6,8 @@ import com.ecommerce.backend.entity.Complaint;
 import com.ecommerce.backend.entity.User;
 import com.ecommerce.backend.enums.ComplaintStatus;
 
+import com.ecommerce.backend.enums.NotificationType;
+import com.ecommerce.backend.enums.Role;
 import com.ecommerce.backend.exception.ResourceNotFoundException;
 import com.ecommerce.backend.repository.ComplaintRepository;
 import com.ecommerce.backend.repository.OrderRepository;
@@ -23,11 +25,14 @@ public class ComplaintService {
     private final ComplaintRepository complaintRepository;
     private final UserRepository userRepository;
     private final OrderRepository orderRepository;
+    private final NotificationService notificationService;
 
-    public ComplaintService(ComplaintRepository complaintRepository, UserRepository userRepository, OrderRepository orderRepository) {
+    public ComplaintService(ComplaintRepository complaintRepository, UserRepository userRepository, 
+                            OrderRepository orderRepository, NotificationService notificationService) {
         this.complaintRepository = complaintRepository;
         this.userRepository = userRepository;
         this.orderRepository = orderRepository;
+        this.notificationService = notificationService;
     }
 
     // MAPPER
@@ -77,7 +82,28 @@ public class ComplaintService {
         complaint.setStatus(ComplaintStatus.PENDING); // Mặc định là PENDING khi mới tạo
         complaint.setComplaintCode(generateComplaintCode());
 
-        return mapToDTO(complaintRepository.save(complaint));
+        Complaint savedComplaint = complaintRepository.save(complaint);
+        
+        // Gửi thông báo cho Admin
+        notifyAdmins(savedComplaint);
+
+        return mapToDTO(savedComplaint);
+    }
+
+    private void notifyAdmins(Complaint complaint) {
+        List<User> admins = userRepository.findByRole(Role.ADMIN);
+        String title = "Khiếu nại mới từ khách hàng";
+        String body = "Bạn có một khiếu nại mới cần xử lý: " + complaint.getComplaintCode();
+        
+        for (User admin : admins) {
+            notificationService.createNotification(
+                    admin.getId(),
+                    title,
+                    body,
+                    NotificationType.COMPLAINT,
+                    complaint.getId()
+            );
+        }
     }
 
     // xóa khiếu nại
@@ -100,7 +126,10 @@ public class ComplaintService {
         complaint.setStatus(ComplaintStatus.PENDING);
         complaint.setComplaintCode(generateComplaintCode());
 
-        complaintRepository.save(complaint);
+        Complaint savedComplaint = complaintRepository.save(complaint);
+        
+        // Gửi thông báo cho Admin
+        notifyAdmins(savedComplaint);
     }
 
     public List<ComplaintResponse> getComplaintsByUser(Integer userId) {

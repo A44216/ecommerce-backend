@@ -12,7 +12,12 @@ public interface CategoryRepository extends JpaRepository<Category, Integer> {
 
     List<Category> findByNameContainingIgnoreCaseAndIsDeletedFalseOrderByNameAsc(String name);
 
-    @org.springframework.data.jpa.repository.Query("SELECT c FROM Category c WHERE c.isDeleted = false OR c.isDeleted IS NULL")
+    @org.springframework.data.jpa.repository.Query("SELECT DISTINCT c FROM Category c " +
+            "JOIN Product p ON p.category.id = c.id " +
+            "WHERE (c.isDeleted = false OR c.isDeleted IS NULL) " +
+            "AND p.isDeleted = false " +
+            "AND p.status = 'APPROVED' " +
+            "ORDER BY c.name ASC")
     java.util.List<Category> findAllActive();
 
     @org.springframework.data.jpa.repository.Query("SELECT c FROM Category c WHERE c.id = :id AND (c.isDeleted = false OR c.isDeleted IS NULL)")
