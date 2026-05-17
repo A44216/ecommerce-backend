@@ -13,6 +13,13 @@ public interface MessageRepository extends JpaRepository<Message, Integer> {
     // tất cả tin nhắn trong 1 conversation
     List<Message> findByConversationIdOrderByCreatedAtAsc(Integer conversationId);
 
+    // lấy tin nhắn trong khoảng thời gian (để lấy 48h)
+    List<Message> findByConversationIdAndCreatedAtAfterOrderByCreatedAtAsc(Integer conversationId, java.time.LocalDateTime time);
+
+    // lấy n tin nhắn cũ hơn một mốc thời gian (để load more)
+    @Query("SELECT m FROM Message m WHERE m.conversation.id = :conversationId AND m.createdAt < :time ORDER BY m.createdAt DESC")
+    List<Message> findOlderMessages(@Param("conversationId") Integer conversationId, @Param("time") java.time.LocalDateTime time, org.springframework.data.domain.Pageable pageable);
+
     // tin nhắn của user
     List<Message> findBySenderId(Integer senderId);
 

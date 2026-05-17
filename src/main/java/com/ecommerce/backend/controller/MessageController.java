@@ -22,8 +22,14 @@ public class MessageController {
 
     // tất cả tin nhắn trong conversation
     @GetMapping("/conversation/{conversationId}")
-    public List<MessageResponse> getMessages(@PathVariable Integer conversationId) {
-        return service.getMessagesByConversation(conversationId);
+    public List<MessageResponse> getMessages(
+            @PathVariable Integer conversationId,
+            @RequestParam(required = false) @org.springframework.format.annotation.DateTimeFormat(iso = org.springframework.format.annotation.DateTimeFormat.ISO.DATE_TIME) java.time.LocalDateTime beforeTime) {
+        if (beforeTime != null) {
+            return service.getOlderMessages(conversationId, beforeTime, 20); // Load 20 tin nhắn mỗi lần lướt lên
+        }
+        // Nếu không truyền beforeTime, mặc định lấy trong 48h qua
+        return service.getRecentMessages(conversationId, 48);
     }
 
     // gửi tin nhắn

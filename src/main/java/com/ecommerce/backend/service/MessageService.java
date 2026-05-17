@@ -56,6 +56,22 @@ public class MessageService {
                 .toList();
     }
 
+    public List<MessageResponse> getRecentMessages(Integer conversationId, int hours) {
+        LocalDateTime time = LocalDateTime.now().minusHours(hours);
+        List<Message> list = repository.findByConversationIdAndCreatedAtAfterOrderByCreatedAtAsc(conversationId, time);
+        return list.stream().map(this::mapToDTO).toList();
+    }
+
+    public List<MessageResponse> getOlderMessages(Integer conversationId, LocalDateTime beforeTime, int limit) {
+        org.springframework.data.domain.Pageable pageable = org.springframework.data.domain.PageRequest.of(0, limit);
+        List<Message> list = repository.findOlderMessages(conversationId, beforeTime, pageable);
+        
+        // Vì query theo DESC để lấy tin nhắn ngay sát trước đó, nên ta cần đảo ngược list lại để đúng thứ tự hiển thị ASC
+        java.util.Collections.reverse(list);
+        
+        return list.stream().map(this::mapToDTO).toList();
+    }
+
     // gửi tin nhắn
     @Transactional
     public MessageResponse sendMessage(MessageRequest request) {
@@ -86,7 +102,7 @@ public class MessageService {
         // Giả lập độ trễ nhỏ để tạo cảm giác tự nhiên
         try { Thread.sleep(2000); } catch (InterruptedException e) {}
 
-        String aiResponse = aiChatService.generateResponse(conversation.getShop(), userMessage);
+        String aiResponse = "Shop đã nhận được tin nhắn của bạn, sẽ phản hồi lại sớm nhất có thể";
 
         Message aiMessage = new Message();
         aiMessage.setConversation(conversation);
@@ -96,8 +112,6 @@ public class MessageService {
         aiMessage.setIsAiGenerated(true);
 
         repository.save(aiMessage);
-        
-        // Lưu ý: Trong thực tế bạn có thể cần gửi qua WebSocket ở đây để người dùng thấy ngay lập tức
     }
 
     // xoá tin nhắn
