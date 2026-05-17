@@ -88,30 +88,35 @@ public class MessageService {
 
         message = repository.save(message);
 
-        // Kích hoạt AI Auto-reply nếu người gửi là Customer và Shop có bật AI
+        // Kích hoạt Auto-reply nếu người gửi là Customer và Shop có bật tính năng này
         if (conversation.getCustomer().getId().equals(sender.getId()) && 
-            conversation.getShop().getIsAiReplyEnabled()) {
+            Boolean.TRUE.equals(conversation.getShop().getIsAiReplyEnabled())) {
             triggerAiAutoReply(conversation, request.getMessage());
         }
 
         return mapToDTO(message);
     }
 
-    @org.springframework.scheduling.annotation.Async
     public void triggerAiAutoReply(Conversation conversation, String userMessage) {
-        // Giả lập độ trễ nhỏ để tạo cảm giác tự nhiên
-        try { Thread.sleep(2000); } catch (InterruptedException e) {}
+        Integer conversationId = conversation.getId();
+        Integer shopUserId = conversation.getShop().getUser().getId();
+        
+        java.util.concurrent.CompletableFuture.runAsync(() -> {
+            try { Thread.sleep(2000); } catch (InterruptedException e) {}
 
-        String aiResponse = "Shop đã nhận được tin nhắn của bạn, sẽ phản hồi lại sớm nhất có thể";
+            String aiResponse = "Shop đã nhận được tin nhắn của bạn, sẽ phản hồi lại sớm nhất có thể";
 
-        Message aiMessage = new Message();
-        aiMessage.setConversation(conversation);
-        aiMessage.setSender(conversation.getShop().getUser()); // Shop owner gửi
-        aiMessage.setMessage(aiResponse);
-        aiMessage.setCreatedAt(LocalDateTime.now());
-        aiMessage.setIsAiGenerated(true);
+            Message aiMessage = new Message();
+            aiMessage.setConversation(conversationRepository.findById(conversationId).orElse(null));
+            aiMessage.setSender(userRepository.findById(shopUserId).orElse(null)); 
+            aiMessage.setMessage(aiResponse);
+            aiMessage.setCreatedAt(LocalDateTime.now());
+            aiMessage.setIsAiGenerated(true);
 
-        repository.save(aiMessage);
+            if (aiMessage.getConversation() != null && aiMessage.getSender() != null) {
+                repository.save(aiMessage);
+            }
+        });
     }
 
     // xoá tin nhắn
