@@ -34,8 +34,14 @@ public class MessageController {
 
     // tất cả tin nhắn AI trong conversation
     @GetMapping("/conversation/{conversationId}/ai-chat")
-    public List<MessageResponse> getAiChatMessages(@PathVariable Integer conversationId) {
-        return service.getAiChatMessages(conversationId);
+    public List<MessageResponse> getAiChatMessages(
+            @PathVariable Integer conversationId,
+            @RequestParam(required = false) @org.springframework.format.annotation.DateTimeFormat(iso = org.springframework.format.annotation.DateTimeFormat.ISO.DATE_TIME) java.time.LocalDateTime beforeTime) {
+        if (beforeTime != null) {
+            return service.getOlderAiMessages(conversationId, beforeTime, 20); // Load 20 tin nhắn AI mỗi lần lướt lên
+        }
+        // Nếu không truyền beforeTime, mặc định lấy trong 48h qua
+        return service.getRecentAiMessages(conversationId, 48);
     }
 
     // gửi tin nhắn
