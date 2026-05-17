@@ -44,4 +44,7 @@ public class Message {
 
     @Column(name = "is_ai_generated", nullable = false)
     private Boolean isAiGenerated = false;
+
+    @Column(name = "is_ai_chat", nullable = false)
+    private Boolean isAiChat = false;
 }

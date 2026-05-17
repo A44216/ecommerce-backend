@@ -10,15 +10,28 @@ import java.util.List;
 
 public interface MessageRepository extends JpaRepository<Message, Integer> {
 
-    // tất cả tin nhắn trong 1 conversation
-    List<Message> findByConversationIdOrderByCreatedAtAsc(Integer conversationId);
+    // tất cả tin nhắn trong 1 conversation (ẩn tin nhắn AI Chatbot)
+    @Query("SELECT m FROM Message m WHERE m.conversation.id = :conversationId AND (m.isAiChat IS NULL OR m.isAiChat = false) ORDER BY m.createdAt ASC")
+    List<Message> findByConversationIdOrderByCreatedAtAsc(@Param("conversationId") Integer conversationId);
 
-    // lấy tin nhắn trong khoảng thời gian (để lấy 48h)
-    List<Message> findByConversationIdAndCreatedAtAfterOrderByCreatedAtAsc(Integer conversationId, java.time.LocalDateTime time);
+    // lấy tin nhắn trong khoảng thời gian (để lấy 48h, ẩn AI chatbot)
+    @Query("SELECT m FROM Message m WHERE m.conversation.id = :conversationId AND (m.isAiChat IS NULL OR m.isAiChat = false) AND m.createdAt > :time ORDER BY m.createdAt ASC")
+    List<Message> findByConversationIdAndCreatedAtAfterOrderByCreatedAtAsc(@Param("conversationId") Integer conversationId, @Param("time") java.time.LocalDateTime time);
 
-    // lấy n tin nhắn cũ hơn một mốc thời gian (để load more)
-    @Query("SELECT m FROM Message m WHERE m.conversation.id = :conversationId AND m.createdAt < :time ORDER BY m.createdAt DESC")
+    // lấy n tin nhắn cũ hơn một mốc thời gian (để load more, ẩn AI chatbot)
+    @Query("SELECT m FROM Message m WHERE m.conversation.id = :conversationId AND (m.isAiChat IS NULL OR m.isAiChat = false) AND m.createdAt < :time ORDER BY m.createdAt DESC")
     List<Message> findOlderMessages(@Param("conversationId") Integer conversationId, @Param("time") java.time.LocalDateTime time, org.springframework.data.domain.Pageable pageable);
+
+    // lấy riêng tin nhắn AI Chatbot
+    @Query("SELECT m FROM Message m WHERE m.conversation.id = :conversationId AND m.isAiChat = true ORDER BY m.createdAt ASC")
+    List<Message> findAiChatMessages(@Param("conversationId") Integer conversationId);
+
+    // lấy riêng tin nhắn AI Chatbot trong khoảng thời gian
+    List<Message> findByConversationIdAndIsAiChatAndCreatedAtAfterOrderByCreatedAtAsc(Integer conversationId, Boolean isAiChat, java.time.LocalDateTime time);
+
+    // lấy riêng tin nhắn AI Chatbot cũ hơn (load more)
+    @Query("SELECT m FROM Message m WHERE m.conversation.id = :conversationId AND m.isAiChat = true AND m.createdAt < :time ORDER BY m.createdAt DESC")
+    List<Message> findOlderAiMessages(@Param("conversationId") Integer conversationId, @Param("time") java.time.LocalDateTime time, org.springframework.data.domain.Pageable pageable);
 
     // tin nhắn của user
     List<Message> findBySenderId(Integer senderId);

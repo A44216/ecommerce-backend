@@ -32,6 +32,12 @@ public class MessageController {
         return service.getRecentMessages(conversationId, 48);
     }
 
+    // tất cả tin nhắn AI trong conversation
+    @GetMapping("/conversation/{conversationId}/ai-chat")
+    public List<MessageResponse> getAiChatMessages(@PathVariable Integer conversationId) {
+        return service.getAiChatMessages(conversationId);
+    }
+
     // gửi tin nhắn
     @PostMapping
     public MessageResponse sendMessage(@RequestBody MessageRequest request) {

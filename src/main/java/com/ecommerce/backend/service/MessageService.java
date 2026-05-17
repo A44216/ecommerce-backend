@@ -42,8 +42,25 @@ public class MessageService {
                 message.getMessage(),
                 message.getCreatedAt(),
                 message.getIsRead(),
-                message.getIsAiGenerated()
+                message.getIsAiGenerated(),
+                message.getIsAiChat()
         );
+    }
+
+    // Lấy tin nhắn AI trong X giờ qua
+    public List<MessageResponse> getRecentAiMessages(Integer conversationId, int hours) {
+        LocalDateTime time = LocalDateTime.now().minusHours(hours);
+        List<Message> list = repository.findByConversationIdAndIsAiChatAndCreatedAtAfterOrderByCreatedAtAsc(conversationId, true, time);
+        return list.stream().map(this::mapToDTO).toList();
+    }
+
+    // Load more tin nhắn AI cũ hơn
+    public List<MessageResponse> getOlderAiMessages(Integer conversationId, LocalDateTime time, int limit) {
+        org.springframework.data.domain.Pageable pageable = org.springframework.data.domain.PageRequest.of(0, limit);
+        List<Message> list = repository.findOlderAiMessages(conversationId, time, pageable);
+        // DB trả về DESC, nên cần reverse lại cho đúng thứ tự chat ASC
+        java.util.Collections.reverse(list);
+        return list.stream().map(this::mapToDTO).toList();
     }
 
     // tin nhắn theo conversation
@@ -88,21 +105,31 @@ public class MessageService {
 
         message = repository.save(message);
 
-        // Kích hoạt Auto-reply nếu người gửi là Customer và Shop có bật tính năng này
-        if (conversation.getCustomer().getId().equals(sender.getId()) && 
-            Boolean.TRUE.equals(conversation.getShop().getIsAiReplyEnabled())) {
-            triggerAiAutoReply(conversation, request.getMessage());
+        // Kích hoạt Auto-reply nếu người gửi là Customer
+        if (conversation.getCustomer().getId().equals(sender.getId())) {
+            triggerAiAutoReply(conversation, message.getId());
         }
 
         return mapToDTO(message);
     }
 
-    public void triggerAiAutoReply(Conversation conversation, String userMessage) {
+    public void triggerAiAutoReply(Conversation conversation, Integer userMessageId) {
         Integer conversationId = conversation.getId();
         Integer shopUserId = conversation.getShop().getUser().getId();
         
         java.util.concurrent.CompletableFuture.runAsync(() -> {
-            try { Thread.sleep(2000); } catch (InterruptedException e) {}
+            try { 
+                // Chờ 6 giây. Nếu trong 6 giây này seller đang online trong phòng chat, 
+                // polling của app sẽ gọi API markAsRead và chuyển isRead thành true.
+                Thread.sleep(6000); 
+            } catch (InterruptedException e) {}
+
+            // Kiểm tra xem tin nhắn đã được đọc chưa
+            Message userMsg = repository.findById(userMessageId).orElse(null);
+            if (userMsg != null && Boolean.TRUE.equals(userMsg.getIsRead())) {
+                // Seller đang online và đã đọc tin nhắn, không cần gửi auto-reply nữa
+                return;
+            }
 
             String aiResponse = "Shop đã nhận được tin nhắn của bạn, sẽ phản hồi lại sớm nhất có thể";
 

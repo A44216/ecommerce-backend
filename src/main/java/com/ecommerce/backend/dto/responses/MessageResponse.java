@@ -24,4 +24,6 @@ public class MessageResponse {
 
     private Boolean isAiGenerated;
 
+    private Boolean isAiChat;
+
 }
