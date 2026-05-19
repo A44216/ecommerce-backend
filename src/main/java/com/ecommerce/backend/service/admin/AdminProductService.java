@@ -216,7 +216,7 @@ public class AdminProductService {
                 .orElseThrow(() -> new ResourceNotFoundException("Product not found"));
 
         // soft delete
-        product.setDeleted(true);
+        product.setIsDeleted(true);
 
         productRepository.save(product);
     }
@@ -227,7 +227,7 @@ public class AdminProductService {
         Product product = productRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Product not found"));
 
-        product.setDeleted(false);
+        product.setIsDeleted(false);
 
         productRepository.save(product);
     }

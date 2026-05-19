@@ -54,7 +54,7 @@ public class SellerProductService {
                 .ratingCount(product.getRatingCount())
                 .soldCount(product.getSoldCount())
                 .status(product.getStatus())
-                .isDeleted(product.isDeleted())
+                .isDeleted(product.getIsDeleted())
                 .images(
                         product.getImages() == null ? List.of() :
                                 product.getImages().stream()
@@ -171,7 +171,7 @@ public class SellerProductService {
             throw new RuntimeException("Access denied");
         }
 
-        product.setDeleted(true);
+        product.setIsDeleted(true);
         productRepository.save(product);
     }
 
@@ -182,11 +182,11 @@ public class SellerProductService {
         Product product = productRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Product not found"));
 
-        if (!product.isDeleted()) {
+        if (!product.getIsDeleted()) {
             throw new RuntimeException("Product is not deleted");
         }
 
-        product.setDeleted(false);
+        product.setIsDeleted(false);
         productRepository.save(product);
     }
 

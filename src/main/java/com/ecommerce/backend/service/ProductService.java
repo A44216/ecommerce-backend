@@ -253,7 +253,7 @@ public class ProductService {
     public void deleteProduct(Integer id) {
         Product product = productRepository.findByIdAndIsDeletedFalse(id)
                 .orElseThrow(() -> new RuntimeException("Product not found"));
-        product.setDeleted(true);
+        product.setIsDeleted(true);
         productRepository.save(product);
     }
 
@@ -262,10 +262,10 @@ public class ProductService {
         Product product = productRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Product not found"));
 
-        if (!product.isDeleted()) {
+        if (!product.getIsDeleted()) {
             throw new RuntimeException("Product is not deleted");
         }
-        product.setDeleted(false);
+        product.setIsDeleted(false);
         productRepository.save(product);
     }
 
