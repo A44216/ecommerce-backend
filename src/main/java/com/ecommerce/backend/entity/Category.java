@@ -3,6 +3,7 @@ package com.ecommerce.backend.entity;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
+import org.hibernate.annotations.ColumnDefault;
 
 @Entity
 @Table(
@@ -26,7 +27,8 @@ public class Category {
     @Column(nullable = false, length = 100)
     private String name;
 
-    @Column(name = "is_deleted", nullable = false)
+    @Column(name = "is_deleted", nullable = false, columnDefinition = "TINYINT(1)")
+    @ColumnDefault("0")
     private Boolean isDeleted = false;
 
 }

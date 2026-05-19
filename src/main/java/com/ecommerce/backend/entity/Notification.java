@@ -6,6 +6,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
@@ -24,7 +25,7 @@ public class Notification {
 
     // Liên kết với bảng User (Ai là người nhận thông báo này)
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", nullable = false)
+    @JoinColumn(name = "user_id", nullable = false, foreignKey = @ForeignKey(name = "fk_notifications_user"))
     private User user;
 
     private String title; // Tiêu đề
@@ -40,15 +41,13 @@ public class Notification {
     private Integer relatedId;
 
     // Đánh dấu đã đọc hay chưa (Mặc định khi mới tạo là chưa đọc)
-    private boolean isRead = false;
+    @Column(name = "is_read", nullable = false, columnDefinition = "TINYINT(1)")
+    @ColumnDefault("0")
+    private Boolean isRead = false;
 
     @CreationTimestamp
-    @Column(name = "created_at", updatable = false)
+    @Column(name = "created_at", updatable = false, columnDefinition = "TIMESTAMP")
+    @ColumnDefault("CURRENT_TIMESTAMP")
     private LocalDateTime createdAt;
 
-    // Tự động lấy giờ hiện tại khi lưu vào DB
-    @PrePersist
-    protected void onCreate() {
-        createdAt = LocalDateTime.now();
-    }
 }

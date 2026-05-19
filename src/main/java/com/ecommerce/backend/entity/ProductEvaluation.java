@@ -4,8 +4,7 @@ import com.ecommerce.backend.enums.ProductEvaluationType;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
-import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.UpdateTimestamp;
+import org.hibernate.annotations.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -30,6 +29,7 @@ public class ProductEvaluation {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "product_id", nullable = false)
+    @OnDelete(action = OnDeleteAction.CASCADE)
     private Product product;
 
     @Enumerated(EnumType.STRING)
@@ -43,20 +43,25 @@ public class ProductEvaluation {
     private String reason;
 
     @Column(name = "sold_score", precision = 5, scale = 4, nullable = false)
-    private BigDecimal soldScore;
+    @ColumnDefault("0.0000")
+    private BigDecimal soldScore = BigDecimal.ZERO;
 
     @Column(name = "rating_score", precision = 5, scale = 4, nullable = false)
-    private BigDecimal ratingScore;
+    @ColumnDefault("0.0000")
+    private BigDecimal ratingScore = BigDecimal.ZERO;
 
     @Column(name = "price_score", precision = 5, scale = 4, nullable = false)
-    private BigDecimal priceScore;
+    @ColumnDefault("0.0000")
+    private BigDecimal priceScore = BigDecimal.ZERO;
 
     @CreationTimestamp
-    @Column(name = "created_at", updatable = false, nullable = false)
+    @Column(name = "created_at", updatable = false, nullable = false, columnDefinition = "TIMESTAMP")
+    @ColumnDefault("CURRENT_TIMESTAMP")
     private LocalDateTime createdAt;
 
     @UpdateTimestamp
-    @Column(name = "updated_at")
+    @Column(name = "updated_at", columnDefinition = "TIMESTAMP")
+    @ColumnDefault("CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP")
     private LocalDateTime updatedAt;
 
 }

@@ -6,6 +6,7 @@ import com.ecommerce.backend.enums.UserStatus;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
+import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
@@ -45,10 +46,12 @@ public class User {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
+    @ColumnDefault("'CUSTOMER'")
     private Role role = Role.CUSTOMER;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
+    @ColumnDefault("'ACTIVE'")
     private UserStatus status = UserStatus.ACTIVE;
 
     @CreationTimestamp
@@ -60,6 +63,7 @@ public class User {
 
     @Enumerated(EnumType.STRING)
     @Column(length = 10)
+    @ColumnDefault("'LOCAL'")
     private Provider provider = Provider.LOCAL;
 
     @Column(name = "avatar")

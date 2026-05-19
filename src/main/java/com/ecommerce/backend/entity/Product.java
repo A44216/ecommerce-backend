@@ -4,8 +4,7 @@ import com.ecommerce.backend.enums.ProductStatus;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
-import org.hibernate.annotations.BatchSize;
-import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -46,6 +45,8 @@ import java.util.List;
                 @Index(name = "idx_products_status", columnList = "status")
         }
 )
+@Check(name = "chk_products_price", constraints = "price >= 0")
+@Check(name = "chk_products_stock", constraints = "stock >= 0")
 @Getter
 @Setter
 public class Product {
@@ -56,6 +57,7 @@ public class Product {
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "shop_id", nullable = false)
+    @OnDelete(action = OnDeleteAction.CASCADE)
     private Shop shop;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
@@ -69,6 +71,7 @@ public class Product {
     private BigDecimal price = BigDecimal.ZERO;
 
     @Column(nullable = false)
+    @ColumnDefault("0")
     private Integer stock = 0;
 
     @Column(columnDefinition = "TEXT")
@@ -76,23 +79,29 @@ public class Product {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
+    @ColumnDefault("'PENDING'")
     private ProductStatus status = ProductStatus.PENDING;
 
     @Column(name = "rating_avg", precision = 3, scale = 2, nullable = false)
+    @ColumnDefault("0.00")
     private BigDecimal ratingAvg = BigDecimal.ZERO;
 
-    @Column(name = "rating_count")
+    @Column(name = "rating_count", nullable = false)
+    @ColumnDefault("0")
     private Integer ratingCount = 0;
 
-    @Column(name = "sold_count")
+    @Column(name = "sold_count", nullable = false)
+    @ColumnDefault("0")
     private Integer soldCount = 0;
 
     @CreationTimestamp
-    @Column(name = "created_at", updatable = false, nullable = false)
+    @Column(name = "created_at", updatable = false, nullable = false, columnDefinition = "TIMESTAMP")
+    @ColumnDefault("CURRENT_TIMESTAMP")
     private LocalDateTime createdAt;
 
-    @Column(name = "is_deleted", nullable = false)
-    private boolean isDeleted = false;
+    @Column(name = "is_deleted", nullable = false, columnDefinition = "TINYINT(1)")
+    @ColumnDefault("0")
+    private Boolean isDeleted = false;
 
     @OneToMany(mappedBy = "product", fetch = FetchType.LAZY)
     @BatchSize(size = 20)

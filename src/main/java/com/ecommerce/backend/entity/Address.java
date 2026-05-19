@@ -3,6 +3,9 @@ package com.ecommerce.backend.entity;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
+import org.hibernate.annotations.ColumnDefault;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 
 @Entity
 @Table(
@@ -21,6 +24,7 @@ public class Address {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
+    @OnDelete(action = OnDeleteAction.CASCADE)
     private User user;
 
     @Column(name = "full_name", nullable = false, length = 100)
@@ -41,6 +45,7 @@ public class Address {
     @Column(nullable = false, length = 100)
     private String ward;
 
-    @Column(name = "is_default", nullable = false)
+    @Column(name = "is_default", nullable = false, columnDefinition = "TINYINT(1)")
+    @ColumnDefault("0")
     private Boolean isDefault = false;
 }

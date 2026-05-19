@@ -3,7 +3,10 @@ package com.ecommerce.backend.entity;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
+import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 
 import java.time.LocalDateTime;
 
@@ -26,25 +29,31 @@ public class Message {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "conversation_id", nullable = false)
+    @OnDelete(action = OnDeleteAction.CASCADE)
     private Conversation conversation;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "sender_id", nullable = false)
+    @OnDelete(action = OnDeleteAction.CASCADE)
     private User sender;
 
     @Column(nullable = false, columnDefinition = "TEXT")
     private String message;
 
     @CreationTimestamp
-    @Column(name = "created_at", updatable = false, nullable = false)
+    @Column(name = "created_at", updatable = false, nullable = false, columnDefinition = "TIMESTAMP")
+    @ColumnDefault("CURRENT_TIMESTAMP")
     private LocalDateTime createdAt;
 
-    @Column(name = "is_read", nullable = false)
+    @Column(name = "is_read", nullable = false, columnDefinition = "TINYINT(1)")
+    @ColumnDefault("0")
     private Boolean isRead = false;
 
-    @Column(name = "is_ai_generated", nullable = false)
+    @Column(name = "is_ai_generated", nullable = false, columnDefinition = "TINYINT(1)")
+    @ColumnDefault("0")
     private Boolean isAiGenerated = false;
 
-    @Column(name = "is_ai_chat", nullable = false)
+    @Column(name = "is_ai_chat", nullable = false, columnDefinition = "TINYINT(1)")
+    @ColumnDefault("0")
     private Boolean isAiChat = false;
 }
