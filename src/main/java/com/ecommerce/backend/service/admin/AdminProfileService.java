@@ -3,6 +3,7 @@ package com.ecommerce.backend.service.admin;
 import com.ecommerce.backend.dto.requests.admin.profile.AdminProfileInfoRequest;
 import com.ecommerce.backend.dto.responses.admin.profile.AdminProfileInfoResponse;
 import com.ecommerce.backend.entity.User;
+import com.ecommerce.backend.exception.BadRequestException;
 import com.ecommerce.backend.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
@@ -29,8 +30,19 @@ public class AdminProfileService {
         User user = getUserFromAuth(authentication);
 
         user.setFullName(request.getFullName());
+
+        // Xử lý Email: Ném BadRequestException nếu trống
+        if (request.getEmail() == null || request.getEmail().isBlank()) {
+            throw new BadRequestException("Email không được để trống.");
+        }
         user.setEmail(request.getEmail());
-        user.setPhone(request.getPhone());
+
+        // Xử lý chuỗi rỗng cho Phone
+        if (request.getPhone() != null && request.getPhone().isBlank()) {
+            user.setPhone(null);
+        } else {
+            user.setPhone(request.getPhone());
+        }
 
         if (request.getAvatar() != null) {
             user.setAvatar(request.getAvatar());
