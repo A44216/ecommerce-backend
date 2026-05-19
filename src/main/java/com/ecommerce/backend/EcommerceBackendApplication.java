@@ -1,8 +1,11 @@
 package com.ecommerce.backend;
 
+import com.ecommerce.backend.entity.Shop;
 import com.ecommerce.backend.entity.User;
 import com.ecommerce.backend.enums.Role;
+import com.ecommerce.backend.enums.ShopStatus;
 import com.ecommerce.backend.enums.UserStatus;
+import com.ecommerce.backend.repository.ShopRepository;
 import com.ecommerce.backend.repository.UserRepository;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
@@ -23,13 +26,14 @@ public class EcommerceBackendApplication {
 	}
 
     @Bean
-    CommandLineRunner init(UserRepository repo, PasswordEncoder encoder, org.springframework.jdbc.core.JdbcTemplate jdbcTemplate) {
+    CommandLineRunner init(UserRepository repo, ShopRepository shopRepo, PasswordEncoder encoder, org.springframework.jdbc.core.JdbcTemplate jdbcTemplate) {
         return args -> {
             try {
                 jdbcTemplate.execute("ALTER TABLE orders MODIFY COLUMN status VARCHAR(50);");
             } catch (Exception e) {
                 System.out.println("Could not alter table orders: " + e.getMessage());
             }
+            // ADMIN
             if (repo.findByUsername("admin12345").isEmpty()) {
                 User admin = new User();
                 admin.setFullName("Admin");
@@ -44,7 +48,7 @@ public class EcommerceBackendApplication {
                 System.out.println("Admin created");
             }
 
-            // ===== CUSTOMER =====
+            // CUSTOMER
             if (repo.findByEmail("user@gmail.com").isEmpty()) {
                 User user = new User();
                 user.setFullName("Nguyen Van C");
@@ -58,6 +62,7 @@ public class EcommerceBackendApplication {
                 System.out.println("Customer created");
             }
 
+            // SELLER
             if (repo.findByEmail("seller@gmail.com").isEmpty()) {
                 User user = new User();
                 user.setFullName("seller12345");
@@ -69,6 +74,16 @@ public class EcommerceBackendApplication {
 
                 repo.save(user);
                 System.out.println("Seller created");
+
+                Shop shop = new Shop();
+                shop.setUser(user);
+                shop.setShopName("Cửa hàng điện tử của " + user.getFullName());
+                shop.setStatus(ShopStatus.APPROVED);
+                shop.setDescription("Chuyên cung cấp linh kiện điện tử.");
+
+                // 3. Lưu shop
+                shopRepo.save(shop);
+                System.out.println("Default shop created for seller");
             }
 
         };

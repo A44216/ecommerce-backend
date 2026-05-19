@@ -56,7 +56,7 @@ public class NotificationService {
         notification.setBody(body);
         notification.setType(type);
         notification.setRelatedId(relatedId);
-        notification.setRead(false);
+        notification.setIsRead(false);
 
         notificationRepository.save(notification);
     }
@@ -66,7 +66,7 @@ public class NotificationService {
     public void markAsRead(Integer notificationId) {
         Notification notification = notificationRepository.findById(notificationId)
                 .orElseThrow(() -> new RuntimeException("Notification not found"));
-        notification.setRead(true);
+        notification.setIsRead(true);
         notificationRepository.save(notification);
     }
 
@@ -104,7 +104,7 @@ public class NotificationService {
             notification.setBody(body);
             notification.setType(type);
             notification.setRelatedId(null);
-            notification.setRead(false);
+            notification.setIsRead(false);
             notificationRepository.save(notification);
         }
     }
@@ -124,7 +124,7 @@ public class NotificationService {
         res.setBody(n.getBody());
         res.setType(n.getType());
         res.setRelatedId(n.getRelatedId());
-        res.setRead(n.isRead());
+        res.setRead(n.getIsRead());
         res.setCreatedAt(n.getCreatedAt());
         return res;
     }
