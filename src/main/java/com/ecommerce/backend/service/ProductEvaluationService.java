@@ -159,7 +159,6 @@ public class ProductEvaluationService {
                 .build();
     }
 
-    // Tối ưu: dùng sales count đã cache sẵn thay vì query lại từng sản phẩm
     @Transactional
     public ProductEvaluationResponse evaluateTrendingProductWithCache(Integer productId, int salesInMonth) {
         Product product = productRepository.findById(productId).orElseThrow(() -> new ResourceNotFoundException("Product not found"));
@@ -212,7 +211,7 @@ public class ProductEvaluationService {
     public void generateGlobalFuzzyEvaluations() {
         List<Product> allProducts = productRepository.findByStatusAndIsDeletedFalse(ProductStatus.APPROVED);
 
-        // Tối ưu 1: Load tất cả category context trong 1 query
+        // Load tất cả category context trong 1 query
         Map<Integer, CategoryContext> contextMap = new ConcurrentHashMap<>();
         List<Object[]> categoryContexts = productRepository.findAllCategoryContexts();
         for (Object[] row : categoryContexts) {
@@ -375,23 +374,23 @@ public class ProductEvaluationService {
         List<FuzzyRule> rules = new ArrayList<>();
 
         // Nhóm luật chuyên biệt (L1-L11)
-        rules.add(new FuzzyRule("L1", "Deal cực hời: Sản phẩm có giá cực tốt so với các mặt hàng cùng loại, bán rất chạy và được đánh giá rất cao!", 0.95, Math.min(Math.min(muGoodR, muHighS), muCheapP)));
-        rules.add(new FuzzyRule("L2", "Lựa chọn an toàn: Mức giá hợp lý đúng với mặt bằng chung, chất lượng đã được nhiều người dùng kiểm chứng.", 0.80, Math.min(Math.min(muGoodR, muMediumS), muFairP)));
-        rules.add(new FuzzyRule("L3", "Thuộc phân khúc cao cấp: Chất lượng vượt trội nhưng có mức giá khá cao, phù hợp với nhu cầu chuyên biệt.", 0.50, Math.min(Math.min(muGoodR, muLowS), muExpensiveP)));
-        rules.add(new FuzzyRule("L4", "Tuy có mức giá rẻ và lượt mua cao, nhưng sản phẩm nhận nhiều phản hồi tiêu cực. Hãy cân nhắc kỹ!", 0.30, Math.min(Math.min(muPoorR, muHighS), muCheapP)));
-        rules.add(new FuzzyRule("L5", "Sản phẩm không được khuyến nghị: Mức giá cao nhưng chất lượng đánh giá rất thấp.", 0.15, Math.min(Math.min(muPoorR, muLowS), muExpensiveP)));
-        rules.add(new FuzzyRule("L6", "Sản phẩm cao cấp được tin dùng: Dù mức giá cao nhưng chất lượng tuyệt vời và lượt bán khủng đã khẳng định giá trị sản phẩm.", 0.80, Math.min(Math.min(muGoodR, muHighS), muExpensiveP)));
-        rules.add(new FuzzyRule("L7", "Lựa chọn phân khúc cao cấp: Sản phẩm có chất lượng tốt, phù hợp cho người dùng ưu tiên trải nghiệm hàng đầu.", 0.68, Math.min(Math.min(muGoodR, muMediumS), muExpensiveP)));
-        rules.add(new FuzzyRule("L8", "Món hời mới: Sản phẩm có giá rất tốt và đánh giá cao, dù chưa có nhiều lượt bán nhưng rất đáng để trải nghiệm.", 0.68, Math.min(Math.min(muGoodR, muLowS), muCheapP)));
-        rules.add(new FuzzyRule("L9", "Sản phẩm quốc dân: Mức giá hợp lý, lượt bán ổn định và nhận được sự tin tưởng từ đông đảo cộng đồng.", 0.80, Math.min(Math.min(muAvgR, muHighS), muFairP)));
-        rules.add(new FuzzyRule("L10", "Lựa chọn tiết kiệm: Giá thành rẻ, chất lượng ở mức ổn định, phù hợp với các nhu cầu mua sắm cơ bản.", 0.50, Math.min(Math.min(muAvgR, muMediumS), muCheapP)));
-        rules.add(new FuzzyRule("L11", "Sản phẩm đắt khách: Giá siêu rẻ, bán rất chạy nhưng chất lượng chỉ ở mức trung bình. Phù hợp dùng tạm.", 0.68, Math.min(Math.min(muAvgR, muHighS), muCheapP)));
+        rules.add(new FuzzyRule("L1", "Deal cực hời: Sản phẩm có giá cực tốt, bán rất chạy và đánh giá rất cao!", 0.95, Math.min(Math.min(muGoodR, muHighS), muCheapP)));
+        rules.add(new FuzzyRule("L2", "Lựa chọn an toàn: Giá hợp lý đúng mặt bằng chung, chất lượng đã được kiểm chứng.", 0.85, Math.min(Math.min(muGoodR, muMediumS), muFairP)));
+        rules.add(new FuzzyRule("L3", "Thuộc phân khúc cao cấp: Chất lượng vượt trội nhưng giá khá cao, kén người mua.", 0.50, Math.min(Math.min(muGoodR, muLowS), muExpensiveP)));
+        rules.add(new FuzzyRule("L4", "Tuy có mức giá rẻ và lượt mua cao, nhưng nhận nhiều phản hồi tiêu cực. Hãy cân nhắc!", 0.30, Math.min(Math.min(muPoorR, muHighS), muCheapP)));
+        rules.add(new FuzzyRule("L5", "Không được khuyến nghị: Mức giá cao nhưng chất lượng đánh giá rất thấp.", 0.15, Math.min(Math.min(muPoorR, muLowS), muExpensiveP)));
+        rules.add(new FuzzyRule("L6", "Sản phẩm cao cấp được tin dùng: Dù giá cao nhưng chất lượng tuyệt vời, bán rất chạy.", 0.85, Math.min(Math.min(muGoodR, muHighS), muExpensiveP)));
+        rules.add(new FuzzyRule("L7", "Lựa chọn phân khúc cao cấp: Chất lượng tốt, dành cho người ưu tiên trải nghiệm.", 0.70, Math.min(Math.min(muGoodR, muMediumS), muExpensiveP)));
+        rules.add(new FuzzyRule("L8", "Món hời mới: Giá rất tốt và đánh giá cao, chưa có nhiều lượt bán nhưng đáng thử.", 0.70, Math.min(Math.min(muGoodR, muLowS), muCheapP)));
+        rules.add(new FuzzyRule("L9", "Sản phẩm quốc dân: Giá hợp lý, lượt bán ổn định và được cộng đồng tin tưởng.", 0.70, Math.min(Math.min(muAvgR, muHighS), muFairP)));
+        rules.add(new FuzzyRule("L10", "Lựa chọn tiết kiệm: Giá thành rẻ, chất lượng ổn định, hợp nhu cầu cơ bản.", 0.50, Math.min(Math.min(muAvgR, muMediumS), muCheapP)));
+        rules.add(new FuzzyRule("L11", "Sản phẩm đắt khách: Giá siêu rẻ, bán chạy nhưng chất lượng chỉ ở mức trung bình.", 0.50, Math.min(Math.min(muAvgR, muHighS), muCheapP)));
 
         // Nhóm luật bao quát (L12-L14)
         double muAny = 1.0;
-        rules.add(new FuzzyRule("L12", "Sản phẩm nhận nhiều phản hồi chưa tốt từ người dùng, bạn nên cân nhắc kỹ trước khi quyết định mua hàng.", 0.30, Math.min(muPoorR, muAny)));
-        rules.add(new FuzzyRule("L13", "Sản phẩm có chất lượng ở mức cơ bản, đáp ứng được các nhu cầu mua sắm và sử dụng phổ thông.", 0.50, Math.min(muAvgR, muAny)));
-        rules.add(new FuzzyRule("L14", "Sản phẩm có chất lượng tốt, nhận được nhiều phản hồi tích cực và sự tin tưởng từ cộng đồng người dùng.", 0.68, Math.min(muGoodR, muAny)));
+        rules.add(new FuzzyRule("L12", "Sản phẩm nhận nhiều phản hồi chưa tốt, bạn nên cân nhắc kỹ trước khi quyết định mua.", 0.30, Math.min(muPoorR, muAny)));
+        rules.add(new FuzzyRule("L13", "Chất lượng ở mức cơ bản, đáp ứng được các nhu cầu mua sắm phổ thông.", 0.50, Math.min(muAvgR, muAny)));
+        rules.add(new FuzzyRule("L14", "Chất lượng tốt, nhận được nhiều phản hồi tích cực và sự tin tưởng từ người dùng.", 0.70, Math.min(muGoodR, muAny)));
 
         // Chọn Luật chi phối2
         FuzzyRule dominantRule = rules.getFirst();
@@ -480,20 +479,20 @@ public class ProductEvaluationService {
         // BƯỚC 3 & 4: SUY LUẬN LUẬT MAMDANI VÀ TRÍCH XUẤT XAI
         List<FuzzyRule> rules = new ArrayList<>();
 
-        rules.add(new FuzzyRule("L1", "Deal cực hời: Sản phẩm có giá cực tốt so với các mặt hàng cùng loại, bán rất chạy và được đánh giá rất cao!", 0.95, Math.min(Math.min(muGoodR, muHighS), muCheapP)));
-        rules.add(new FuzzyRule("L2", "Lựa chọn an toàn: Mức giá hợp lý đúng với mặt bằng chung, chất lượng đã được nhiều người dùng kiểm chứng.", 0.80, Math.min(Math.min(muGoodR, muMediumS), muFairP)));
-        rules.add(new FuzzyRule("L3", "Thuộc phân khúc cao cấp: Chất lượng vượt trội nhưng có mức giá khá cao, phù hợp với nhu cầu chuyên biệt.", 0.50, Math.min(Math.min(muGoodR, muLowS), muExpensiveP)));
-        rules.add(new FuzzyRule("L4", "Tuy có mức giá rẻ và lượt mua cao, nhưng sản phẩm nhận nhiều phản hồi tiêu cực. Hãy cân nhắc kỹ!", 0.30, Math.min(Math.min(muPoorR, muHighS), muCheapP)));
-        rules.add(new FuzzyRule("L5", "Sản phẩm không được khuyến nghị: Mức giá cao nhưng chất lượng đánh giá rất thấp.", 0.15, Math.min(Math.min(muPoorR, muLowS), muExpensiveP)));
-        rules.add(new FuzzyRule("L6", "Sản phẩm cao cấp được tin dùng: Dù mức giá cao nhưng chất lượng tuyệt vời và lượt bán khủng đã khẳng định giá trị sản phẩm.", 0.80, Math.min(Math.min(muGoodR, muHighS), muExpensiveP)));
-        rules.add(new FuzzyRule("L7", "Lựa chọn phân khúc cao cấp: Sản phẩm có chất lượng tốt, phù hợp cho người dùng ưu tiên trải nghiệm hàng đầu.", 0.68, Math.min(Math.min(muGoodR, muMediumS), muExpensiveP)));
-        rules.add(new FuzzyRule("L8", "Món hời mới: Sản phẩm có giá rất tốt và đánh giá cao, dù chưa có nhiều lượt bán nhưng rất đáng để trải nghiệm.", 0.68, Math.min(Math.min(muGoodR, muLowS), muCheapP)));
-        rules.add(new FuzzyRule("L9", "Sản phẩm quốc dân: Mức giá hợp lý, lượt bán ổn định và nhận được sự tin tưởng từ đông đảo cộng đồng.", 0.80, Math.min(Math.min(muAvgR, muHighS), muFairP)));
-        rules.add(new FuzzyRule("L10", "Lựa chọn tiết kiệm: Giá thành rẻ, chất lượng ở mức ổn định, phù hợp với các nhu cầu mua sắm cơ bản.", 0.50, Math.min(Math.min(muAvgR, muMediumS), muCheapP)));
-        rules.add(new FuzzyRule("L11", "Sản phẩm đắt khách: Giá siêu rẻ, bán rất chạy nhưng chất lượng chỉ ở mức trung bình. Phù hợp dùng tạm.", 0.68, Math.min(Math.min(muAvgR, muHighS), muCheapP)));
-        rules.add(new FuzzyRule("L12", "Sản phẩm nhận nhiều phản hồi chưa tốt từ người dùng, bạn nên cân nhắc kỹ trước khi quyết định mua hàng.", 0.30, Math.min(muPoorR, 1.0)));
-        rules.add(new FuzzyRule("L13", "Sản phẩm có chất lượng ở mức cơ bản, đáp ứng được các nhu cầu mua sắm và sử dụng phổ thông.", 0.50, Math.min(muAvgR, 1.0)));
-        rules.add(new FuzzyRule("L14", "Sản phẩm có chất lượng tốt, nhận được nhiều phản hồi tích cực và sự tin tưởng từ cộng đồng người dùng.", 0.68, Math.min(muGoodR, 1.0)));
+        rules.add(new FuzzyRule("L1", "Deal cực hời: Sản phẩm có giá cực tốt, bán rất chạy và đánh giá rất cao!", 0.95, Math.min(Math.min(muGoodR, muHighS), muCheapP)));
+        rules.add(new FuzzyRule("L2", "Lựa chọn an toàn: Giá hợp lý đúng mặt bằng chung, chất lượng đã được kiểm chứng.", 0.85, Math.min(Math.min(muGoodR, muMediumS), muFairP)));
+        rules.add(new FuzzyRule("L3", "Thuộc phân khúc cao cấp: Chất lượng vượt trội nhưng giá khá cao, kén người mua.", 0.50, Math.min(Math.min(muGoodR, muLowS), muExpensiveP)));
+        rules.add(new FuzzyRule("L4", "Tuy có mức giá rẻ và lượt mua cao, nhưng nhận nhiều phản hồi tiêu cực. Hãy cân nhắc!", 0.30, Math.min(Math.min(muPoorR, muHighS), muCheapP)));
+        rules.add(new FuzzyRule("L5", "Không được khuyến nghị: Mức giá cao nhưng chất lượng đánh giá rất thấp.", 0.15, Math.min(Math.min(muPoorR, muLowS), muExpensiveP)));
+        rules.add(new FuzzyRule("L6", "Sản phẩm cao cấp được tin dùng: Dù giá cao nhưng chất lượng tuyệt vời, bán rất chạy.", 0.85, Math.min(Math.min(muGoodR, muHighS), muExpensiveP)));
+        rules.add(new FuzzyRule("L7", "Lựa chọn phân khúc cao cấp: Chất lượng tốt, dành cho người ưu tiên trải nghiệm.", 0.70, Math.min(Math.min(muGoodR, muMediumS), muExpensiveP)));
+        rules.add(new FuzzyRule("L8", "Món hời mới: Giá rất tốt và đánh giá cao, chưa có nhiều lượt bán nhưng đáng thử.", 0.70, Math.min(Math.min(muGoodR, muLowS), muCheapP)));
+        rules.add(new FuzzyRule("L9", "Sản phẩm quốc dân: Giá hợp lý, lượt bán ổn định và được cộng đồng tin tưởng.", 0.70, Math.min(Math.min(muAvgR, muHighS), muFairP)));
+        rules.add(new FuzzyRule("L10", "Lựa chọn tiết kiệm: Giá thành rẻ, chất lượng ổn định, hợp nhu cầu cơ bản.", 0.50, Math.min(Math.min(muAvgR, muMediumS), muCheapP)));
+        rules.add(new FuzzyRule("L11", "Sản phẩm đắt khách: Giá siêu rẻ, bán chạy nhưng chất lượng chỉ ở mức trung bình.", 0.50, Math.min(Math.min(muAvgR, muHighS), muCheapP)));
+        rules.add(new FuzzyRule("L12", "Sản phẩm nhận nhiều phản hồi chưa tốt, bạn nên cân nhắc kỹ trước khi quyết định mua.", 0.30, Math.min(muPoorR, 1.0)));
+        rules.add(new FuzzyRule("L13", "Chất lượng ở mức cơ bản, đáp ứng được các nhu cầu mua sắm phổ thông.", 0.50, Math.min(muAvgR, 1.0)));
+        rules.add(new FuzzyRule("L14", "Chất lượng tốt, nhận được nhiều phản hồi tích cực và sự tin tưởng từ người dùng.", 0.70, Math.min(muGoodR, 1.0)));
 
         FuzzyRule dominantRule = rules.getFirst();
         for (FuzzyRule rule : rules) {
@@ -510,7 +509,6 @@ public class ProductEvaluationService {
         double finalScore = denominator > 0 ? numerator / denominator : 0.5;
         String xaiReason = denominator > 0 ? dominantRule.reason : "Hệ thống đang phân tích thêm dữ liệu để đánh giá.";
 
-        // Dùng map thay vì query
         ProductEvaluation evaluation = evalMap.getOrDefault(product.getId(), new ProductEvaluation());
         evaluation.setProduct(product);
         evaluation.setRatingScore(BigDecimal.valueOf(rScore));
@@ -523,7 +521,6 @@ public class ProductEvaluationService {
         return evaluationRepository.save(evaluation);
     }
 
-    // Tối ưu: evaluate Trending dùng map thay vì query từng sản phẩm
     private ProductEvaluation evaluateTrendingWithMap(Product product, int salesInMonth, double pScore,
                                                       Map<Integer, ProductEvaluation> evalMap) {
         double salesFactor = Math.min((double) salesInMonth / 100.0, 1.0);
@@ -558,7 +555,6 @@ public class ProductEvaluationService {
                             "Tiềm năng: Đang có lượt bán và phản hồi tốt.";
         }
 
-        // Dùng map thay vì query
         ProductEvaluation evaluation = evalMap.getOrDefault(product.getId(), new ProductEvaluation());
         evaluation.setProduct(product);
         evaluation.setScore(BigDecimal.valueOf(trendingScore));
