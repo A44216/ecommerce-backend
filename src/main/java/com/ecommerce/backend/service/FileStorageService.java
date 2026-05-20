@@ -1,41 +1,32 @@
 package com.ecommerce.backend.service;
 
+import com.cloudinary.Cloudinary;
+import com.cloudinary.utils.ObjectUtils;
 import org.springframework.stereotype.Service;
-import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
-import java.util.Objects;
-import java.util.UUID;
+import java.util.Map;
 
 @Service
 public class FileStorageService {
 
-    // Thư mục lưu ảnh. Spring Boot sẽ tự tạo thư mục "uploads/images" trong project của bạn
-    private final Path fileStorageLocation = Paths.get("uploads").toAbsolutePath().normalize();
+    private final Cloudinary cloudinary;
 
-    public FileStorageService() {
-        try {
-            Files.createDirectories(this.fileStorageLocation);
-        } catch (Exception ex) {
-            throw new RuntimeException("Không thể tạo thư mục lưu ảnh.", ex);
-        }
+    // Tiêm Cloudinary bean đã tạo ở config vào đây
+    public FileStorageService(Cloudinary cloudinary) {
+        this.cloudinary = cloudinary;
     }
 
     public String storeFile(MultipartFile file) {
-        // Gắn thêm chuỗi ngẫu nhiên UUID để tên file không bao giờ bị trùng
-        String fileName = UUID.randomUUID().toString() + "_" + StringUtils.cleanPath(Objects.requireNonNull(file.getOriginalFilename()));
-
         try {
-            Path targetLocation = this.fileStorageLocation.resolve(fileName);
-            Files.copy(file.getInputStream(), targetLocation, StandardCopyOption.REPLACE_EXISTING);
-            return fileName; // Trả về tên file đã lưu
+            // Đẩy trực tiếp byte của ảnh lên Cloudinary
+            Map uploadResult = cloudinary.uploader().upload(file.getBytes(), ObjectUtils.emptyMap());
+
+            // Lấy đường link HTTPS trực tiếp mà Cloudinary trả về
+            return uploadResult.get("secure_url").toString();
         } catch (IOException ex) {
-            throw new RuntimeException("Không thể lưu file " + fileName, ex);
+            throw new RuntimeException("Không thể upload ảnh lên Cloudinary", ex);
         }
     }
 }
