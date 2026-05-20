@@ -16,7 +16,6 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import com.ecommerce.backend.service.FileStorageService;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.util.Collections;
 
@@ -73,17 +72,12 @@ public class UserController {
 
     @PostMapping("/{id}/avatar")
     public UserResponse uploadAvatar(@PathVariable Integer id, @RequestParam("file") MultipartFile file) {
-        // 1. Lưu file vật lý vào máy
-        String fileName = fileStorageService.storeFile(file);
 
-        // 2. Tạo link URL để truy cập ảnh (Ví dụ: http://10.0.2.2:8080/api/images/abc.jpg)
-        String fileDownloadUri = ServletUriComponentsBuilder.fromCurrentContextPath()
-                .path("/api/images/")
-                .path(fileName)
-                .toUriString();
+        // 1. Upload lên Cloudinary và lấy về ĐƯỜNG LINK HOÀN CHỈNH (https://res.cloudinary.com/...)
+        String cloudinaryUrl = fileStorageService.storeFile(file);
 
-        // 3. Lưu link URL đó vào bảng Users trong Database
-        return userService.updateUserAvatar(id, fileDownloadUri);
+        // 2. Lưu thẳng đường link xịn này vào bảng Users trong Database luôn, KHÔNG cần nối chuỗi nữa!
+        return userService.updateUserAvatar(id, cloudinaryUrl);
     }
 
     @PutMapping("/{id}/profile")
