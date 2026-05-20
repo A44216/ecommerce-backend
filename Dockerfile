@@ -1,12 +1,12 @@
-# Bước 1: Sử dụng môi trường Maven để build code thành file .jar
-FROM maven:3.8.5-openjdk-17 AS build
+# Bước 1: Sử dụng môi trường Maven (kèm Eclipse Temurin) để build code
+FROM maven:3.9.4-eclipse-temurin-17 AS build
 WORKDIR /app
 COPY pom.xml .
 COPY src ./src
 RUN mvn clean package -DskipTests
 
-# Bước 2: Chạy file .jar vừa build được
-FROM openjdk:17-jdk-slim
+# Bước 2: Sử dụng image JRE siêu nhẹ của Eclipse Temurin để chạy ứng dụng
+FROM eclipse-temurin:17-jre-alpine
 WORKDIR /app
 COPY --from=build /app/target/*.jar app.jar
 EXPOSE 8080
