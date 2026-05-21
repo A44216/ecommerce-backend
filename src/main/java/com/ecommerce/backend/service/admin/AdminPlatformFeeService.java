@@ -19,18 +19,6 @@ public class AdminPlatformFeeService {
         this.platformFeeRepository = platformFeeRepository;
     }
 
-    public AdminPlatformFeeResponse getCurrentFee() {
-        PlatformFee currentFee = platformFeeRepository.findByIsActiveTrue()
-                .orElseGet(() -> {
-                    PlatformFee defaultFee = new PlatformFee();
-                    defaultFee.setRate(BigDecimal.ZERO);
-                    defaultFee.setIsActive(true);
-                    return platformFeeRepository.save(defaultFee);
-                });
-
-        return mapToResponse(currentFee);
-    }
-
     @Transactional
     public AdminPlatformFeeResponse updateCurrentFee(AdminPlatformFeeRequest request) {
         PlatformFee currentFee = platformFeeRepository.findByIsActiveTrue()

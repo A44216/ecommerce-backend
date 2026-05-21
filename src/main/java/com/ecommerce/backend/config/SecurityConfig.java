@@ -51,6 +51,7 @@ public class SecurityConfig {
                         // Các endpoint cần đăng nhập
                         .requestMatchers("/api/notifications/**").authenticated()
                         .requestMatchers("/api/conversations/**", "/api/messages/**").authenticated()
+                        .requestMatchers("/api/platform-fees/**").authenticated()
 
                         // Tất cả các yêu cầu còn lại đều cần xác thực
                         .anyRequest().authenticated()

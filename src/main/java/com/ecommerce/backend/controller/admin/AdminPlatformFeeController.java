@@ -19,11 +19,6 @@ public class AdminPlatformFeeController {
         this.adminPlatformFeeService = adminPlatformFeeService;
     }
 
-    @GetMapping("/current")
-    public ResponseEntity<AdminPlatformFeeResponse> getCurrentFee() {
-        return ResponseEntity.ok(adminPlatformFeeService.getCurrentFee());
-    }
-
     @PostMapping
     public ResponseEntity<AdminPlatformFeeResponse> updateCurrentFee(
             @Valid @RequestBody AdminPlatformFeeRequest request) {
