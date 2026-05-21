@@ -5,6 +5,8 @@ import com.ecommerce.backend.dto.responses.ReviewResponse;
 import com.ecommerce.backend.entity.Product;
 import com.ecommerce.backend.entity.Review;
 import com.ecommerce.backend.entity.User;
+import com.ecommerce.backend.entity.OrderItem;
+import com.ecommerce.backend.repository.OrderItemRepository;
 import com.ecommerce.backend.repository.ProductRepository;
 import com.ecommerce.backend.repository.ReviewRepository;
 import com.ecommerce.backend.repository.UserRepository;
@@ -20,13 +22,16 @@ public class ReviewService {
     private final ReviewRepository reviewRepository;
     private final UserRepository userRepository;
     private final ProductRepository productRepository;
+    private final OrderItemRepository orderItemRepository;
 
     public ReviewService(ReviewRepository reviewRepository,
                          UserRepository userRepository,
-                         ProductRepository productRepository) {
+                         ProductRepository productRepository,
+                         OrderItemRepository orderItemRepository) {
         this.reviewRepository = reviewRepository;
         this.userRepository = userRepository;
         this.productRepository = productRepository;
+        this.orderItemRepository = orderItemRepository;
     }
 
     // ENTITY -> RESPONSE DTO
@@ -42,9 +47,10 @@ public class ReviewService {
     }
 
     // REQUEST DTO -> ENTITY
-    private void mapRequestToReview(Review review, ReviewRequest request, User user, Product product) {
+    private void mapRequestToReview(Review review, ReviewRequest request, User user, Product product, OrderItem orderItem) {
         review.setUser(user);
         review.setProduct(product);
+        review.setOrderItem(orderItem);
         review.setRating(request.getRating());
         review.setComment(request.getComment());
     }
@@ -79,9 +85,12 @@ public class ReviewService {
         Product product = productRepository.findById(request.getProductId())
                 .orElseThrow(() -> new RuntimeException("Product not found"));
 
+        OrderItem orderItem = orderItemRepository.findById(request.getOrderItemId())
+                .orElseThrow(() -> new RuntimeException("Order item not found"));
+
         Review review = new Review();
 
-        mapRequestToReview(review, request, user, product);
+        mapRequestToReview(review, request, user, product, orderItem);
 
         Review saved = reviewRepository.save(review);
 
