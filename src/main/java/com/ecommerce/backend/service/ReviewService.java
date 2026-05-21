@@ -6,12 +6,16 @@ import com.ecommerce.backend.entity.Product;
 import com.ecommerce.backend.entity.Review;
 import com.ecommerce.backend.entity.User;
 import com.ecommerce.backend.entity.OrderItem;
+import com.ecommerce.backend.entity.Shop;
 import com.ecommerce.backend.repository.OrderItemRepository;
 import com.ecommerce.backend.repository.ProductRepository;
 import com.ecommerce.backend.repository.ReviewRepository;
+import com.ecommerce.backend.repository.ShopRepository;
 import com.ecommerce.backend.repository.UserRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.math.BigDecimal;
 
 import java.util.List;
 
@@ -23,15 +27,18 @@ public class ReviewService {
     private final UserRepository userRepository;
     private final ProductRepository productRepository;
     private final OrderItemRepository orderItemRepository;
+    private final ShopRepository shopRepository;
 
     public ReviewService(ReviewRepository reviewRepository,
                          UserRepository userRepository,
                          ProductRepository productRepository,
-                         OrderItemRepository orderItemRepository) {
+                         OrderItemRepository orderItemRepository,
+                         ShopRepository shopRepository) {
         this.reviewRepository = reviewRepository;
         this.userRepository = userRepository;
         this.productRepository = productRepository;
         this.orderItemRepository = orderItemRepository;
+        this.shopRepository = shopRepository;
     }
 
     // ENTITY -> RESPONSE DTO
@@ -93,6 +100,25 @@ public class ReviewService {
         mapRequestToReview(review, request, user, product, orderItem);
 
         Review saved = reviewRepository.save(review);
+
+        // Update Product stats
+        int newProductRatingCount = product.getRatingCount() + 1;
+        BigDecimal oldTotalProductRating = product.getRatingAvg().multiply(new BigDecimal(product.getRatingCount()));
+        BigDecimal newAvgProductRating = oldTotalProductRating.add(new BigDecimal(request.getRating()))
+                .divide(new BigDecimal(newProductRatingCount), 2, java.math.RoundingMode.HALF_UP);
+        
+        product.setRatingCount(newProductRatingCount);
+        product.setRatingAvg(newAvgProductRating);
+        productRepository.saveAndFlush(product);
+
+        // Update Shop stats
+        Shop shop = product.getShop();
+        BigDecimal shopAvg = productRepository.getAverageRatingByShopId(shop.getId());
+        Integer shopRatingCount = productRepository.getTotalRatingCountByShopId(shop.getId());
+        
+        shop.setRatingAvg(shopAvg != null ? shopAvg : BigDecimal.ZERO);
+        shop.setRatingCount(shopRatingCount != null ? shopRatingCount : 0);
+        shopRepository.save(shop);
 
         return mapToDTO(saved);
     }

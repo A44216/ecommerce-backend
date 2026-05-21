@@ -224,13 +224,19 @@ public interface ProductRepository extends JpaRepository<Product, Integer> {
     );
 
     @Query("""
-        SELECT COALESCE(SUM(oi.quantity), 0)\s
-        FROM OrderItem oi\s
-        JOIN oi.order o\s
-        WHERE oi.product.id = :productId\s
-        AND o.status = 'COMPLETED'\s
+        SELECT COALESCE(SUM(oi.quantity), 0) 
+        FROM OrderItem oi 
+        JOIN oi.order o 
+        WHERE oi.product.id = :productId 
+        AND o.status = 'COMPLETED' 
         AND o.createdAt >= :startDate
-   \s""")
+    """)
     Integer countRecentSales(@Param("productId") Integer productId, @Param("startDate") LocalDateTime startDate);
+
+    @Query("SELECT AVG(p.ratingAvg) FROM Product p WHERE p.shop.id = :shopId AND p.ratingCount > 0 AND p.isDeleted = false")
+    BigDecimal getAverageRatingByShopId(@Param("shopId") Integer shopId);
+
+    @Query("SELECT SUM(p.ratingCount) FROM Product p WHERE p.shop.id = :shopId AND p.isDeleted = false")
+    Integer getTotalRatingCountByShopId(@Param("shopId") Integer shopId);
 
 }
