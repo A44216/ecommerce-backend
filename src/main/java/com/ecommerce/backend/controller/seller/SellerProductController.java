@@ -3,9 +3,11 @@ package com.ecommerce.backend.controller.seller;
 import com.ecommerce.backend.dto.requests.seller.product.SellerProductRequest;
 import com.ecommerce.backend.dto.responses.ProductAutocompleteResponse;
 import com.ecommerce.backend.dto.responses.seller.PageResponse;
+import com.ecommerce.backend.dto.responses.seller.product.SellerAssistantResponse;
 import com.ecommerce.backend.dto.responses.seller.product.SellerProductResponse;
 import com.ecommerce.backend.enums.ProductStatus;
 import com.ecommerce.backend.service.seller.SellerProductService;
+import com.ecommerce.backend.service.ProductEvaluationService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -20,10 +22,13 @@ import java.util.List;
 public class SellerProductController {
 
     private final SellerProductService productService;
+    private final ProductEvaluationService productEvaluationService;
 
     // Constructor Injection
-    public SellerProductController(SellerProductService productService) {
+    public SellerProductController(SellerProductService productService,
+            ProductEvaluationService productEvaluationService) {
         this.productService = productService;
+        this.productEvaluationService = productEvaluationService;
     }
 
     @GetMapping
@@ -32,11 +37,9 @@ public class SellerProductController {
             @RequestParam(required = false) Boolean isDeleted,
             @RequestParam(required = false) String keyword,
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size
-    ) {
+            @RequestParam(defaultValue = "10") int size) {
         return ResponseEntity.ok(
-                productService.filterProducts(status, isDeleted, keyword, page, size)
-        );
+                productService.filterProducts(status, isDeleted, keyword, page, size));
     }
 
     // lấy thông tin chi tiết một sản phẩm theo ID
@@ -79,11 +82,9 @@ public class SellerProductController {
     public ResponseEntity<PageResponse<SellerProductResponse>> getProductsByCategory(
             @PathVariable Integer categoryId,
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size
-    ) {
+            @RequestParam(defaultValue = "10") int size) {
         return ResponseEntity.ok(
-                productService.getProductsByCategory(categoryId, page, size)
-        );
+                productService.getProductsByCategory(categoryId, page, size));
     }
 
     @PutMapping("/restore/{id}")
@@ -100,9 +101,13 @@ public class SellerProductController {
 
     @GetMapping("/autocomplete")
     public ResponseEntity<List<ProductAutocompleteResponse>> autocomplete(
-            @RequestParam(required = false) String keyword
-    ) {
+            @RequestParam(required = false) String keyword) {
         return ResponseEntity.ok(productService.autocompleteProducts(keyword));
+    }
+
+    @GetMapping("/{id}/analysis")
+    public ResponseEntity<SellerAssistantResponse> getProductAnalysis(@PathVariable Integer id) {
+        return ResponseEntity.ok(productEvaluationService.evaluateProductForSeller(id));
     }
 
 }

@@ -1,6 +1,7 @@
 package com.ecommerce.backend.service;
 
 import com.ecommerce.backend.dto.requests.ProductEvaluationRequest;
+import com.ecommerce.backend.dto.responses.seller.product.SellerAssistantResponse;
 import com.ecommerce.backend.dto.responses.ProductBaseResponse;
 import com.ecommerce.backend.dto.responses.ProductEvaluationResponse;
 import com.ecommerce.backend.entity.Product;
@@ -117,21 +118,6 @@ public class ProductEvaluationService {
         if (x <= a) return 0.0;
         if (x >= b) return 1.0;
         return (x - a) / (b - a);
-    }
-
-    // Class nội bộ hỗ trợ tính toán luật XAI
-    private static class FuzzyRule {
-        String code;
-        String reason;
-        double centroidValue; // Điểm trọng tâm của tập mờ đầu ra (ci)
-        double firingStrength; // Mức độ kích hoạt của luật (α)
-
-        public FuzzyRule(String code, String reason, double centroidValue, double firingStrength) {
-            this.code = code;
-            this.reason = reason;
-            this.centroidValue = centroidValue;
-            this.firingStrength = firingStrength;
-        }
     }
 
     // Mapper DTO
@@ -301,9 +287,9 @@ public class ProductEvaluationService {
                 }
 
                 double pScore = 0.5;
-                if (ctx.pMax != null && ctx.pMin != null && ctx.pMax.compareTo(ctx.pMin) > 0 && p.getPrice() != null) {
-                    pScore = p.getPrice().subtract(ctx.pMin)
-                            .divide(ctx.pMax.subtract(ctx.pMin), 4, RoundingMode.HALF_UP).doubleValue();
+                if (ctx.getPMax() != null && ctx.getPMin() != null && ctx.getPMax().compareTo(ctx.getPMin()) > 0 && p.getPrice() != null) {
+                    pScore = p.getPrice().subtract(ctx.getPMin())
+                            .divide(ctx.getPMax().subtract(ctx.getPMin()), 4, RoundingMode.HALF_UP).doubleValue();
                 }
 
                 int recentSales = salesMap.getOrDefault(p.getId(), 0);
@@ -320,9 +306,9 @@ public class ProductEvaluationService {
 
     private ProductEvaluation evaluateProductWithContext(Product product, CategoryContext ctx, int totalSales) {
         double pScore = 0.5;
-        if (ctx.pMax != null && ctx.pMin != null && ctx.pMax.compareTo(ctx.pMin) > 0 && product.getPrice() != null) {
-            pScore = product.getPrice().subtract(ctx.pMin)
-                    .divide(ctx.pMax.subtract(ctx.pMin), 4, RoundingMode.HALF_UP).doubleValue();
+        if (ctx.getPMax() != null && ctx.getPMin() != null && ctx.getPMax().compareTo(ctx.getPMin()) > 0 && product.getPrice() != null) {
+            pScore = product.getPrice().subtract(ctx.getPMin())
+                    .divide(ctx.getPMax().subtract(ctx.getPMin()), 4, RoundingMode.HALF_UP).doubleValue();
         }
 
         int ratingCount = product.getRatingCount() != null ? product.getRatingCount() : 0;
@@ -355,7 +341,7 @@ public class ProductEvaluationService {
         if (ratingCount > 0) {
             rScore = product.getRatingAvg() != null ? product.getRatingAvg().doubleValue() / 5.0 : 0.5;
         }
-        double sScore = ctx.sMax > 0 ? (double) totalSales / ctx.sMax : 0;
+        double sScore = ctx.getSMax() > 0 ? (double) totalSales / ctx.getSMax() : 0;
 
         // BƯỚC 2: MỜ HÓA (FUZZIFICATION)
         double muPoorR = fuzzyLeftShoulder(rScore, 0.0, 0.4);
@@ -395,19 +381,19 @@ public class ProductEvaluationService {
         // Chọn Luật chi phối2
         FuzzyRule dominantRule = rules.getFirst();
         for (FuzzyRule rule : rules) {
-            if (rule.firingStrength > dominantRule.firingStrength) dominantRule = rule;
+            if (rule.getFiringStrength() > dominantRule.getFiringStrength()) dominantRule = rule;
         }
 
         // BƯỚC 5: GIẢI MỜ (DEFUZZIFICATION)
         double numerator = 0;
         double denominator = 0;
         for (FuzzyRule rule : rules) {
-            numerator += rule.firingStrength * rule.centroidValue;
-            denominator += rule.firingStrength;
+            numerator += rule.getFiringStrength() * rule.getCentroidValue();
+            denominator += rule.getFiringStrength();
         }
 
         double finalScore = denominator > 0 ? numerator / denominator : 0.5;
-        String xaiReason = denominator > 0 ? dominantRule.reason : "Hệ thống đang phân tích thêm dữ liệu để đánh giá.";
+        String xaiReason = denominator > 0 ? dominantRule.getReason() : "Hệ thống đang phân tích thêm dữ liệu để đánh giá.";
 
         // LƯU KẾT QUẢ
         ProductEvaluation evaluation = evaluationRepository
@@ -429,9 +415,9 @@ public class ProductEvaluationService {
     private ProductEvaluation evaluateFuzzyWithMap(Product product, CategoryContext ctx, int totalSales,
                                                    Map<Integer, ProductEvaluation> evalMap) {
         double pScore = 0.5;
-        if (ctx.pMax != null && ctx.pMin != null && ctx.pMax.compareTo(ctx.pMin) > 0 && product.getPrice() != null) {
-            pScore = product.getPrice().subtract(ctx.pMin)
-                    .divide(ctx.pMax.subtract(ctx.pMin), 4, RoundingMode.HALF_UP).doubleValue();
+        if (ctx.getPMax() != null && ctx.getPMin() != null && ctx.getPMax().compareTo(ctx.getPMin()) > 0 && product.getPrice() != null) {
+            pScore = product.getPrice().subtract(ctx.getPMin())
+                    .divide(ctx.getPMax().subtract(ctx.getPMin()), 4, RoundingMode.HALF_UP).doubleValue();
         }
 
         int ratingCount = product.getRatingCount() != null ? product.getRatingCount() : 0;
@@ -461,7 +447,7 @@ public class ProductEvaluationService {
         if (ratingCount > 0) {
             rScore = product.getRatingAvg() != null ? product.getRatingAvg().doubleValue() / 5.0 : 0.5;
         }
-        double sScore = ctx.sMax > 0 ? (double) totalSales / ctx.sMax : 0;
+        double sScore = ctx.getSMax() > 0 ? (double) totalSales / ctx.getSMax() : 0;
 
         // BƯỚC 2: MỜ HÓA (FUZZIFICATION)
         double muPoorR = fuzzyLeftShoulder(rScore, 0.0, 0.4);
@@ -496,18 +482,18 @@ public class ProductEvaluationService {
 
         FuzzyRule dominantRule = rules.getFirst();
         for (FuzzyRule rule : rules) {
-            if (rule.firingStrength > dominantRule.firingStrength) dominantRule = rule;
+            if (rule.getFiringStrength() > dominantRule.getFiringStrength()) dominantRule = rule;
         }
 
         double numerator = 0;
         double denominator = 0;
         for (FuzzyRule rule : rules) {
-            numerator += rule.firingStrength * rule.centroidValue;
-            denominator += rule.firingStrength;
+            numerator += rule.getFiringStrength() * rule.getCentroidValue();
+            denominator += rule.getFiringStrength();
         }
 
         double finalScore = denominator > 0 ? numerator / denominator : 0.5;
-        String xaiReason = denominator > 0 ? dominantRule.reason : "Hệ thống đang phân tích thêm dữ liệu để đánh giá.";
+        String xaiReason = denominator > 0 ? dominantRule.getReason() : "Hệ thống đang phân tích thêm dữ liệu để đánh giá.";
 
         ProductEvaluation evaluation = evalMap.getOrDefault(product.getId(), new ProductEvaluation());
         evaluation.setProduct(product);
@@ -567,16 +553,106 @@ public class ProductEvaluationService {
         return evaluationRepository.save(evaluation);
     }
 
-    private static class CategoryContext {
-        int sMax;
-        BigDecimal pMin;
-        BigDecimal pMax;
+    public SellerAssistantResponse evaluateProductForSeller(Integer productId) {
+        Product product = productRepository.findById(productId)
+                .orElseThrow(() -> new ResourceNotFoundException("Product not found"));
 
-        public CategoryContext(int sMax, BigDecimal pMin, BigDecimal pMax) {
-            this.sMax = sMax;
-            this.pMin = pMin;
-            this.pMax = pMax;
+        Integer catId = product.getCategory().getId();
+
+        List<Object[]> contexts = productRepository.findAllCategoryContexts();
+        CategoryContext ctx = new CategoryContext(1, BigDecimal.ZERO, BigDecimal.ONE);
+        for (Object[] row : contexts) {
+            if (row[0].equals(catId)) {
+                Integer sMax = ((Number) row[1]).intValue();
+                BigDecimal pMin = (BigDecimal) row[2];
+                BigDecimal pMax = (BigDecimal) row[3];
+                ctx = new CategoryContext(sMax > 0 ? sMax : 1, pMin != null ? pMin : BigDecimal.ZERO, pMax != null ? pMax : BigDecimal.ONE);
+                break;
+            }
         }
-    }
 
+        int totalSales = product.getSoldCount() != null ? product.getSoldCount() : 0;
+
+        double pScore = 0.5;
+        if (ctx.getPMax() != null && ctx.getPMin() != null && ctx.getPMax().compareTo(ctx.getPMin()) > 0 && product.getPrice() != null) {
+            pScore = product.getPrice().subtract(ctx.getPMin())
+                    .divide(ctx.getPMax().subtract(ctx.getPMin()), 4, RoundingMode.HALF_UP).doubleValue();
+        }
+
+        int ratingCount = product.getRatingCount() != null ? product.getRatingCount() : 0;
+        
+        if (ratingCount == 0 && totalSales == 0) {
+            long daysSinceCreation = product.getCreatedAt() != null ? java.time.temporal.ChronoUnit.DAYS.between(product.getCreatedAt(), LocalDateTime.now()) : 30;
+            boolean isNewArrival = daysSinceCreation <= 14;
+            
+            String analysis = isNewArrival ? "Sản phẩm mới ra mắt, chưa có nhiều dữ liệu giao dịch trên hệ thống." : "Sản phẩm hiện chưa có lượt bán và đánh giá nào từ khách hàng.";
+            String recommendation = "Hệ thống khuyến nghị bạn nên cân nhắc chạy các chương trình khuyến mãi (như giảm giá sản phẩm) hoặc tạo combo trong thời gian đầu để kích thích nhu cầu mua sắm và thu hút lượt đánh giá đầu tiên.";
+
+            return SellerAssistantResponse.builder()
+                    .productId(product.getId())
+                    .score(BigDecimal.valueOf(0.5))
+                    .priceScore(BigDecimal.valueOf(pScore))
+                    .soldScore(BigDecimal.ZERO)
+                    .ratingScore(BigDecimal.valueOf(0.5))
+                    .analysis(analysis)
+                    .recommendation(recommendation)
+                    .build();
+        }
+
+        double rScore = 0.5;
+        if (ratingCount > 0) {
+            rScore = product.getRatingAvg() != null ? product.getRatingAvg().doubleValue() / 5.0 : 0.5;
+        }
+        double sScore = ctx.getSMax() > 0 ? (double) totalSales / ctx.getSMax() : 0;
+
+        double muPoorR = fuzzyLeftShoulder(rScore, 0.0, 0.4);
+        double muAvgR = fuzzyTriangle(rScore, 0.2, 0.5, 0.8);
+        double muGoodR = fuzzyRightShoulder(rScore, 0.6, 1.0);
+
+        double muLowS = fuzzyLeftShoulder(sScore, 0.0, 0.4);
+        double muMediumS = fuzzyTriangle(sScore, 0.2, 0.5, 0.8);
+        double muHighS = fuzzyRightShoulder(sScore, 0.6, 1.0);
+
+        double muCheapP = fuzzyLeftShoulder(pScore, 0.0, 0.4);
+        double muFairP = fuzzyTriangle(pScore, 0.2, 0.5, 0.8);
+        double muExpensiveP = fuzzyRightShoulder(pScore, 0.6, 1.0);
+
+        List<SellerRule> rules = new ArrayList<>();
+        
+        rules.add(new SellerRule("S1", "Sản phẩm của bạn đang có điểm gợi ý thấp do mức giá cao so với mặt bằng chung nhưng lượt mua còn hạn chế.", "Hệ thống khuyến nghị bạn nên cân nhắc điều chỉnh giảm giá 10-15% trong tuần tới để tăng điểm xếp hạng và thu hút người mua.", 0.2, Math.min(Math.min(Math.max(muPoorR, muAvgR), muLowS), muExpensiveP)));
+        rules.add(new SellerRule("S2", "Sản phẩm đang có lượt bán rất tốt nhờ mức giá cạnh tranh, tuy nhiên lại nhận nhiều đánh giá thấp từ khách hàng.", "Bạn cần kiểm tra lại ngay chất lượng sản phẩm hoặc khâu đóng gói để cải thiện đánh giá. Nếu chất lượng quá thấp, sản phẩm có rủi ro bị hệ thống ẩn đi.", 0.4, Math.min(Math.min(muPoorR, muHighS), muCheapP)));
+        rules.add(new SellerRule("S3", "Sản phẩm đang hoạt động cực kỳ hiệu quả: Giá bán hợp lý, doanh số tốt và nhận được đánh giá cao.", "Sản phẩm có độ hấp dẫn rất cao. Bạn hãy tiếp tục duy trì chất lượng kho hàng và có thể cân nhắc chạy thêm quảng cáo để tiếp cận tập khách hàng rộng hơn.", 0.9, Math.min(Math.min(muGoodR, Math.max(muHighS, muMediumS)), Math.max(muFairP, muCheapP))));
+        rules.add(new SellerRule("S4", "Sản phẩm được khách hàng đánh giá rất cao về chất lượng, nhưng lượt bán vẫn còn khá khiêm tốn.", "Khách hàng rất thích sản phẩm này! Hãy cân nhắc tăng cường quảng bá, đăng lên các kênh mạng xã hội để thúc đẩy doanh số.", 0.7, Math.min(muGoodR, muLowS)));
+        rules.add(new SellerRule("S5", "Sản phẩm định vị ở phân khúc cao cấp, giá cao nhưng vẫn bán chạy nhờ chất lượng tuyệt vời.", "Đây là sản phẩm mang lại biên lợi nhuận cao. Hãy tập trung vào việc chăm sóc khách hàng VIP và cải thiện trải nghiệm unbox (mở hộp).", 0.85, Math.min(Math.min(muGoodR, muHighS), muExpensiveP)));
+        rules.add(new SellerRule("S6", "Sản phẩm có chất lượng rất tốt, bán chạy nhưng mức giá đang rẻ hơn đáng kể so với mặt bằng chung.", "Bạn đang bán rất tốt nhưng có thể biên lợi nhuận chưa tối ưu. Hãy thử tăng nhẹ giá bán hoặc gom thành các combo lớn hơn để gia tăng doanh thu.", 0.75, Math.min(Math.min(muGoodR, muHighS), muCheapP)));
+        rules.add(new SellerRule("S7", "Sản phẩm vừa có giá đắt, vừa không bán được và nhận nhiều đánh giá tiêu cực.", "Đây là một sản phẩm không hiệu quả. Cân nhắc thanh lý tồn kho với giá rẻ hoặc ngừng kinh doanh sản phẩm này để tập trung cho các sản phẩm khác.", 0.1, Math.min(Math.min(muPoorR, muLowS), muExpensiveP)));
+        rules.add(new SellerRule("S8", "Sản phẩm bán khá chậm mặc dù giá rẻ, đồng thời cũng nhận nhiều đánh giá tiêu cực.", "Sản phẩm đang bị mất sức hút dù giá rẻ. Bạn nên xem xét lại nguồn hàng hoặc ngưng bán để bảo vệ uy tín cho gian hàng của mình.", 0.15, Math.min(Math.min(muPoorR, muLowS), muCheapP)));
+
+        double muAny = 1.0;
+        rules.add(new SellerRule("S_DEF", "Sản phẩm đang ở mức ổn định, đáp ứng được nhu cầu cơ bản của thị trường.", "Hãy theo dõi thêm dữ liệu phản hồi của khách hàng. Bạn có thể thử nghiệm tạo các combo mua kèm để tăng giá trị trung bình trên mỗi đơn hàng.", 0.5, Math.min(muAvgR, muAny)));
+
+        SellerRule dominantRule = rules.getFirst();
+        for (SellerRule rule : rules) {
+            if (rule.getFiringStrength() > dominantRule.getFiringStrength()) dominantRule = rule;
+        }
+
+        double numerator = 0;
+        double denominator = 0;
+        for (SellerRule rule : rules) {
+            numerator += rule.getFiringStrength() * rule.getCentroidValue();
+            denominator += rule.getFiringStrength();
+        }
+
+        double finalScore = denominator > 0 ? numerator / denominator : 0.5;
+
+        return SellerAssistantResponse.builder()
+                .productId(product.getId())
+                .score(BigDecimal.valueOf(finalScore))
+                .priceScore(BigDecimal.valueOf(pScore))
+                .soldScore(BigDecimal.valueOf(sScore))
+                .ratingScore(BigDecimal.valueOf(rScore))
+                .analysis(dominantRule.getReason())
+                .recommendation(dominantRule.getRecommendation())
+                .build();
+    }
 }
