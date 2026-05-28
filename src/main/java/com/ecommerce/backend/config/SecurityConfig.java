@@ -45,6 +45,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/admin/**").hasRole(Role.ADMIN.name())
 
                         // Các endpoint công khai (không cần đăng nhập)
+                        .requestMatchers("/api/ping").permitAll()
                         .requestMatchers("/api/auth/**", "/api/payment/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/products/**", "/api/categories/**", "/api/shops/**", "/api/reviews/**", "/api/images/**").permitAll()
 
