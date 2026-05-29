@@ -93,7 +93,13 @@ public class CustomerAssistantService {
                 "Sử dụng công cụ search_products khi khách hàng có nhu cầu tìm kiếm mua sắm. " +
                 "Sử dụng công cụ track_order khi khách hàng muốn kiểm tra tình trạng đơn hàng.";
 
-        for (MessageContextDTO msg : request.getHistory()) {
+        List<MessageContextDTO> history = request.getHistory();
+        // Tối ưu hóa: Chỉ lấy tối đa 6 tin nhắn gần nhất (3 lượt trao đổi) để tiết kiệm Token
+        int maxHistorySize = 6;
+        int startIndex = Math.max(0, history.size() - maxHistorySize);
+
+        for (int i = startIndex; i < history.size(); i++) {
+            MessageContextDTO msg = history.get(i);
             Map<String, Object> content = new HashMap<>();
             content.put("role", msg.getRole().equals("assistant") ? "model" : "user");
             content.put("parts", List.of(Map.of("text", msg.getContent())));
