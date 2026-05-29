@@ -1,6 +1,7 @@
 package com.ecommerce.backend.controller;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestTemplate;
@@ -30,7 +31,7 @@ public class KeepAliveController {
     public ResponseEntity<String> testModels() {
         try {
             RestTemplate restTemplate = new RestTemplate();
-            String url = "https://generativelanguage.googleapis.com/v1beta/models?key=" + geminiApiKey;
+            String url = "https://generativelanguage.googleapis.com/v1beta/models?key=" + apiKey;
             ResponseEntity<String> response = restTemplate.getForEntity(url, String.class);
             return ResponseEntity.ok(response.getBody());
         } catch (Exception e) {
