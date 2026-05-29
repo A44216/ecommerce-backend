@@ -364,4 +364,10 @@ public interface OrderRepository extends JpaRepository<Order, Integer> {
     """, nativeQuery = true)
     Optional<Integer> findFavoriteCategoryIdByUserId(@Param("userId") Integer userId);
 
+    @EntityGraph(attributePaths = { "items", "items.product" })
+    Optional<Order> findByOrderCodeAndUserId(String orderCode, Integer userId);
+
+    @EntityGraph(attributePaths = { "items", "items.product" })
+    List<Order> findTop3ByUserIdOrderByCreatedAtDesc(Integer userId);
+
 }
