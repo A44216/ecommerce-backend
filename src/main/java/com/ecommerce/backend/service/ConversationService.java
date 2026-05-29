@@ -36,9 +36,9 @@ public class ConversationService {
     }
 
     private ConversationResponse mapToDTO(Conversation c) {
-        java.time.LocalDateTime latestTime = messageRepository.findFirstByConversationIdOrderByCreatedAtDesc(c.getId())
-                .map(com.ecommerce.backend.entity.Message::getCreatedAt)
-                .orElse(c.getCreatedAt());
+        org.springframework.data.domain.Pageable limitOne = org.springframework.data.domain.PageRequest.of(0, 1);
+        java.util.List<com.ecommerce.backend.entity.Message> latestMsg = messageRepository.findLatestRealMessages(c.getId(), limitOne);
+        java.time.LocalDateTime latestTime = latestMsg.isEmpty() ? c.getCreatedAt() : latestMsg.get(0).getCreatedAt();
 
         return new ConversationResponse(
                 c.getId(),
@@ -72,8 +72,9 @@ public class ConversationService {
     // theo shop
     public List<ConversationResponse> getByShop(Integer shopId) {
         List<Conversation> list = repository.findByShopId(shopId);
+        org.springframework.data.domain.Pageable limitOne = org.springframework.data.domain.PageRequest.of(0, 1);
         return list.stream()
-                .filter(c -> messageRepository.findFirstByConversationIdOrderByCreatedAtDesc(c.getId()).isPresent())
+                .filter(c -> !messageRepository.findLatestRealMessages(c.getId(), limitOne).isEmpty())
                 .map(this::mapToDTO)
                 .toList();
     }

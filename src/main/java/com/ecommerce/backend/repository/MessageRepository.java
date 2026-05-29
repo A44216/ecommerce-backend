@@ -13,6 +13,9 @@ public interface MessageRepository extends JpaRepository<Message, Integer> {
 
     Optional<Message> findFirstByConversationIdOrderByCreatedAtDesc(Integer conversationId);
 
+    @Query("SELECT m FROM Message m WHERE m.conversation.id = :conversationId AND (m.isAiChat IS NULL OR m.isAiChat = false) ORDER BY m.createdAt DESC")
+    List<Message> findLatestRealMessages(@Param("conversationId") Integer conversationId, org.springframework.data.domain.Pageable pageable);
+
     // tất cả tin nhắn trong 1 conversation (ẩn tin nhắn AI Chatbot)
     @Query("SELECT m FROM Message m WHERE m.conversation.id = :conversationId AND (m.isAiChat IS NULL OR m.isAiChat = false) ORDER BY m.createdAt ASC")
     List<Message> findByConversationIdOrderByCreatedAtAsc(@Param("conversationId") Integer conversationId);
