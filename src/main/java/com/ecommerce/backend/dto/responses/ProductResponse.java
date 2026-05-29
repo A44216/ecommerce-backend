@@ -23,6 +23,7 @@ public class ProductResponse {
     private Integer categoryId;
     private Integer shopId;
     private String shopName;
+    private Integer shopOwnerId;
 
     private BigDecimal ratingAvg;
     private int ratingCount;

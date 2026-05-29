@@ -45,6 +45,7 @@ public class ProductService {
                 .categoryId(product.getCategory() != null ? product.getCategory().getId() : null)
                 .shopId(product.getShop() != null ? product.getShop().getId() : null)
                 .shopName(product.getShop() != null ? product.getShop().getShopName() : null)
+                .shopOwnerId((product.getShop() != null && product.getShop().getUser() != null) ? product.getShop().getUser().getId() : null)
                 .ratingAvg(product.getRatingAvg())
                 .ratingCount(product.getRatingCount())
                 .soldCount(product.getSoldCount())
