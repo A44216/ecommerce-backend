@@ -46,7 +46,7 @@ public class SecurityConfig {
 
                         // Các endpoint công khai (không cần đăng nhập)
                         .requestMatchers("/api/ping").permitAll()
-                        .requestMatchers("/api/auth/**", "/api/payment/**").permitAll()
+                        .requestMatchers("/api/auth/**", "/api/payment/**", "/api/v1/assistant/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/products/**", "/api/categories/**", "/api/shops/**", "/api/reviews/**", "/api/images/**").permitAll()
 
                         // Các endpoint cần đăng nhập
