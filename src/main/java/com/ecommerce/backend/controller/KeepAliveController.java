@@ -26,6 +26,19 @@ public class KeepAliveController {
         return ResponseEntity.ok("Server is awake!");
     }
 
+    @GetMapping("/api/test-models")
+    public ResponseEntity<String> testModels() {
+        try {
+            RestTemplate restTemplate = new RestTemplate();
+            String url = "https://generativelanguage.googleapis.com/v1beta/models?key=" + geminiApiKey;
+            ResponseEntity<String> response = restTemplate.getForEntity(url, String.class);
+            return ResponseEntity.ok(response.getBody());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Error: " + e.getMessage());
+        }
+    }
+
     @GetMapping("/api/test-gemini")
     public ResponseEntity<String> testGemini() {
         try {
