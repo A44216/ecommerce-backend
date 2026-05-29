@@ -105,7 +105,7 @@ public class CustomerAssistantService {
         searchProductsTool.put("parameters", parameters);
 
         Map<String, Object> functionDeclarations = new HashMap<>();
-        functionDeclarations.put("function_declarations", List.of(searchProductsTool)); // fixed key
+        functionDeclarations.put("functionDeclarations", List.of(searchProductsTool));
 
         body.put("tools", List.of(functionDeclarations));
 
