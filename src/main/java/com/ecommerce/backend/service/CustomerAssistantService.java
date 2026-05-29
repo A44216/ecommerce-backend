@@ -51,7 +51,7 @@ public class CustomerAssistantService {
             e.printStackTrace();
             return AssistantChatResponse.builder()
                     .type("TEXT")
-                    .text("Xin lỗi, tôi đang gặp sự cố kết nối. Bạn vui lòng thử lại sau nhé! \uD83E\uDD16")
+                    .text("Xin lỗi, tôi đang gặp sự cố kết nối: " + e.getMessage() + ". Vui lòng thử lại sau nhé! \uD83E\uDD16")
                     .build();
         }
     }
