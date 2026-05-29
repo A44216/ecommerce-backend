@@ -23,23 +23,30 @@ public class ConversationService {
     private final ConversationRepository repository;
     private final UserRepository userRepository;
     private final ShopRepository shopRepository;
+    private final com.ecommerce.backend.repository.MessageRepository messageRepository;
 
     public ConversationService(ConversationRepository repository,
                                UserRepository userRepository,
-                               ShopRepository shopRepository) {
+                               ShopRepository shopRepository,
+                               com.ecommerce.backend.repository.MessageRepository messageRepository) {
         this.repository = repository;
         this.userRepository = userRepository;
         this.shopRepository = shopRepository;
+        this.messageRepository = messageRepository;
     }
 
     private ConversationResponse mapToDTO(Conversation c) {
+        java.time.LocalDateTime latestTime = messageRepository.findFirstByConversationIdOrderByCreatedAtDesc(c.getId())
+                .map(com.ecommerce.backend.entity.Message::getCreatedAt)
+                .orElse(c.getCreatedAt());
+
         return new ConversationResponse(
                 c.getId(),
                 c.getCustomer().getId(),
                 c.getCustomer().getUsername(),
                 c.getShop().getId(),
                 c.getShop().getShopName(),
-                c.getCreatedAt()
+                latestTime
         );
     }
 
@@ -65,7 +72,10 @@ public class ConversationService {
     // theo shop
     public List<ConversationResponse> getByShop(Integer shopId) {
         List<Conversation> list = repository.findByShopId(shopId);
-        return list.stream().map(this::mapToDTO).toList();
+        return list.stream()
+                .filter(c -> messageRepository.findFirstByConversationIdOrderByCreatedAtDesc(c.getId()).isPresent())
+                .map(this::mapToDTO)
+                .toList();
     }
 
     // ==========================================

@@ -7,8 +7,11 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface MessageRepository extends JpaRepository<Message, Integer> {
+
+    Optional<Message> findFirstByConversationIdOrderByCreatedAtDesc(Integer conversationId);
 
     // tất cả tin nhắn trong 1 conversation (ẩn tin nhắn AI Chatbot)
     @Query("SELECT m FROM Message m WHERE m.conversation.id = :conversationId AND (m.isAiChat IS NULL OR m.isAiChat = false) ORDER BY m.createdAt ASC")
