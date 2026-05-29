@@ -105,7 +105,7 @@ public class CustomerAssistantService {
         // 2. Build Tools (Function Calling)
         Map<String, Object> searchProductsTool = new HashMap<>();
         searchProductsTool.put("name", "search_products");
-        searchProductsTool.put("description", "Tìm kiếm sản phẩm dựa trên từ khóa (keyword). Sử dụng khi khách hàng muốn tìm mua đồ.");
+        searchProductsTool.put("description", "Tìm kiếm sản phẩm dựa trên từ khóa. Luôn nghĩ ra một sản phẩm phụ trợ và mời khách mua kèm qua tham số up_sell_message.");
         Map<String, Object> parameters = new HashMap<>();
         parameters.put("type", "OBJECT");
         Map<String, Object> properties = new HashMap<>();
@@ -113,6 +113,12 @@ public class CustomerAssistantService {
         keywordProp.put("type", "STRING");
         keywordProp.put("description", "Từ khóa tìm kiếm sản phẩm. Ví dụ: 'áo thun', 'điện thoại'");
         properties.put("keyword", keywordProp);
+        
+        Map<String, Object> upSellProp = new HashMap<>();
+        upSellProp.put("type", "STRING");
+        upSellProp.put("description", "Câu hỏi thân thiện mời khách mua thêm sản phẩm phụ trợ (VD: Để bảo vệ máy, bạn có muốn xem thêm ốp lưng không?)");
+        properties.put("up_sell_message", upSellProp);
+        
         parameters.put("properties", properties);
         parameters.put("required", List.of("keyword"));
         searchProductsTool.put("parameters", parameters);
@@ -130,8 +136,30 @@ public class CustomerAssistantService {
         trackParams.put("properties", trackProps);
         trackOrderTool.put("parameters", trackParams);
 
+        Map<String, Object> compareTool = new HashMap<>();
+        compareTool.put("name", "compare_products");
+        compareTool.put("description", "So sánh 2 sản phẩm. Sử dụng khi khách hàng phân vân giữa 2 sản phẩm.");
+        Map<String, Object> compareParams = new HashMap<>();
+        compareParams.put("type", "OBJECT");
+        Map<String, Object> compareProps = new HashMap<>();
+        Map<String, Object> kw1Prop = new HashMap<>();
+        kw1Prop.put("type", "STRING");
+        kw1Prop.put("description", "Từ khóa sản phẩm thứ nhất");
+        Map<String, Object> kw2Prop = new HashMap<>();
+        kw2Prop.put("type", "STRING");
+        kw2Prop.put("description", "Từ khóa sản phẩm thứ hai");
+        compareProps.put("keyword1", kw1Prop);
+        compareProps.put("keyword2", kw2Prop);
+        compareParams.put("properties", compareProps);
+        compareParams.put("required", List.of("keyword1", "keyword2"));
+        compareTool.put("parameters", compareParams);
+
+        Map<String, Object> recommendTool = new HashMap<>();
+        recommendTool.put("name", "recommend_products");
+        recommendTool.put("description", "Gợi ý các sản phẩm phù hợp với sở thích của khách hàng. Dùng khi khách hỏi 'có gì mới không' hoặc 'gợi ý cho tôi'.");
+
         Map<String, Object> functionDeclarations = new HashMap<>();
-        functionDeclarations.put("functionDeclarations", List.of(searchProductsTool, trackOrderTool));
+        functionDeclarations.put("functionDeclarations", List.of(searchProductsTool, trackOrderTool, compareTool, recommendTool));
 
         body.put("tools", List.of(functionDeclarations));
 
@@ -171,13 +199,22 @@ public class CustomerAssistantService {
             if ("search_products".equals(functionName)) {
                 Map<String, Object> args = (Map<String, Object>) functionCall.get("args");
                 String keyword = args != null && args.containsKey("keyword") ? (String) args.get("keyword") : "";
+                String upSell = args != null && args.containsKey("up_sell_message") ? (String) args.get("up_sell_message") : null;
 
-                return executeSearchProducts(keyword);
+                return executeSearchProducts(keyword, upSell);
             } else if ("track_order".equals(functionName)) {
                 Map<String, Object> args = (Map<String, Object>) functionCall.get("args");
                 String orderCode = args != null && args.containsKey("orderCode") ? (String) args.get("orderCode") : null;
 
                 return executeTrackOrder(orderCode);
+            } else if ("compare_products".equals(functionName)) {
+                Map<String, Object> args = (Map<String, Object>) functionCall.get("args");
+                String keyword1 = args != null && args.containsKey("keyword1") ? (String) args.get("keyword1") : "";
+                String keyword2 = args != null && args.containsKey("keyword2") ? (String) args.get("keyword2") : "";
+
+                return executeCompareProducts(keyword1, keyword2);
+            } else if ("recommend_products".equals(functionName)) {
+                return executeRecommendProducts();
             }
         } else if (firstPart.containsKey("text")) {
             // Trả lời văn bản bình thường
@@ -190,7 +227,7 @@ public class CustomerAssistantService {
         return fallbackResponse();
     }
 
-    private AssistantChatResponse executeSearchProducts(String keyword) {
+    private AssistantChatResponse executeSearchProducts(String keyword, String upSellMessage) {
         // Thực thi logic Backend (tìm kiếm) thông qua ProductService
         List<ProductResponse> products = productService.searchProducts(keyword, null);
 
@@ -198,9 +235,15 @@ public class CustomerAssistantService {
                 .limit(10) // Trả về tối đa 10 sp cho Carousel
                 .toList();
 
-        String responseText = topProducts.isEmpty() 
-                ? "Xin lỗi, tôi không tìm thấy sản phẩm nào phù hợp với yêu cầu của bạn. Bạn thử từ khóa khác nhé!"
-                : "Tôi đã tìm thấy một số sản phẩm phù hợp. Bạn tham khảo nhé!";
+        String responseText = "Xin lỗi, tôi không tìm thấy sản phẩm nào phù hợp với yêu cầu của bạn. Bạn thử từ khóa khác nhé!";
+        
+        if (!topProducts.isEmpty()) {
+            if (upSellMessage != null && !upSellMessage.isEmpty()) {
+                responseText = "Tôi đã tìm thấy một số sản phẩm phù hợp.\n\n" + upSellMessage;
+            } else {
+                responseText = "Tôi đã tìm thấy một số sản phẩm phù hợp. Bạn tham khảo nhé!";
+            }
+        }
 
         return AssistantChatResponse.builder()
                 .type(topProducts.isEmpty() ? "TEXT" : "PRODUCT_CAROUSEL")
@@ -286,6 +329,83 @@ public class CustomerAssistantService {
             case "DISPUTED": return "Đang khiếu nại";
             default: return status;
         }
+    }
+
+    private AssistantChatResponse executeCompareProducts(String keyword1, String keyword2) {
+        List<ProductResponse> p1List = productService.searchProducts(keyword1, null);
+        List<ProductResponse> p2List = productService.searchProducts(keyword2, null);
+        
+        if (p1List.isEmpty() || p2List.isEmpty()) {
+            return AssistantChatResponse.builder()
+                    .type("TEXT")
+                    .text("Xin lỗi, tôi không tìm đủ sản phẩm để so sánh. Bạn thử từ khóa khác rõ ràng hơn nhé!")
+                    .build();
+        }
+        
+        ProductResponse p1 = p1List.get(0);
+        ProductResponse p2 = p2List.get(0);
+        NumberFormat formatter = NumberFormat.getInstance(new Locale("vi", "VN"));
+        
+        StringBuilder sb = new StringBuilder();
+        sb.append("Dưới đây là bảng so sánh giữa **").append(p1.getName()).append("** và **").append(p2.getName()).append("**:\n\n");
+        sb.append("| Tiêu chí | ").append(p1.getName()).append(" | ").append(p2.getName()).append(" |\n");
+        sb.append("| :--- | :--- | :--- |\n");
+        sb.append("| **Giá** | ").append(formatter.format(p1.getPrice())).append("đ | ").append(formatter.format(p2.getPrice())).append("đ |\n");
+        sb.append("| **Đánh giá** | ").append(p1.getRatingAvg()).append("⭐ (").append(p1.getRatingCount()).append(") | ").append(p2.getRatingAvg()).append("⭐ (").append(p2.getRatingCount()).append(") |\n");
+        sb.append("| **Đã bán** | ").append(p1.getSoldCount()).append(" | ").append(p2.getSoldCount()).append(" |\n");
+        sb.append("| **Tồn kho** | ").append(p1.getStock()).append(" | ").append(p2.getStock()).append(" |\n");
+        sb.append("| **Cửa hàng** | ").append(p1.getShopName()).append(" | ").append(p2.getShopName()).append(" |\n");
+        
+        return AssistantChatResponse.builder()
+                .type("TEXT")
+                .text(sb.toString())
+                .build();
+    }
+
+    private AssistantChatResponse executeRecommendProducts() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null || auth instanceof AnonymousAuthenticationToken) {
+            return AssistantChatResponse.builder()
+                    .type("TEXT")
+                    .text("🔐 Bạn cần **đăng nhập** để tôi có thể gợi ý sản phẩm dựa trên sở thích của bạn nhé!")
+                    .build();
+        }
+
+        String username = auth.getName();
+        User user = userRepository.findByUsername(username).orElse(null);
+        if (user == null) {
+            return AssistantChatResponse.builder()
+                    .type("TEXT")
+                    .text("Xin lỗi, tôi không thể xác thực tài khoản của bạn.")
+                    .build();
+        }
+        
+        Integer favCategoryId = orderRepository.findFavoriteCategoryIdByUserId(user.getId()).orElse(null);
+        if (favCategoryId == null) {
+            return AssistantChatResponse.builder()
+                    .type("TEXT")
+                    .text("Bạn chưa mua món đồ nào gần đây nên tôi chưa biết sở thích của bạn. Bạn hãy thử tìm kiếm sản phẩm trước nhé!")
+                    .build();
+        }
+        
+        List<ProductResponse> products = productService.getProductsByCategory(favCategoryId);
+        
+        List<ProductResponse> topProducts = products.stream()
+                .limit(10)
+                .toList();
+                
+        if (topProducts.isEmpty()) {
+             return AssistantChatResponse.builder()
+                    .type("TEXT")
+                    .text("Rất tiếc, hiện tại không có sản phẩm mới nào trong danh mục yêu thích của bạn.")
+                    .build();
+        }
+        
+        return AssistantChatResponse.builder()
+                .type("PRODUCT_CAROUSEL")
+                .text("Dựa vào lịch sử mua hàng, tôi thấy bạn rất quan tâm đến danh mục **" + topProducts.get(0).getCategoryName() + "**! Dưới đây là những sản phẩm dành riêng cho bạn:")
+                .data(topProducts)
+                .build();
     }
 
     private AssistantChatResponse fallbackResponse() {
