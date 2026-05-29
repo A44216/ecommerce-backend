@@ -92,6 +92,10 @@ public class CartItemService {
         Cart cart = getCartOrThrow(request.getCartId());
         Product product = getProductOrThrow(request.getProductId());
 
+        if (product.getShop().getUser().getId().equals(cart.getUser().getId())) {
+            throw new BadRequestException("You cannot buy your own product");
+        }
+
         if (product.getStock() < request.getQuantity()) {
             throw new BadRequestException("Product out of stock");
         }
