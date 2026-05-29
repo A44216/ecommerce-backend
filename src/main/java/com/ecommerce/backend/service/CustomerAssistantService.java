@@ -161,7 +161,7 @@ public class CustomerAssistantService {
 
     private AssistantChatResponse executeSearchProducts(String keyword) {
         // Thực thi logic Backend (tìm kiếm) thông qua ProductService
-        List<ProductResponse> products = productService.searchProducts(keyword);
+        List<ProductResponse> products = productService.searchProducts(keyword, null);
 
         List<ProductResponse> topProducts = products.stream()
                 .limit(10) // Trả về tối đa 10 sp cho Carousel
