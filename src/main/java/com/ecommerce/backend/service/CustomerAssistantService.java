@@ -65,9 +65,16 @@ public class CustomerAssistantService {
 
         } catch (Exception e) {
             e.printStackTrace();
+            String errorMsg = e.getMessage();
+            String userFriendlyMessage = "Xin lỗi, tôi đang gặp sự cố kết nối. Vui lòng thử lại sau nhé! \uD83E\uDD16";
+            
+            if (errorMsg != null && (errorMsg.contains("429") || errorMsg.contains("Too Many Requests") || errorMsg.contains("quota"))) {
+                userFriendlyMessage = "Hệ thống AI đang bị quá tải (vượt quá giới hạn miễn phí). Bạn vui lòng đợi khoảng 1 phút rồi thử lại nhé! \uD83E\uDD16";
+            }
+            
             return AssistantChatResponse.builder()
                     .type("TEXT")
-                    .text("Xin lỗi, tôi đang gặp sự cố kết nối: " + e.getMessage() + ". Vui lòng thử lại sau nhé! \uD83E\uDD16")
+                    .text(userFriendlyMessage)
                     .build();
         }
     }
