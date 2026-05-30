@@ -4,22 +4,28 @@ import com.ecommerce.backend.dto.requests.CouponRequest;
 import com.ecommerce.backend.dto.responses.CouponResponse;
 import com.ecommerce.backend.entity.Coupon;
 import com.ecommerce.backend.enums.CouponStatus;
+import com.ecommerce.backend.enums.NotificationType;
 import com.ecommerce.backend.exception.BadRequestException;
 import com.ecommerce.backend.exception.ResourceNotFoundException;
 import com.ecommerce.backend.repository.CouponRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.text.NumberFormat;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Locale;
 
 @Service
 @Transactional(readOnly = true)
 public class CouponService {
 
     private final CouponRepository couponRepository;
+    private final NotificationService notificationService;
 
-    public CouponService(CouponRepository couponRepository) {
+    public CouponService(CouponRepository couponRepository, NotificationService notificationService) {
         this.couponRepository = couponRepository;
+        this.notificationService = notificationService;
     }
 
     // MAPPER: Entity -> DTO
@@ -82,7 +88,34 @@ public class CouponService {
         coupon.setStatus(CouponStatus.ACTIVE);
         coupon.setUsedCount(0); // Mã mới chưa có ai dùng
 
-        return mapToDTO(couponRepository.save(coupon));
+        Coupon savedCoupon = couponRepository.save(coupon);
+
+        // Gửi thông báo đến người dùng
+        String title = "Mã giảm giá mới: " + savedCoupon.getCode();
+        StringBuilder bodyBuilder = new StringBuilder("Nhập mã " + savedCoupon.getCode());
+        
+        NumberFormat currencyFormat = NumberFormat.getInstance(new Locale("vi", "VN"));
+        
+        if (savedCoupon.getDiscountPercent() != null) {
+            bodyBuilder.append(" giảm ").append(savedCoupon.getDiscountPercent()).append("%");
+        } else if (savedCoupon.getDiscountAmount() != null) {
+            bodyBuilder.append(" giảm ").append(currencyFormat.format(savedCoupon.getDiscountAmount())).append("đ");
+        }
+        
+        if (savedCoupon.getMinOrderValue() != null && savedCoupon.getMinOrderValue().doubleValue() > 0) {
+            bodyBuilder.append(" cho đơn từ ").append(currencyFormat.format(savedCoupon.getMinOrderValue())).append("đ.");
+        } else {
+            bodyBuilder.append(".");
+        }
+        
+        if (savedCoupon.getEndDate() != null) {
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
+            bodyBuilder.append(" Hạn sử dụng: ").append(savedCoupon.getEndDate().format(formatter)).append(".");
+        }
+        
+        notificationService.broadcastNotification(title, bodyBuilder.toString(), NotificationType.PROMOTION);
+
+        return mapToDTO(savedCoupon);
     }
 
     // cập nhật mã
