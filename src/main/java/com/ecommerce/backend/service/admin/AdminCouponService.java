@@ -5,9 +5,11 @@ import com.ecommerce.backend.dto.responses.admin.profile.AdminCouponResponse;
 import com.ecommerce.backend.dto.responses.seller.PageResponse;
 import com.ecommerce.backend.entity.Coupon;
 import com.ecommerce.backend.enums.CouponStatus;
+import com.ecommerce.backend.enums.NotificationType;
 import com.ecommerce.backend.exception.BadRequestException;
 import com.ecommerce.backend.exception.ResourceNotFoundException;
 import com.ecommerce.backend.repository.CouponRepository;
+import com.ecommerce.backend.service.NotificationService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -16,17 +18,22 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.text.NumberFormat;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Locale;
 
 @Service
 @Transactional(readOnly = true)
 public class AdminCouponService {
 
     private final CouponRepository couponRepository;
+    private final NotificationService notificationService;
 
-    public AdminCouponService(CouponRepository couponRepository) {
+    public AdminCouponService(CouponRepository couponRepository, NotificationService notificationService) {
         this.couponRepository = couponRepository;
+        this.notificationService = notificationService;
     }
 
     // LIST
@@ -103,7 +110,34 @@ public class AdminCouponService {
         coupon.setCreatedAt(LocalDateTime.now());
         coupon.setUpdatedAt(LocalDateTime.now());
 
-        return mapToDTO(couponRepository.save(coupon));
+        Coupon savedCoupon = couponRepository.save(coupon);
+
+        // Phát thông báo khuyến mãi
+        String title = "Mã giảm giá mới: " + savedCoupon.getCode();
+        StringBuilder bodyBuilder = new StringBuilder("Nhập mã " + savedCoupon.getCode());
+        
+        NumberFormat currencyFormat = NumberFormat.getInstance(new Locale("vi", "VN"));
+        
+        if (savedCoupon.getDiscountPercent() != null) {
+            bodyBuilder.append(" giảm ").append(savedCoupon.getDiscountPercent()).append("%");
+        } else if (savedCoupon.getDiscountAmount() != null) {
+            bodyBuilder.append(" giảm ").append(currencyFormat.format(savedCoupon.getDiscountAmount())).append("đ");
+        }
+        
+        if (savedCoupon.getMinOrderValue() != null && savedCoupon.getMinOrderValue().doubleValue() > 0) {
+            bodyBuilder.append(" cho đơn từ ").append(currencyFormat.format(savedCoupon.getMinOrderValue())).append("đ.");
+        } else {
+            bodyBuilder.append(".");
+        }
+        
+        if (savedCoupon.getEndDate() != null) {
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
+            bodyBuilder.append(" Hạn sử dụng: ").append(savedCoupon.getEndDate().format(formatter)).append(".");
+        }
+        
+        notificationService.broadcastNotification(title, bodyBuilder.toString(), NotificationType.PROMOTION);
+
+        return mapToDTO(savedCoupon);
     }
 
     // UPDATE
