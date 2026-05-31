@@ -28,4 +28,11 @@ public class RecommendationController {
     public void refreshRecs() {
         recommendationService.generateRecommendationsForUser();
     }
+
+    // [DÀNH CHO TEST] Kích hoạt tạo lại gợi ý cho TẤT CẢ user
+    @PostMapping("/refresh-all")
+    public String refreshAllRecs() {
+        recommendationService.generateRecommendationsForAllUsers();
+        return "Đã kích hoạt tạo Recommendations cho tất cả user thành công!";
+    }
 }
