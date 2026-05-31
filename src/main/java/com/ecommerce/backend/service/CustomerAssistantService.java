@@ -254,20 +254,28 @@ public class CustomerAssistantService {
                 .limit(10) // Trả về tối đa 10 sp cho Carousel
                 .toList();
 
-        String responseText = "Xin lỗi, tôi không tìm thấy sản phẩm nào phù hợp với yêu cầu của bạn. Bạn thử từ khóa khác nhé!";
-        
-        if (!topProducts.isEmpty()) {
-            if (upSellMessage != null && !upSellMessage.isEmpty()) {
-                responseText = "Tôi đã tìm thấy một số sản phẩm phù hợp.\n\n" + upSellMessage;
-            } else {
-                responseText = "Tôi đã tìm thấy một số sản phẩm phù hợp. Bạn tham khảo nhé!";
+        if (topProducts.isEmpty()) {
+            List<ProductResponse> trending = productService.getTrendingProducts();
+            String suggestion = " Bạn thử từ khóa khác nhé!";
+            if (trending != null && !trending.isEmpty()) {
+                List<String> trendingNames = trending.stream().limit(3).map(p -> p.getName()).toList();
+                suggestion = " Bạn có thể thử tìm kiếm các từ khóa đang hot như: **" + String.join("**, **", trendingNames) + "** nhé!";
             }
+            return AssistantChatResponse.builder()
+                    .type("TEXT")
+                    .text("Xin lỗi, tôi không tìm thấy sản phẩm nào phù hợp với yêu cầu của bạn." + suggestion)
+                    .build();
+        }
+
+        String responseText = "Tôi đã tìm thấy một số sản phẩm phù hợp. Bạn tham khảo nhé!";
+        if (upSellMessage != null && !upSellMessage.isEmpty()) {
+            responseText = "Tôi đã tìm thấy một số sản phẩm phù hợp.\n\n" + upSellMessage;
         }
 
         return AssistantChatResponse.builder()
-                .type(topProducts.isEmpty() ? "TEXT" : "PRODUCT_CAROUSEL")
+                .type("PRODUCT_CAROUSEL")
                 .text(responseText)
-                .data(topProducts.isEmpty() ? null : topProducts)
+                .data(topProducts)
                 .build();
     }
 
