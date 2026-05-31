@@ -8,6 +8,7 @@ import com.ecommerce.backend.entity.Product;
 import com.ecommerce.backend.entity.ProductEvaluation;
 import com.ecommerce.backend.enums.ProductStatus;
 import com.ecommerce.backend.enums.ProductEvaluationType;
+import com.ecommerce.backend.enums.ShopStatus;
 import com.ecommerce.backend.exception.ResourceNotFoundException;
 import com.ecommerce.backend.repository.ProductRepository;
 import com.ecommerce.backend.repository.ProductEvaluationRepository;
@@ -195,7 +196,7 @@ public class ProductEvaluationService {
 
     @Transactional
     public void generateGlobalFuzzyEvaluations() {
-        List<Product> allProducts = productRepository.findByStatusAndIsDeletedFalse(ProductStatus.APPROVED);
+        List<Product> allProducts = productRepository.findByStatusAndIsDeletedFalseAndShopStatus(ProductStatus.APPROVED, ShopStatus.APPROVED);
 
         // Load tất cả category context trong 1 query
         Map<Integer, CategoryContext> contextMap = new ConcurrentHashMap<>();
@@ -243,7 +244,7 @@ public class ProductEvaluationService {
 
     @Transactional
     public void generateGlobalTrendingEvaluations() {
-        List<Product> allProducts = productRepository.findByStatusAndIsDeletedFalse(ProductStatus.APPROVED);
+        List<Product> allProducts = productRepository.findByStatusAndIsDeletedFalseAndShopStatus(ProductStatus.APPROVED, ShopStatus.APPROVED);
         LocalDateTime oneMonthAgo = LocalDateTime.now().minusDays(30);
 
         // Tối ưu 1: Load tất cả category context trong 1 query (Cần cho pScore của Xu Hướng)

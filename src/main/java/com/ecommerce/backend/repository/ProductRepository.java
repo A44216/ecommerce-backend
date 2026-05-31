@@ -1,5 +1,7 @@
 package com.ecommerce.backend.repository;
 
+import com.ecommerce.backend.enums.ShopStatus;
+
 import com.ecommerce.backend.dto.responses.ProductAutocompleteResponse;
 import com.ecommerce.backend.entity.Product;
 import com.ecommerce.backend.enums.ProductStatus;
@@ -166,25 +168,25 @@ public interface ProductRepository extends JpaRepository<Product, Integer> {
 
     List<Product> findByIsDeletedTrue();
 
-    List<Product> findByStatusAndIsDeletedFalse(ProductStatus status);
+    List<Product> findByStatusAndIsDeletedFalseAndShopStatus(ProductStatus status, ShopStatus shopStatus);
 
-    org.springframework.data.domain.Page<Product> findByStatusAndIsDeletedFalse(ProductStatus status, org.springframework.data.domain.Pageable pageable);
+    org.springframework.data.domain.Page<Product> findByStatusAndIsDeletedFalseAndShopStatus(ProductStatus status, ShopStatus shopStatus, org.springframework.data.domain.Pageable pageable);
 
-    org.springframework.data.domain.Page<Product> findByNameContainingIgnoreCaseAndStatusAndIsDeletedFalse(String keyword, ProductStatus status, org.springframework.data.domain.Pageable pageable);
+    org.springframework.data.domain.Page<Product> findByNameContainingIgnoreCaseAndStatusAndIsDeletedFalseAndShopStatus(String keyword, ProductStatus status, ShopStatus shopStatus, org.springframework.data.domain.Pageable pageable);
 
-    org.springframework.data.domain.Page<Product> findByCategoryIdAndStatusAndIsDeletedFalse(Integer categoryId, ProductStatus status, org.springframework.data.domain.Pageable pageable);
+    org.springframework.data.domain.Page<Product> findByCategoryIdAndStatusAndIsDeletedFalseAndShopStatus(Integer categoryId, ProductStatus status, ShopStatus shopStatus, org.springframework.data.domain.Pageable pageable);
 
-    List<Product> findTop10ByNameContainingIgnoreCaseAndStatusAndIsDeletedFalse(String keyword, ProductStatus status);
+    List<Product> findTop10ByNameContainingIgnoreCaseAndStatusAndIsDeletedFalseAndShopStatus(String keyword, ProductStatus status, ShopStatus shopStatus);
 
-    List<Product> findTop10ByStatusAndIsDeletedFalseOrderBySoldCountDesc(ProductStatus status);
+    List<Product> findTop10ByStatusAndIsDeletedFalseAndShopStatusOrderBySoldCountDesc(ProductStatus status, ShopStatus shopStatus);
 
-    Optional<Product> findByIdAndStatusAndIsDeletedFalse(Integer id, ProductStatus status);
+    Optional<Product> findByIdAndStatusAndIsDeletedFalseAndShopStatus(Integer id, ProductStatus status, ShopStatus shopStatus);
 
-    List<Product> findByNameContainingIgnoreCaseAndStatusAndIsDeletedFalse(String keyword, ProductStatus status);
+    List<Product> findByNameContainingIgnoreCaseAndStatusAndIsDeletedFalseAndShopStatus(String keyword, ProductStatus status, ShopStatus shopStatus);
 
-    List<Product> findByCategoryIdAndStatusAndIsDeletedFalse(Integer categoryId, ProductStatus status);
+    List<Product> findByCategoryIdAndStatusAndIsDeletedFalseAndShopStatus(Integer categoryId, ProductStatus status, ShopStatus shopStatus);
 
-    List<Product> findByShopIdAndStatusAndIsDeletedFalse(Integer shopId, ProductStatus status);
+    List<Product> findByShopIdAndStatusAndIsDeletedFalseAndShopStatus(Integer shopId, ProductStatus status, ShopStatus shopStatus);
 
     // Các hàm cho Xai và Fuzzy
     // Query context 1 lần cho tất cả categories (tối ưu: thay 3N query bằng 1 query)
@@ -194,7 +196,7 @@ public interface ProductRepository extends JpaRepository<Product, Integer> {
                MIN(p.price),
                MAX(p.price)
         FROM Product p
-        WHERE p.status = 'APPROVED' AND p.isDeleted = false
+        WHERE p.status = 'APPROVED' AND p.isDeleted = false AND p.shop.status = 'APPROVED'
         GROUP BY p.category.id
     """)
     List<Object[]> findAllCategoryContexts();

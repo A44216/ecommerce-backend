@@ -8,6 +8,7 @@ import com.ecommerce.backend.entity.Product;
 import com.ecommerce.backend.entity.ProductImage;
 import com.ecommerce.backend.entity.Shop;
 import com.ecommerce.backend.enums.ProductStatus;
+import com.ecommerce.backend.enums.ShopStatus;
 import com.ecommerce.backend.repository.CategoryRepository;
 import com.ecommerce.backend.repository.ProductRepository;
 import jakarta.validation.constraints.NotNull;
@@ -94,13 +95,13 @@ public class ProductService {
 
     public List<ProductResponse> getAllProducts() {
         // Chỉ lấy sản phẩm APPROVED
-        List<Product> products = productRepository.findByStatusAndIsDeletedFalse(ProductStatus.APPROVED);
+        List<Product> products = productRepository.findByStatusAndIsDeletedFalseAndShopStatus(ProductStatus.APPROVED, ShopStatus.APPROVED);
         return products.stream().map(this::mapToDTO).toList();
     }
 
     public com.ecommerce.backend.dto.responses.PageResponse<ProductResponse> getAllProductsPaginated(int page, int size, String sortBy) {
         org.springframework.data.domain.Pageable pageable = createPageable(page, size, sortBy);
-        org.springframework.data.domain.Page<Product> productPage = productRepository.findByStatusAndIsDeletedFalse(ProductStatus.APPROVED, pageable);
+        org.springframework.data.domain.Page<Product> productPage = productRepository.findByStatusAndIsDeletedFalseAndShopStatus(ProductStatus.APPROVED, ShopStatus.APPROVED, pageable);
 
         List<ProductResponse> content = productPage.getContent().stream().map(this::mapToDTO).toList();
 
@@ -116,7 +117,7 @@ public class ProductService {
 
     public com.ecommerce.backend.dto.responses.PageResponse<ProductResponse> searchProductsPaginated(String keyword, int page, int size, String sortBy) {
         org.springframework.data.domain.Pageable pageable = createPageable(page, size, sortBy);
-        org.springframework.data.domain.Page<Product> productPage = productRepository.findByNameContainingIgnoreCaseAndStatusAndIsDeletedFalse(keyword, ProductStatus.APPROVED, pageable);
+        org.springframework.data.domain.Page<Product> productPage = productRepository.findByNameContainingIgnoreCaseAndStatusAndIsDeletedFalseAndShopStatus(keyword, ProductStatus.APPROVED, ShopStatus.APPROVED, pageable);
 
         List<ProductResponse> content = productPage.getContent().stream().map(this::mapToDTO).toList();
 
@@ -132,7 +133,7 @@ public class ProductService {
 
     public com.ecommerce.backend.dto.responses.PageResponse<ProductResponse> getProductsByCategoryPaginated(Integer categoryId, int page, int size, String sortBy) {
         org.springframework.data.domain.Pageable pageable = createPageable(page, size, sortBy);
-        org.springframework.data.domain.Page<Product> productPage = productRepository.findByCategoryIdAndStatusAndIsDeletedFalse(categoryId, ProductStatus.APPROVED, pageable);
+        org.springframework.data.domain.Page<Product> productPage = productRepository.findByCategoryIdAndStatusAndIsDeletedFalseAndShopStatus(categoryId, ProductStatus.APPROVED, ShopStatus.APPROVED, pageable);
 
         List<ProductResponse> content = productPage.getContent().stream().map(this::mapToDTO).toList();
 
@@ -167,18 +168,18 @@ public class ProductService {
 
     public ProductResponse getProductById(Integer id) {
         // Khách hàng chỉ xem được chi tiết nếu sản phẩm đó APPROVED
-        Product product = productRepository.findByIdAndStatusAndIsDeletedFalse(id, ProductStatus.APPROVED)
+        Product product = productRepository.findByIdAndStatusAndIsDeletedFalseAndShopStatus(id, ProductStatus.APPROVED, ShopStatus.APPROVED)
                 .orElseThrow(() -> new RuntimeException("Product not found or not approved"));
         return mapToDTO(product);
     }
 
     public List<ProductResponse> searchProducts(String keyword) {
-        List<Product> products = productRepository.findByNameContainingIgnoreCaseAndStatusAndIsDeletedFalse(keyword, ProductStatus.APPROVED);
+        List<Product> products = productRepository.findByNameContainingIgnoreCaseAndStatusAndIsDeletedFalseAndShopStatus(keyword, ProductStatus.APPROVED, ShopStatus.APPROVED);
         return products.stream().map(this::mapToDTO).toList();
     }
 
     public List<String> suggestProductNames(String keyword) {
-        List<Product> products = productRepository.findTop10ByNameContainingIgnoreCaseAndStatusAndIsDeletedFalse(keyword, ProductStatus.APPROVED);
+        List<Product> products = productRepository.findTop10ByNameContainingIgnoreCaseAndStatusAndIsDeletedFalseAndShopStatus(keyword, ProductStatus.APPROVED, ShopStatus.APPROVED);
         return products.stream()
                 .map(Product::getName)
                 .distinct()
@@ -186,24 +187,24 @@ public class ProductService {
     }
 
     public List<ProductResponse> getTrendingProducts() {
-        List<Product> products = productRepository.findTop10ByStatusAndIsDeletedFalseOrderBySoldCountDesc(ProductStatus.APPROVED);
+        List<Product> products = productRepository.findTop10ByStatusAndIsDeletedFalseAndShopStatusOrderBySoldCountDesc(ProductStatus.APPROVED, ShopStatus.APPROVED);
         return products.stream().map(this::mapToDTO).toList();
     }
 
     public List<ProductResponse> getProductsByCategory(Integer categoryId) {
-        List<Product> products = productRepository.findByCategoryIdAndStatusAndIsDeletedFalse(categoryId, ProductStatus.APPROVED);
+        List<Product> products = productRepository.findByCategoryIdAndStatusAndIsDeletedFalseAndShopStatus(categoryId, ProductStatus.APPROVED, ShopStatus.APPROVED);
         return products.stream().map(this::mapToDTO).toList();
     }
 
     public List<ProductResponse> getProductsByShop(Integer shopId) {
-        List<Product> products = productRepository.findByShopIdAndStatusAndIsDeletedFalse(shopId, ProductStatus.APPROVED);
+        List<Product> products = productRepository.findByShopIdAndStatusAndIsDeletedFalseAndShopStatus(shopId, ProductStatus.APPROVED, ShopStatus.APPROVED);
         return products.stream().map(this::mapToDTO).toList();
     }
 
     public List<ProductResponse> searchProducts(String keyword, Integer shopId) {
         List<Product> products = (shopId != null)
-                ? productRepository.findByShopIdAndStatusAndIsDeletedFalse(shopId, ProductStatus.APPROVED)
-                : productRepository.findByStatusAndIsDeletedFalse(ProductStatus.APPROVED);
+                ? productRepository.findByShopIdAndStatusAndIsDeletedFalseAndShopStatus(shopId, ProductStatus.APPROVED, ShopStatus.APPROVED)
+                : productRepository.findByStatusAndIsDeletedFalseAndShopStatus(ProductStatus.APPROVED, ShopStatus.APPROVED);
 
         if (keyword != null && !keyword.trim().isEmpty()) {
             String k = keyword.trim().toLowerCase();
