@@ -88,10 +88,10 @@ public class CustomerAssistantService {
         // System Instruction can be added as a separate context or first message, but Gemini 1.5+ supports system_instruction
         // For simplicity with generateContent, we'll just prepend it to the first user message if history is empty
         String systemInstruction = "Bạn là trợ lý mua sắm ảo thông minh của ứng dụng E-commerce. " +
-                "Nhiệm vụ của bạn là tư vấn sản phẩm cho khách hàng. " +
-                "Luôn xưng hô lịch sự, thân thiện và trả lời ngắn gọn. " +
-                "Sử dụng công cụ search_products khi khách hàng có nhu cầu tìm kiếm mua sắm. " +
-                "Sử dụng công cụ track_order khi khách hàng muốn kiểm tra tình trạng đơn hàng.";
+                "KHI khách hàng hỏi mua, tìm kiếm sản phẩm: BẮT BUỘC PHẢI GỌI HÀM search_products NGAY LẬP TỨC. KHÔNG ĐƯỢC CHAT HAY HỎI LẠI TRƯỚC KHI GỌI HÀM. " +
+                "KHI khách hàng hỏi về sản phẩm bán chạy nhất, hot nhất: BẮT BUỘC GỌI HÀM get_trending_products. " +
+                "KHI khách hàng hỏi gợi ý sản phẩm (gợi ý cho tôi): BẮT BUỘC GỌI HÀM recommend_products. " +
+                "KHI khách muốn kiểm tra đơn hàng: BẮT BUỘC GỌI HÀM track_order.";
 
         List<MessageContextDTO> history = request.getHistory();
         // Tối ưu hóa: Chỉ lấy tối đa 6 tin nhắn gần nhất (3 lượt trao đổi) để tiết kiệm Token
@@ -118,7 +118,7 @@ public class CustomerAssistantService {
         // 2. Build Tools (Function Calling)
         Map<String, Object> searchProductsTool = new HashMap<>();
         searchProductsTool.put("name", "search_products");
-        searchProductsTool.put("description", "Tìm kiếm sản phẩm dựa trên từ khóa. Luôn nghĩ ra một sản phẩm phụ trợ và mời khách mua kèm qua tham số up_sell_message.");
+        searchProductsTool.put("description", "BẮT BUỘC phải gọi ngay lập tức khi khách hàng muốn tìm kiếm hoặc hỏi mua một sản phẩm. Tự động điền tham số keyword. Tham số up_sell_message dùng để gửi lời nhắn thân thiện và gợi ý mua kèm (VD: 'Tôi tìm thấy điện thoại cho bạn, bạn có muốn xem thêm ốp lưng không?'). Tuyệt đối KHÔNG tự trả lời văn bản mà phải gọi hàm này để hệ thống hiển thị sản phẩm.");
         Map<String, Object> parameters = new HashMap<>();
         parameters.put("type", "OBJECT");
         Map<String, Object> properties = new HashMap<>();
@@ -129,7 +129,7 @@ public class CustomerAssistantService {
         
         Map<String, Object> upSellProp = new HashMap<>();
         upSellProp.put("type", "STRING");
-        upSellProp.put("description", "Câu hỏi thân thiện mời khách mua thêm sản phẩm phụ trợ (VD: Để bảo vệ máy, bạn có muốn xem thêm ốp lưng không?)");
+        upSellProp.put("description", "Câu hỏi thân thiện mời khách mua thêm sản phẩm phụ trợ.");
         properties.put("up_sell_message", upSellProp);
         
         parameters.put("properties", properties);
@@ -169,10 +169,14 @@ public class CustomerAssistantService {
 
         Map<String, Object> recommendTool = new HashMap<>();
         recommendTool.put("name", "recommend_products");
-        recommendTool.put("description", "Gợi ý các sản phẩm phù hợp với sở thích của khách hàng. Dùng khi khách hỏi 'có gì mới không' hoặc 'gợi ý cho tôi'.");
+        recommendTool.put("description", "Gợi ý các sản phẩm phù hợp với sở thích cá nhân của khách hàng dựa trên lịch sử mua.");
+        
+        Map<String, Object> trendingTool = new HashMap<>();
+        trendingTool.put("name", "get_trending_products");
+        trendingTool.put("description", "Lấy danh sách các sản phẩm bán chạy nhất, hot nhất, được mua nhiều nhất hiện nay.");
 
         Map<String, Object> functionDeclarations = new HashMap<>();
-        functionDeclarations.put("functionDeclarations", List.of(searchProductsTool, trackOrderTool, compareTool, recommendTool));
+        functionDeclarations.put("functionDeclarations", List.of(searchProductsTool, trackOrderTool, compareTool, recommendTool, trendingTool));
 
         body.put("tools", List.of(functionDeclarations));
 
@@ -228,6 +232,8 @@ public class CustomerAssistantService {
                 return executeCompareProducts(keyword1, keyword2);
             } else if ("recommend_products".equals(functionName)) {
                 return executeRecommendProducts();
+            } else if ("get_trending_products".equals(functionName)) {
+                return executeTrendingProducts();
             }
         } else if (firstPart.containsKey("text")) {
             // Trả lời văn bản bình thường
@@ -417,6 +423,23 @@ public class CustomerAssistantService {
         return AssistantChatResponse.builder()
                 .type("PRODUCT_CAROUSEL")
                 .text("Dựa vào lịch sử mua hàng, tôi thấy bạn rất quan tâm đến danh mục **" + topProducts.get(0).getCategoryName() + "**! Dưới đây là những sản phẩm dành riêng cho bạn:")
+                .data(topProducts)
+                .build();
+    }
+
+    private AssistantChatResponse executeTrendingProducts() {
+        List<ProductResponse> topProducts = productService.getTrendingProducts();
+        
+        if (topProducts == null || topProducts.isEmpty()) {
+             return AssistantChatResponse.builder()
+                    .type("TEXT")
+                    .text("Rất tiếc, hiện tại không có sản phẩm nào nổi bật. Bạn thử tìm kiếm sản phẩm cụ thể nhé!")
+                    .build();
+        }
+        
+        return AssistantChatResponse.builder()
+                .type("PRODUCT_CAROUSEL")
+                .text("Đây là những sản phẩm đang bán chạy nhất và được nhiều khách hàng yêu thích hiện nay. Bạn tham khảo nhé!")
                 .data(topProducts)
                 .build();
     }
