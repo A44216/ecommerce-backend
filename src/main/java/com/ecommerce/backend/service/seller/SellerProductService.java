@@ -9,6 +9,7 @@ import com.ecommerce.backend.entity.Category;
 import com.ecommerce.backend.entity.Product;
 import com.ecommerce.backend.entity.Shop;
 import com.ecommerce.backend.enums.ProductStatus;
+import com.ecommerce.backend.enums.ShopStatus;
 import com.ecommerce.backend.repository.CategoryRepository;
 import com.ecommerce.backend.repository.ProductRepository;
 import org.springframework.data.domain.*;
@@ -84,6 +85,9 @@ public class SellerProductService {
         }
 
         Shop shop = sellerShopService.getMyShopEntity();
+        if (shop.getStatus() == ShopStatus.BLOCKED) {
+            throw new RuntimeException("Shop has been locked by Admin. Cannot add or edit products.");
+        }
         product.setShop(shop);
 
         if (product.getId() == null) {
