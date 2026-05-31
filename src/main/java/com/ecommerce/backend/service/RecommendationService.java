@@ -9,7 +9,7 @@ import com.ecommerce.backend.repository.*;
 import com.ecommerce.backend.util.SecurityUtils;
 import com.ecommerce.backend.enums.ProductEvaluationType;
 import com.ecommerce.backend.enums.UserStatus;
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
@@ -23,7 +23,7 @@ import java.util.stream.Collectors;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-@org.springframework.transaction.annotation.Transactional(readOnly = true)
+@Transactional(readOnly = true)
 public class RecommendationService {
 
     private final RecommendationRepository recommendationRepository;
@@ -39,6 +39,7 @@ public class RecommendationService {
         generateRecommendationsForUser(currentUser);
     }
 
+    @Transactional
     public void generateRecommendationsForAllUsers() {
         List<User> activeUsers = userRepository.findActiveUsers();
         log.info("Bắt đầu tạo recommendations cho {} users...", activeUsers.size());
