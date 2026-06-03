@@ -370,4 +370,5 @@ public interface OrderRepository extends JpaRepository<Order, Integer> {
     @EntityGraph(attributePaths = { "items", "items.product" })
     List<Order> findTop3ByUserIdOrderByCreatedAtDesc(Integer userId);
 
+    boolean existsByCouponIdAndUserIdAndStatusNot(Integer couponId, Integer userId, OrderStatus status);
 }

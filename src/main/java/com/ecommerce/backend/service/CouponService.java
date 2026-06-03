@@ -22,10 +22,16 @@ public class CouponService {
 
     private final CouponRepository couponRepository;
     private final NotificationService notificationService;
+    private final com.ecommerce.backend.repository.OrderRepository orderRepository;
+    private final com.ecommerce.backend.util.SecurityUtils securityUtils;
 
-    public CouponService(CouponRepository couponRepository, NotificationService notificationService) {
+    public CouponService(CouponRepository couponRepository, NotificationService notificationService,
+                         com.ecommerce.backend.repository.OrderRepository orderRepository,
+                         com.ecommerce.backend.util.SecurityUtils securityUtils) {
         this.couponRepository = couponRepository;
         this.notificationService = notificationService;
+        this.orderRepository = orderRepository;
+        this.securityUtils = securityUtils;
     }
 
     // MAPPER: Entity -> DTO
@@ -36,6 +42,7 @@ public class CouponService {
                 .discountPercent(coupon.getDiscountPercent())
                 .discountAmount(coupon.getDiscountAmount())
                 .minOrderValue(coupon.getMinOrderValue())
+                .maxDiscountAmount(coupon.getMaxDiscountAmount())
                 .startDate(coupon.getStartDate())
                 .endDate(coupon.getEndDate())
                 .maxUsage(coupon.getMaxUsage())
@@ -72,7 +79,29 @@ public class CouponService {
     // lấy mã theo Code (Dùng khi khách hàng nhập mã)
     public CouponResponse getCouponByCode(String code) {
         Coupon coupon = couponRepository.findByCode(code)
-                .orElseThrow(() -> new ResourceNotFoundException("Coupon code not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Mã giảm giá không tồn tại"));
+                
+        if (coupon.getStatus() != CouponStatus.ACTIVE) {
+            throw new BadRequestException("Mã giảm giá không hợp lệ hoặc đã hết hạn");
+        }
+        
+        try {
+            Integer userId = securityUtils.getCurrentUserId();
+            if (userId != null) {
+                boolean isUsed = orderRepository.existsByCouponIdAndUserIdAndStatusNot(
+                        coupon.getId(), userId, com.ecommerce.backend.enums.OrderStatus.CANCELED);
+                if (isUsed) {
+                    throw new BadRequestException("Bạn đã sử dụng mã này rồi");
+                }
+            }
+        } catch (Exception e) {
+            // Nếu không lấy được user (chưa đăng nhập hoặc lỗi gì đó), bỏ qua check hoặc ném lỗi
+            // Vì chỉ user mới apply coupon được
+            if (e instanceof BadRequestException) {
+                throw e; // Re-throw the "Bạn đã sử dụng mã này rồi" exception
+            }
+        }
+
         return mapToDTO(coupon);
     }
 

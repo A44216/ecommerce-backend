@@ -23,6 +23,8 @@ public class CouponResponse {
 
     private BigDecimal minOrderValue;
 
+    private BigDecimal maxDiscountAmount;
+
     private LocalDateTime startDate;
 
     private LocalDateTime endDate;
