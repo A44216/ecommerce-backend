@@ -21,9 +21,9 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 
 public class EcommerceBackendApplication {
 
-	public static void main(String[] args) {
-		SpringApplication.run(EcommerceBackendApplication.class, args);
-	}
+    public static void main(String[] args) {
+        SpringApplication.run(EcommerceBackendApplication.class, args);
+    }
 
     @Bean
     CommandLineRunner init(UserRepository repo, ShopRepository shopRepo, PasswordEncoder encoder, org.springframework.jdbc.core.JdbcTemplate jdbcTemplate) {
@@ -39,7 +39,7 @@ public class EcommerceBackendApplication {
                 admin.setFullName("Admin");
                 admin.setUsername("admin12345");
                 admin.setEmail("admin@gmail.com");
-                admin.setPassword(encoder.encode("admin12345"));
+                admin.setPassword(encoder.encode("123456"));
                 admin.setRole(Role.ADMIN);
                 admin.setStatus(UserStatus.ACTIVE);
 
@@ -51,7 +51,7 @@ public class EcommerceBackendApplication {
             // CUSTOMER
             if (repo.findByEmail("user@gmail.com").isEmpty()) {
                 User user = new User();
-                user.setFullName("Nguyen Van C");
+                user.setFullName("Nguyễn Văn A");
                 user.setUsername("user12345");
                 user.setEmail("user@gmail.com");
                 user.setPassword(encoder.encode("123456"));
@@ -65,7 +65,7 @@ public class EcommerceBackendApplication {
             // SELLER
             if (repo.findByEmail("seller@gmail.com").isEmpty()) {
                 User user = new User();
-                user.setFullName("seller12345");
+                user.setFullName("Nguyễn Hiro");
                 user.setUsername("seller12345");
                 user.setEmail("seller@gmail.com");
                 user.setPassword(encoder.encode("123456"));
@@ -77,7 +77,7 @@ public class EcommerceBackendApplication {
 
                 Shop shop = new Shop();
                 shop.setUser(user);
-                shop.setShopName("Cửa hàng điện tử của " + user.getFullName());
+                shop.setShopName("Cửa hàng điện tử");
                 shop.setStatus(ShopStatus.APPROVED);
                 shop.setDescription("Chuyên cung cấp linh kiện điện tử.");
 

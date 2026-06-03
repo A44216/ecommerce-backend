@@ -38,8 +38,7 @@ public class AdminOrderService {
             PaymentMethod paymentMethod,
             PaymentStatus paymentStatus,
             String sortBy,
-            String direction
-    ) {
+            String direction) {
 
         Sort sort = (direction != null && direction.equalsIgnoreCase("asc"))
                 ? Sort.by(sortBy).ascending()
@@ -53,16 +52,14 @@ public class AdminOrderService {
                 status,
                 paymentMethod,
                 paymentStatus,
-                pageable
-        );
+                pageable);
 
         return new PageResponse<>(
                 orders.getContent().stream().map(this::mapToDTO).toList(),
                 orders.getNumber(),
                 orders.getSize(),
                 orders.getTotalElements(),
-                orders.getTotalPages()
-        );
+                orders.getTotalPages());
     }
 
     public AdminOrderDetailResponse getOrderById(Integer id) {
@@ -100,11 +97,20 @@ public class AdminOrderService {
 
     private AdminOrderDetailResponse mapToDetailDTO(Order order) {
 
-        BigDecimal sellerReceived = null;
+        BigDecimal subtotal = order.getSubtotal() != null ? order.getSubtotal() : BigDecimal.ZERO;
+        BigDecimal platformFee = order.getPlatformFeeAmount() != null ? order.getPlatformFeeAmount() : BigDecimal.ZERO;
+        BigDecimal totalPrice = order.getTotalPrice() != null ? order.getTotalPrice() : BigDecimal.ZERO;
+        BigDecimal discount = order.getDiscountAmount() != null ? order.getDiscountAmount() : BigDecimal.ZERO;
 
-        if (order.getTotalPrice() != null && order.getPlatformFeeAmount() != null) {
-            sellerReceived = order.getTotalPrice().subtract(order.getPlatformFeeAmount());
+        // Tính phí ship: totalPrice = subtotal + shippingFee - discount → shippingFee =
+        // totalPrice - subtotal + discount
+        BigDecimal shippingFee = totalPrice.subtract(subtotal).add(discount);
+        if (shippingFee.compareTo(BigDecimal.ZERO) < 0) {
+            shippingFee = BigDecimal.ZERO;
         }
+
+        // Seller nhận = subtotal + phí ship - phí nền tảng
+        BigDecimal sellerReceived = subtotal.add(shippingFee).subtract(platformFee);
 
         return AdminOrderDetailResponse.builder()
                 .id(order.getId())
@@ -121,6 +127,7 @@ public class AdminOrderService {
                 .platformFeeRate(order.getPlatformFeeRate())
                 .platformFeeAmount(order.getPlatformFeeAmount())
                 .totalPrice(order.getTotalPrice())
+                .shippingFee(shippingFee)
                 .sellerReceived(sellerReceived)
                 .shippingName(order.getShippingName())
                 .shippingPhone(order.getShippingPhone())

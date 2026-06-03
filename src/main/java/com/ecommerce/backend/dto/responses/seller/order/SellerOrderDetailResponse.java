@@ -37,6 +37,8 @@ public class SellerOrderDetailResponse {
 
     private BigDecimal subtotal;
 
+    private BigDecimal shippingFee;       // phí vận chuyển (computed)
+
     private BigDecimal platformFeeRate;
     private BigDecimal platformFeeAmount;
 

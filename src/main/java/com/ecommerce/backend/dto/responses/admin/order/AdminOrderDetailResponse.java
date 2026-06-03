@@ -27,6 +27,7 @@ public class AdminOrderDetailResponse {
     private BigDecimal totalPrice;        // khách trả
     private BigDecimal platformFeeAmount; // phí hệ thống
     private BigDecimal sellerReceived;    // shop nhận
+    private BigDecimal shippingFee;       // phí vận chuyển (computed)
     private BigDecimal platformFeeRate;
     private String shippingName;
     private String shippingPhone;

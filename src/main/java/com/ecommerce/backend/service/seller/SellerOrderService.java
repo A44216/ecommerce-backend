@@ -39,15 +39,13 @@ public class SellerOrderService {
             PaymentStatus paymentStatus,
             String keyword,
             int page,
-            int size
-    ) {
+            int size) {
         Integer shopId = sellerShopService.getMyShop().getId();
 
         Pageable pageable = PageRequest.of(
                 page,
                 size,
-                Sort.by("createdAt").descending()
-        );
+                Sort.by("createdAt").descending());
 
         if (keyword != null) {
             keyword = keyword.trim();
@@ -59,8 +57,7 @@ public class SellerOrderService {
                 paymentMethod,
                 paymentStatus,
                 keyword,
-                pageable
-        );
+                pageable);
 
         List<SellerOrderResponse> content = orders
                 .map(this::mapToDTO)
@@ -71,8 +68,7 @@ public class SellerOrderService {
                 orders.getNumber(),
                 orders.getSize(),
                 orders.getTotalElements(),
-                orders.getTotalPages()
-        );
+                orders.getTotalPages());
     }
 
     // ORDER DETAIL
@@ -92,7 +88,18 @@ public class SellerOrderService {
                 .map(this::mapItem)
                 .toList();
 
-        String couponCode = order.getCoupon() != null ? order.getCoupon().getCode() : null;
+        // String couponCode = order.getCoupon() != null ? order.getCoupon().getCode() :
+        // null;
+
+        // Tính phí ship: totalPrice = subtotal + shippingFee - discount → shippingFee =
+        // totalPrice - subtotal + discount
+        BigDecimal orderSubtotal = Optional.ofNullable(order.getSubtotal()).orElse(BigDecimal.ZERO);
+        BigDecimal orderTotal = Optional.ofNullable(order.getTotalPrice()).orElse(BigDecimal.ZERO);
+        BigDecimal orderDiscount = Optional.ofNullable(order.getDiscountAmount()).orElse(BigDecimal.ZERO);
+        BigDecimal shippingFee = orderTotal.subtract(orderSubtotal).add(orderDiscount);
+        if (shippingFee.compareTo(BigDecimal.ZERO) < 0) {
+            shippingFee = BigDecimal.ZERO;
+        }
 
         return SellerOrderDetailResponse.builder()
                 .orderId(order.getId())
@@ -100,8 +107,9 @@ public class SellerOrderService {
                 .status(order.getStatus())
                 .paymentMethod(order.getPaymentMethod())
                 .paymentStatus(order.getPaymentStatus())
-                .sellerRevenue(Optional.ofNullable(order.getSubtotal()).orElse(BigDecimal.ZERO).subtract(Optional.ofNullable(order.getPlatformFeeAmount()).orElse(BigDecimal.ZERO)))
+                .sellerRevenue(calculateSellerRevenue(order))
                 .subtotal(order.getSubtotal())
+                .shippingFee(shippingFee)
                 .platformFeeRate(order.getPlatformFeeRate())
                 .platformFeeAmount(order.getPlatformFeeAmount())
                 .createdAt(order.getCreatedAt())
@@ -166,8 +174,7 @@ public class SellerOrderService {
                     title,
                     body,
                     NotificationType.ORDER,
-                    order.getId()
-            );
+                    order.getId());
         }
 
         // chỉ set completedAt lần đầu khi chuyển sang COMPLETED
@@ -184,8 +191,7 @@ public class SellerOrderService {
                 if (shop != null) {
                     shop.setTotalOrders(shop.getTotalOrders() + 1);
 
-                    BigDecimal sellerRevenue = Optional.ofNullable(order.getSubtotal()).orElse(BigDecimal.ZERO)
-                            .subtract(Optional.ofNullable(order.getPlatformFeeAmount()).orElse(BigDecimal.ZERO));
+                    BigDecimal sellerRevenue = calculateSellerRevenue(order);
                     shop.setTotalRevenue(shop.getTotalRevenue().add(sellerRevenue));
                 }
 
@@ -218,7 +224,7 @@ public class SellerOrderService {
                 .status(order.getStatus())
                 .customerName(order.getUser().getFullName())
                 .customerPhone(order.getShippingPhone())
-                .sellerRevenue(Optional.ofNullable(order.getSubtotal()).orElse(BigDecimal.ZERO).subtract(Optional.ofNullable(order.getPlatformFeeAmount()).orElse(BigDecimal.ZERO)))
+                .sellerRevenue(calculateSellerRevenue(order))
                 .createdAt(order.getCreatedAt())
                 .paymentStatus(order.getPaymentStatus())
                 .imageOrder(image)
@@ -250,6 +256,20 @@ public class SellerOrderService {
                 .distinct()
                 .limit(5)
                 .toList();
+    }
+
+    private BigDecimal calculateSellerRevenue(Order order) {
+        BigDecimal subtotal = Optional.ofNullable(order.getSubtotal()).orElse(BigDecimal.ZERO);
+        BigDecimal total = Optional.ofNullable(order.getTotalPrice()).orElse(BigDecimal.ZERO);
+        BigDecimal discount = Optional.ofNullable(order.getDiscountAmount()).orElse(BigDecimal.ZERO);
+        BigDecimal platformFee = Optional.ofNullable(order.getPlatformFeeAmount()).orElse(BigDecimal.ZERO);
+
+        BigDecimal shippingFee = total.subtract(subtotal).add(discount);
+        if (shippingFee.compareTo(BigDecimal.ZERO) < 0) {
+            shippingFee = BigDecimal.ZERO;
+        }
+
+        return subtotal.add(shippingFee).subtract(platformFee);
     }
 
 }

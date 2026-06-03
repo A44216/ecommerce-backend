@@ -39,13 +39,13 @@ public class OrderService {
     private final com.ecommerce.backend.repository.CouponRepository couponRepository;
 
     public OrderService(OrderRepository repository,
-                        UserRepository userRepository,
-                        AddressRepository addressRepository,
-                        ShopRepository shopRepository,
-                        com.ecommerce.backend.repository.ProductRepository productRepository,
-                        com.ecommerce.backend.repository.OrderItemRepository orderItemRepository, 
-                        NotificationService notificationService,
-                        com.ecommerce.backend.repository.CouponRepository couponRepository) {
+            UserRepository userRepository,
+            AddressRepository addressRepository,
+            ShopRepository shopRepository,
+            com.ecommerce.backend.repository.ProductRepository productRepository,
+            com.ecommerce.backend.repository.OrderItemRepository orderItemRepository,
+            NotificationService notificationService,
+            com.ecommerce.backend.repository.CouponRepository couponRepository) {
         this.repository = repository;
         this.userRepository = userRepository;
         this.addressRepository = addressRepository;
@@ -75,7 +75,7 @@ public class OrderService {
             fullAddress += ", " + address.getCity();
         }
 
-        //CHUYỂN ĐỔI DANH SÁCH SẢN PHẨM ---
+        // CHUYỂN ĐỔI DANH SÁCH SẢN PHẨM ---
         List<OrderItemResponse> itemResponses = new ArrayList<>();
 
         // Kiểm tra xem đơn hàng có danh sách sản phẩm không
@@ -117,8 +117,9 @@ public class OrderService {
                 .paymentMethod(order.getPaymentMethod())
                 .paymentStatus(order.getPaymentStatus())
                 .createdAt(order.getCreatedAt())
-                
-                // Sử dụng thông tin snapshot từ bảng orders nếu có, nếu không thì fallback về bảng addresses
+
+                // Sử dụng thông tin snapshot từ bảng orders nếu có, nếu không thì fallback về
+                // bảng addresses
                 .shippingName(order.getShippingName() != null ? order.getShippingName() : address.getFullName())
                 .shippingPhone(order.getShippingPhone() != null ? order.getShippingPhone() : address.getPhone())
                 .addressLine(order.getShippingAddress() != null ? order.getShippingAddress() : fullAddress)
@@ -183,11 +184,12 @@ public class OrderService {
 
         // 1. Tạo vỏ Đơn hàng
         Order order = new Order();
-        
+
         // Phát sinh mã đơn hàng duy nhất
-        String orderCode = "ORD-" + System.currentTimeMillis() + "-" + java.util.UUID.randomUUID().toString().substring(0, 4).toUpperCase();
+        String orderCode = "ORD-" + System.currentTimeMillis() + "-"
+                + java.util.UUID.randomUUID().toString().substring(0, 4).toUpperCase();
         order.setOrderCode(orderCode);
-        
+
         order.setUser(user);
         order.setAddress(address);
         order.setShop(shop);
@@ -224,7 +226,8 @@ public class OrderService {
         java.math.BigDecimal platformFeeRate = new java.math.BigDecimal("5.00");
         order.setPlatformFeeRate(platformFeeRate);
         if (request.getSubtotal() != null) {
-            order.setPlatformFeeAmount(request.getSubtotal().multiply(platformFeeRate).divide(new java.math.BigDecimal("100")));
+            order.setPlatformFeeAmount(
+                    request.getSubtotal().multiply(platformFeeRate).divide(new java.math.BigDecimal("100")));
         } else {
             order.setPlatformFeeAmount(java.math.BigDecimal.ZERO);
         }
@@ -284,18 +287,17 @@ public class OrderService {
                 "Đặt hàng thành công!",
                 "Đơn hàng #" + savedOrder.getId() + " đã được tạo và đang chờ người bán xác nhận.",
                 NotificationType.ORDER,
-                savedOrder.getId()
-        );
+                savedOrder.getId());
 
         // Thông báo cho người bán
         if (savedOrder.getShop() != null && savedOrder.getShop().getUser() != null) {
             notificationService.createNotification(
                     savedOrder.getShop().getUser().getId(),
                     "Đơn hàng mới",
-                    "Bạn vừa nhận được đơn hàng mới #" + savedOrder.getId() + " từ khách hàng " + savedOrder.getUser().getFullName() + ".",
+                    "Bạn vừa nhận được đơn hàng mới #" + savedOrder.getId() + " từ khách hàng "
+                            + savedOrder.getUser().getFullName() + ".",
                     NotificationType.ORDER,
-                    savedOrder.getId()
-            );
+                    savedOrder.getId());
         }
 
         return mapToDTO(savedOrder);
@@ -337,8 +339,7 @@ public class OrderService {
                     title,
                     body,
                     NotificationType.ORDER,
-                    order.getId()
-            );
+                    order.getId());
         }
 
         return mapToDTO(repository.save(order));
@@ -371,18 +372,17 @@ public class OrderService {
                 "Đơn hàng đã bị hủy",
                 "Đơn hàng #" + savedOrder.getId() + " của bạn đã được hủy thành công.",
                 NotificationType.ORDER,
-                savedOrder.getId()
-        );
+                savedOrder.getId());
 
         // Thông báo cho người bán
         if (savedOrder.getShop() != null && savedOrder.getShop().getUser() != null) {
             notificationService.createNotification(
                     savedOrder.getShop().getUser().getId(),
                     "Đơn hàng đã bị hủy",
-                    "Khách hàng " + savedOrder.getUser().getFullName() + " đã hủy đơn hàng #" + savedOrder.getId() + ".",
+                    "Khách hàng " + savedOrder.getUser().getFullName() + " đã hủy đơn hàng #" + savedOrder.getId()
+                            + ".",
                     NotificationType.ORDER,
-                    savedOrder.getId()
-            );
+                    savedOrder.getId());
         }
 
         return mapToDTO(savedOrder);
@@ -398,7 +398,7 @@ public class OrderService {
 
         order.setStatus(OrderStatus.COMPLETED);
         order.setCompletedAt(java.time.LocalDateTime.now());
-        
+
         // Xử lý tiền và số lượng bán
         completeOrderLogic(order);
 
@@ -411,8 +411,7 @@ public class OrderService {
                     "Khách đã nhận hàng",
                     "Đơn hàng #" + savedOrder.getId() + " đã được khách xác nhận nhận hàng thành công.",
                     NotificationType.ORDER,
-                    savedOrder.getId()
-            );
+                    savedOrder.getId());
         }
 
         return mapToDTO(savedOrder);
@@ -436,8 +435,7 @@ public class OrderService {
                     "Yêu cầu trả hàng/hoàn tiền",
                     "Khách hàng đã yêu cầu trả hàng cho đơn hàng #" + savedOrder.getId() + " với lý do: " + reason,
                     NotificationType.ORDER,
-                    savedOrder.getId()
-            );
+                    savedOrder.getId());
         }
 
         // Thông báo cho Admin
@@ -448,8 +446,7 @@ public class OrderService {
                     "Tranh chấp trả hàng",
                     "Đơn hàng #" + savedOrder.getId() + " đang có yêu cầu trả hàng/hoàn tiền cần xem xét.",
                     NotificationType.SYSTEM,
-                    savedOrder.getId()
-            );
+                    savedOrder.getId());
         }
 
         return mapToDTO(savedOrder);
@@ -471,8 +468,7 @@ public class OrderService {
                 "Hoàn tiền thành công",
                 "Shop đã đồng ý yêu cầu trả hàng/hoàn tiền cho đơn hàng #" + savedOrder.getId() + ".",
                 NotificationType.ORDER,
-                savedOrder.getId()
-        );
+                savedOrder.getId());
 
         return mapToDTO(savedOrder);
     }
@@ -492,10 +488,10 @@ public class OrderService {
         notificationService.createNotification(
                 savedOrder.getUser().getId(),
                 "Khiếu nại trả hàng",
-                "Shop đã từ chối yêu cầu trả hàng đơn #" + savedOrder.getId() + " với lý do: " + reason + ". Đơn hàng đã được chuyển cho Admin phân xử.",
+                "Shop đã từ chối yêu cầu trả hàng đơn #" + savedOrder.getId() + " với lý do: " + reason
+                        + ". Đơn hàng đã được chuyển cho Admin phân xử.",
                 NotificationType.ORDER,
-                savedOrder.getId()
-        );
+                savedOrder.getId());
 
         // Thông báo cho Admin
         List<User> admins = userRepository.findByRole(com.ecommerce.backend.enums.Role.ADMIN);
@@ -503,10 +499,10 @@ public class OrderService {
             notificationService.createNotification(
                     admin.getId(),
                     "Tranh chấp cần phân xử",
-                    "Đơn hàng #" + savedOrder.getId() + " đang có tranh chấp giữa Khách và Shop. Shop từ chối với lý do: " + reason,
+                    "Đơn hàng #" + savedOrder.getId()
+                            + " đang có tranh chấp giữa Khách và Shop. Shop từ chối với lý do: " + reason,
                     NotificationType.SYSTEM,
-                    savedOrder.getId()
-            );
+                    savedOrder.getId());
         }
 
         return mapToDTO(savedOrder);
@@ -527,19 +523,17 @@ public class OrderService {
                     "Phán quyết tranh chấp",
                     "Admin đã xử thắng cho bạn ở đơn hàng #" + order.getId() + ". Tiền sẽ được hoàn lại.",
                     NotificationType.ORDER,
-                    order.getId()
-            );
+                    order.getId());
             notificationService.createNotification(
                     order.getShop().getUser().getId(),
                     "Phán quyết tranh chấp",
                     "Admin đã xử hoàn tiền cho khách ở đơn hàng #" + order.getId() + ".",
                     NotificationType.ORDER,
-                    order.getId()
-            );
+                    order.getId());
         } else if ("COMPLETED".equalsIgnoreCase(decision)) {
             order.setStatus(OrderStatus.COMPLETED);
             order.setCompletedAt(java.time.LocalDateTime.now());
-            
+
             // Xử lý tiền và số lượng bán
             completeOrderLogic(order);
 
@@ -548,15 +542,13 @@ public class OrderService {
                     "Phán quyết tranh chấp",
                     "Admin đã xử từ chối hoàn tiền cho đơn hàng #" + order.getId() + ".",
                     NotificationType.ORDER,
-                    order.getId()
-            );
+                    order.getId());
             notificationService.createNotification(
                     order.getShop().getUser().getId(),
                     "Phán quyết tranh chấp",
                     "Admin đã xử thắng cho Shop ở đơn hàng #" + order.getId() + ". Tiền sẽ được chuyển cho bạn.",
                     NotificationType.ORDER,
-                    order.getId()
-            );
+                    order.getId());
         } else {
             throw new BadRequestException("Quyết định không hợp lệ!");
         }
@@ -575,8 +567,17 @@ public class OrderService {
             com.ecommerce.backend.entity.Shop shop = order.getShop();
             if (shop != null) {
                 shop.setTotalOrders(shop.getTotalOrders() + 1);
-                java.math.BigDecimal sellerRevenue = java.util.Optional.ofNullable(order.getSubtotal()).orElse(java.math.BigDecimal.ZERO)
-                        .subtract(java.util.Optional.ofNullable(order.getPlatformFeeAmount()).orElse(java.math.BigDecimal.ZERO));
+                java.math.BigDecimal subtotal = java.util.Optional.ofNullable(order.getSubtotal()).orElse(java.math.BigDecimal.ZERO);
+                java.math.BigDecimal total = java.util.Optional.ofNullable(order.getTotalPrice()).orElse(java.math.BigDecimal.ZERO);
+                java.math.BigDecimal discount = java.util.Optional.ofNullable(order.getDiscountAmount()).orElse(java.math.BigDecimal.ZERO);
+                java.math.BigDecimal platformFee = java.util.Optional.ofNullable(order.getPlatformFeeAmount()).orElse(java.math.BigDecimal.ZERO);
+
+                java.math.BigDecimal shippingFee = total.subtract(subtotal).add(discount);
+                if (shippingFee.compareTo(java.math.BigDecimal.ZERO) < 0) {
+                    shippingFee = java.math.BigDecimal.ZERO;
+                }
+
+                java.math.BigDecimal sellerRevenue = subtotal.add(shippingFee).subtract(platformFee);
                 shop.setTotalRevenue(shop.getTotalRevenue().add(sellerRevenue));
                 shopRepository.save(shop);
             }

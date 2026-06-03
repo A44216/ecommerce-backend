@@ -6,6 +6,7 @@ import com.ecommerce.backend.dto.responses.seller.order.SellerOrderResponse;
 import com.ecommerce.backend.enums.OrderStatus;
 import com.ecommerce.backend.enums.PaymentMethod;
 import com.ecommerce.backend.enums.PaymentStatus;
+import com.ecommerce.backend.service.OrderService;
 import com.ecommerce.backend.service.seller.SellerOrderService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -20,7 +21,7 @@ import java.util.List;
 public class SellerOrderController {
 
     private final SellerOrderService service;
-    private final com.ecommerce.backend.service.OrderService orderService;
+    private final OrderService orderService;
 
     @GetMapping
     public PageResponse<SellerOrderResponse> getOrders(
