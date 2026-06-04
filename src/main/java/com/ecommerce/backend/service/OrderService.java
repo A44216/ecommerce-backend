@@ -37,6 +37,8 @@ public class OrderService {
     private final com.ecommerce.backend.repository.OrderItemRepository orderItemRepository;
     private final NotificationService notificationService;
     private final com.ecommerce.backend.repository.CouponRepository couponRepository;
+    private final com.ecommerce.backend.repository.CartRepository cartRepository;
+    private final com.ecommerce.backend.repository.CartItemRepository cartItemRepository;
 
     public OrderService(OrderRepository repository,
             UserRepository userRepository,
@@ -45,7 +47,9 @@ public class OrderService {
             com.ecommerce.backend.repository.ProductRepository productRepository,
             com.ecommerce.backend.repository.OrderItemRepository orderItemRepository,
             NotificationService notificationService,
-            com.ecommerce.backend.repository.CouponRepository couponRepository) {
+            com.ecommerce.backend.repository.CouponRepository couponRepository,
+            com.ecommerce.backend.repository.CartRepository cartRepository,
+            com.ecommerce.backend.repository.CartItemRepository cartItemRepository) {
         this.repository = repository;
         this.userRepository = userRepository;
         this.addressRepository = addressRepository;
@@ -54,6 +58,8 @@ public class OrderService {
         this.orderItemRepository = orderItemRepository;
         this.notificationService = notificationService;
         this.couponRepository = couponRepository;
+        this.cartRepository = cartRepository;
+        this.cartItemRepository = cartItemRepository;
     }
 
     private OrderResponse mapToDTO(Order order) {
@@ -266,6 +272,13 @@ public class OrderService {
                 }
                 product.setStock(product.getStock() - itemReq.getQuantity());
                 productRepository.save(product);
+
+                // --- DỌN DẸP GIỎ HÀNG SAU KHI MUA ---
+                cartRepository.findByUserId(user.getId()).ifPresent(cart -> {
+                    cartItemRepository.findByCartIdAndProductId(cart.getId(), product.getId())
+                            .ifPresent(cartItemRepository::delete);
+                });
+                // ------------------------------------
 
                 com.ecommerce.backend.entity.OrderItem orderItem = new com.ecommerce.backend.entity.OrderItem();
                 orderItem.setOrder(savedOrder);
