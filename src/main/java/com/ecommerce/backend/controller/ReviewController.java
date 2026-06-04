@@ -24,6 +24,12 @@ public class ReviewController {
         return reviewService.getAllReviews();
     }
 
+    // lấy review theo ID
+    @GetMapping("/{id}")
+    public ReviewResponse getReviewById(@PathVariable Integer id) {
+        return reviewService.getReviewById(id);
+    }
+
     // review theo product
     @GetMapping("/product/{productId}")
     public List<ReviewResponse> getReviewsByProduct(@PathVariable Integer productId) {

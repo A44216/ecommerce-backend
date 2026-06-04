@@ -12,6 +12,7 @@ import com.ecommerce.backend.repository.ProductRepository;
 import com.ecommerce.backend.repository.ReviewRepository;
 import com.ecommerce.backend.repository.ShopRepository;
 import com.ecommerce.backend.repository.UserRepository;
+import com.ecommerce.backend.exception.ResourceNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -70,6 +71,13 @@ public class ReviewService {
         return reviews.stream()
                 .map(this::mapToDTO)
                 .toList();
+    }
+
+    // review theo id
+    public ReviewResponse getReviewById(Integer id) {
+        Review review = reviewRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Review not found with id: " + id));
+        return mapToDTO(review);
     }
 
     // review theo product

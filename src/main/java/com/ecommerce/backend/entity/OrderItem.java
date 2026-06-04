@@ -9,6 +9,7 @@ import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 @Entity
 @Table(
@@ -53,4 +54,7 @@ public class OrderItem {
 
     @Column(name = "product_image", length = 255)
     private String productImage;
+
+    @OneToMany(mappedBy = "orderItem", fetch = FetchType.LAZY)
+    private List<Review> reviews;
 }

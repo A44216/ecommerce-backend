@@ -17,5 +17,7 @@ public class OrderItemResponse {
     private String productImage;
     private BigDecimal price;
     private Integer quantity;
+    private Boolean isReviewed;
+    private Integer reviewId;
 
 }

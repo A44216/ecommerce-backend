@@ -88,6 +88,9 @@ public class OrderService {
                             firstImageUrl = item.getProduct().getImages().get(0).getImageUrl();
                         }
 
+                        boolean isReviewed = item.getReviews() != null && !item.getReviews().isEmpty();
+                        Integer reviewId = isReviewed ? item.getReviews().get(0).getId() : null;
+
                         return OrderItemResponse.builder()
                                 .id(item.getId())
                                 .productId(item.getProduct().getId())
@@ -95,6 +98,8 @@ public class OrderService {
                                 .productImage(firstImageUrl) // Truyền URL ảnh vừa lấy được
                                 .price(item.getPrice())
                                 .quantity(item.getQuantity())
+                                .isReviewed(isReviewed)
+                                .reviewId(reviewId)
                                 .build();
                     })
                     .collect(Collectors.toList());
@@ -219,7 +224,7 @@ public class OrderService {
         order.setShippingAddress(fullAddress);
         order.setTotalPrice(request.getTotalPrice());
         order.setSubtotal(request.getSubtotal());
-        order.setDiscountAmount(request.getDiscountAmount());
+        order.setDiscountAmount(request.getDiscountAmount() != null ? request.getDiscountAmount() : java.math.BigDecimal.ZERO);
         order.setStatus(OrderStatus.PENDING);
 
         // Xử lý Platform Fee (Mặc định 5%)
@@ -254,6 +259,13 @@ public class OrderService {
 
                 com.ecommerce.backend.entity.Product product = productRepository.findById(itemReq.getProductId())
                         .orElseThrow(() -> new ResourceNotFoundException("Product not found"));
+
+                // Kiểm tra và trừ số lượng tồn kho
+                if (product.getStock() < itemReq.getQuantity()) {
+                    throw new BadRequestException("Số lượng tồn kho không đủ cho sản phẩm: " + product.getName());
+                }
+                product.setStock(product.getStock() - itemReq.getQuantity());
+                productRepository.save(product);
 
                 com.ecommerce.backend.entity.OrderItem orderItem = new com.ecommerce.backend.entity.OrderItem();
                 orderItem.setOrder(savedOrder);
