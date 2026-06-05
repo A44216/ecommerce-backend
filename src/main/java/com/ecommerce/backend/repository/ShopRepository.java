@@ -68,7 +68,8 @@ public interface ShopRepository extends JpaRepository<Shop, Integer> {
                  LIMIT 5
              )
         ) t
-        ORDER BY priority
+        GROUP BY id, value
+        ORDER BY MIN(priority)
         LIMIT 5
     """, nativeQuery = true)
     List<Object[]> autocompleteShops(@Param("keyword") String keyword);

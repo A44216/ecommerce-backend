@@ -33,8 +33,7 @@ public interface ComplaintRepository extends JpaRepository<Complaint, Integer> {
     Page<Complaint> adminSearchComplaints(
             @Param("status") ComplaintStatus status,
             @Param("keyword") String keyword,
-            Pageable pageable
-    );
+            Pageable pageable);
 
     List<Complaint> findByUserIdOrderByCreatedAtDesc(Integer userId);
 
@@ -53,11 +52,13 @@ public interface ComplaintRepository extends JpaRepository<Complaint, Integer> {
                 FROM complaints c
                 JOIN users u ON c.user_id = u.id
                 WHERE LOWER(u.username) LIKE LOWER(CONCAT('%', :keyword, '%'))
-                ORDER BY c.created_at DESC
+                GROUP BY u.username
+                ORDER BY MAX(c.created_at) DESC
                 LIMIT 5
             )
         ) t
-        ORDER BY t.priority
+        GROUP BY value
+        ORDER BY MIN(t.priority)
         LIMIT 5
     """, nativeQuery = true)
     List<String> autocompleteComplaints(@Param("keyword") String keyword);

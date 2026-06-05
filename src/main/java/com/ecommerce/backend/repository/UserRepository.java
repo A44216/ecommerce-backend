@@ -81,7 +81,8 @@ public interface UserRepository extends JpaRepository<User, Integer> {
                 LIMIT 5
             )
         ) t
-        ORDER BY priority
+        GROUP BY value
+        ORDER BY MIN(priority)
         LIMIT 5
     """, nativeQuery = true)
     List<String> autocompleteUsers(@Param("keyword") String keyword);

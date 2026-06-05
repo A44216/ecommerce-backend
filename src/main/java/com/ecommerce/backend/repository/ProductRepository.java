@@ -108,7 +108,7 @@ public interface ProductRepository extends JpaRepository<Product, Integer> {
     Optional<Product> findById(Integer id);
 
     @Query("""
-        SELECT new com.ecommerce.backend.dto.responses.ProductAutocompleteResponse(
+        SELECT DISTINCT new com.ecommerce.backend.dto.responses.ProductAutocompleteResponse(
             p.productCode,
             p.name
         )
@@ -135,7 +135,7 @@ public interface ProductRepository extends JpaRepository<Product, Integer> {
     );
 
     @Query("""
-        SELECT new com.ecommerce.backend.dto.responses.ProductAutocompleteResponse(
+        SELECT DISTINCT new com.ecommerce.backend.dto.responses.ProductAutocompleteResponse(
             p.productCode,
             p.name
         )

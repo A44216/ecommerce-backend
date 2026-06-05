@@ -281,15 +281,17 @@ public interface OrderRepository extends JpaRepository<Order, Integer> {
             )
             UNION ALL
             (
-                SELECT u.full_name AS value, 3 AS priority, o.created_at
+                SELECT u.full_name AS value, 3 AS priority, MAX(o.created_at) AS created_at
                 FROM orders o
                 JOIN users u ON o.user_id = u.id
                 WHERE LOWER(u.full_name) LIKE LOWER(CONCAT('%', :keyword, '%'))
-                ORDER BY o.created_at DESC
+                GROUP BY u.id, u.full_name
+                ORDER BY created_at DESC
                 LIMIT 5
             )
         ) t
-        ORDER BY priority, created_at DESC
+        GROUP BY value
+        ORDER BY MIN(priority), MAX(created_at) DESC
         LIMIT 5
     """, nativeQuery = true)
     List<String> autocompleteSellerOrders(@Param("keyword") String keyword);
@@ -337,14 +339,16 @@ public interface OrderRepository extends JpaRepository<Order, Integer> {
             )
             UNION ALL
             (
-                SELECT u.full_name AS value, 3 AS priority, o.created_at
+                SELECT u.full_name AS value, 3 AS priority, MAX(o.created_at) AS created_at
                 FROM orders o
                 JOIN users u ON o.user_id = u.id
                 WHERE (:shopId IS NULL OR o.shop_id = :shopId)
                   AND LOWER(u.full_name) LIKE LOWER(CONCAT('%', :keyword, '%'))
+                GROUP BY u.id, u.full_name
             )
         ) t
-        ORDER BY t.priority ASC, t.created_at DESC
+        GROUP BY value
+        ORDER BY MIN(t.priority) ASC, MAX(t.created_at) DESC
         LIMIT 5
     """, nativeQuery = true)
     List<String> autocompleteAdminOrders(
