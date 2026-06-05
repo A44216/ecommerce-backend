@@ -35,11 +35,14 @@ public class SellerProductController {
     public ResponseEntity<PageResponse<SellerProductResponse>> getProducts(
             @RequestParam(required = false) ProductStatus status,
             @RequestParam(required = false) Boolean isDeleted,
+            @RequestParam(required = false) Boolean inStock,
             @RequestParam(required = false) String keyword,
+            @RequestParam(required = false, defaultValue = "createdAt") String sortBy,
+            @RequestParam(required = false, defaultValue = "desc") String sortDir,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
         return ResponseEntity.ok(
-                productService.filterProducts(status, isDeleted, keyword, page, size));
+                productService.filterProducts(status, isDeleted, inStock, keyword, sortBy, sortDir, page, size));
     }
 
     // lấy thông tin chi tiết một sản phẩm theo ID

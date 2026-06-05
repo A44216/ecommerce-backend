@@ -220,12 +220,18 @@ public class SellerProductService {
     public PageResponse<SellerProductResponse> filterProducts(
             ProductStatus status,
             Boolean isDeleted,
+            Boolean inStock,
             String keyword,
+            String sortBy,
+            String sortDir,
             int page,
             int size
     ) {
 
-        Pageable pageable = PageRequest.of(page, size, Sort.by("id").descending());
+        String sortProperty = (sortBy != null && !sortBy.isBlank()) ? sortBy : "createdAt";
+        Sort.Direction direction = "asc".equalsIgnoreCase(sortDir) ? Sort.Direction.ASC : Sort.Direction.DESC;
+
+        Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sortProperty));
 
         Integer shopId = sellerShopService.getMyShopEntity().getId();
 
@@ -233,6 +239,7 @@ public class SellerProductService {
                 shopId,
                 isDeleted,
                 status,
+                inStock,
                 (keyword == null || keyword.isBlank()) ? null : keyword.trim(),
                 pageable
         );
