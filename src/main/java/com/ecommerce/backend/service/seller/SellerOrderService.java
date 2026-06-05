@@ -251,7 +251,9 @@ public class SellerOrderService {
             return List.of();
         }
 
-        return orderRepository.autocompleteSellerOrders(k)
+        Integer shopId = sellerShopService.getMyShop().getId();
+
+        return orderRepository.autocompleteSellerOrders(k, shopId)
                 .stream()
                 .distinct()
                 .limit(5)

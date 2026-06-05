@@ -32,27 +32,26 @@ public interface OrderRepository extends JpaRepository<Order, Integer> {
     Optional<Order> findByIdAndShopId(Integer id, Integer shopId);
 
     @Query("""
-        SELECT o FROM Order o
-        LEFT JOIN o.user u
-        WHERE o.shop.id = :shopId
-        AND (:statuses IS NULL OR o.status IN :statuses)
-        AND (:paymentMethod IS NULL OR o.paymentMethod = :paymentMethod)
-        AND (:paymentStatus IS NULL OR o.paymentStatus = :paymentStatus)
-        AND (
-            :keyword IS NULL OR :keyword = '' OR
-            LOWER(o.orderCode) LIKE LOWER(CONCAT('%', :keyword, '%')) OR
-            LOWER(u.fullName) LIKE LOWER(CONCAT('%', :keyword, '%')) OR
-            o.shippingPhone LIKE CONCAT('%', :keyword, '%')
-        )
-    """)
+                SELECT o FROM Order o
+                LEFT JOIN o.user u
+                WHERE o.shop.id = :shopId
+                AND (:statuses IS NULL OR o.status IN :statuses)
+                AND (:paymentMethod IS NULL OR o.paymentMethod = :paymentMethod)
+                AND (:paymentStatus IS NULL OR o.paymentStatus = :paymentStatus)
+                AND (
+                    :keyword IS NULL OR :keyword = '' OR
+                    LOWER(o.orderCode) LIKE LOWER(CONCAT('%', :keyword, '%')) OR
+                    LOWER(u.fullName) LIKE LOWER(CONCAT('%', :keyword, '%')) OR
+                    o.shippingPhone LIKE CONCAT('%', :keyword, '%')
+                )
+            """)
     Page<Order> getOrders(
             @Param("shopId") Integer shopId,
             @Param("statuses") List<OrderStatus> statuses,
             @Param("paymentMethod") PaymentMethod paymentMethod,
             @Param("paymentStatus") PaymentStatus paymentStatus,
             @Param("keyword") String keyword,
-            Pageable pageable
-    );
+            Pageable pageable);
 
     @Query("""
                 SELECT COUNT(o)
@@ -202,12 +201,12 @@ public interface OrderRepository extends JpaRepository<Order, Integer> {
     List<Object[]> getPlatformRevenueByYear();
 
     @Query("""
-            SELECT COALESCE(SUM(o.subtotal - o.platformFeeAmount), 0)
-            FROM Order o
-            WHERE o.status = com.ecommerce.backend.enums.OrderStatus.COMPLETED
-                AND o.paymentStatus = com.ecommerce.backend.enums.PaymentStatus.PAID
-                AND o.completedAt BETWEEN :startDate AND :endDate
-        """)
+                SELECT COALESCE(SUM(o.subtotal - o.platformFeeAmount), 0)
+                FROM Order o
+                WHERE o.status = com.ecommerce.backend.enums.OrderStatus.COMPLETED
+                    AND o.paymentStatus = com.ecommerce.backend.enums.PaymentStatus.PAID
+                    AND o.completedAt BETWEEN :startDate AND :endDate
+            """)
     BigDecimal sumGMVByDate(
             @Param("startDate") LocalDateTime startDate,
             @Param("endDate") LocalDateTime endDate);
@@ -215,157 +214,165 @@ public interface OrderRepository extends JpaRepository<Order, Integer> {
     Integer countByCreatedAtBetween(LocalDateTime startDate, LocalDateTime endDate);
 
     @Query("""
-        SELECT o.status, COUNT(DISTINCT o.id)
-        FROM Order o
-        WHERE o.createdAt BETWEEN :startDate AND :endDate
-           OR (o.status = com.ecommerce.backend.enums.OrderStatus.COMPLETED
-               AND o.completedAt BETWEEN :startDate AND :endDate)
-        GROUP BY o.status
-    """)
+                SELECT o.status, COUNT(DISTINCT o.id)
+                FROM Order o
+                WHERE o.createdAt BETWEEN :startDate AND :endDate
+                   OR (o.status = com.ecommerce.backend.enums.OrderStatus.COMPLETED
+                       AND o.completedAt BETWEEN :startDate AND :endDate)
+                GROUP BY o.status
+            """)
     List<Object[]> countOrdersByStatusAndDate(
             @Param("startDate") LocalDateTime startDate,
             @Param("endDate") LocalDateTime endDate);
 
     @Query(value = """
-            SELECT c.name AS categoryName, COALESCE(SUM(oi.price * oi.quantity), 0) AS totalSales
-            FROM orders o
-            JOIN order_items oi ON o.id = oi.order_id
-            JOIN products p ON oi.product_id = p.id
-            JOIN categories c ON p.category_id = c.id
-            WHERE o.status = 'COMPLETED' AND o.payment_status = 'PAID'
-            AND o.completed_at BETWEEN :startDate AND :endDate
-            GROUP BY c.id, c.name
-            ORDER BY totalSales DESC
-        """, nativeQuery = true)
+                SELECT c.name AS categoryName, COALESCE(SUM(oi.price * oi.quantity), 0) AS totalSales
+                FROM orders o
+                JOIN order_items oi ON o.id = oi.order_id
+                JOIN products p ON oi.product_id = p.id
+                JOIN categories c ON p.category_id = c.id
+                WHERE o.status = 'COMPLETED' AND o.payment_status = 'PAID'
+                AND o.completed_at BETWEEN :startDate AND :endDate
+                GROUP BY c.id, c.name
+                ORDER BY totalSales DESC
+            """, nativeQuery = true)
     List<Object[]> getCategorySalesByDate(
             @Param("startDate") LocalDateTime startDate,
             @Param("endDate") LocalDateTime endDate);
 
     @Query("""
-            SELECT new com.ecommerce.backend.dto.responses.admin.dashboard.AdminTopShopResponse(
-                o.shop.id,
-                o.shop.shopName,
-                o.shop.avatar,
-                SUM(o.subtotal - o.platformFeeAmount),
-                COUNT(o.id)
-            )
-            FROM Order o
-            WHERE o.status = com.ecommerce.backend.enums.OrderStatus.COMPLETED
-                AND o.paymentStatus = com.ecommerce.backend.enums.PaymentStatus.PAID
-                AND o.shop.status = com.ecommerce.backend.enums.ShopStatus.APPROVED
-                AND o.completedAt BETWEEN :startDate AND :endDate
-            GROUP BY o.shop.id, o.shop.shopName, o.shop.avatar
-            ORDER BY SUM(o.subtotal - o.platformFeeAmount) DESC
-        """)
+                SELECT new com.ecommerce.backend.dto.responses.admin.dashboard.AdminTopShopResponse(
+                    o.shop.id,
+                    o.shop.shopName,
+                    o.shop.avatar,
+                    SUM(o.subtotal - o.platformFeeAmount),
+                    COUNT(o.id)
+                )
+                FROM Order o
+                WHERE o.status = com.ecommerce.backend.enums.OrderStatus.COMPLETED
+                    AND o.paymentStatus = com.ecommerce.backend.enums.PaymentStatus.PAID
+                    AND o.shop.status = com.ecommerce.backend.enums.ShopStatus.APPROVED
+                    AND o.completedAt BETWEEN :startDate AND :endDate
+                GROUP BY o.shop.id, o.shop.shopName, o.shop.avatar
+                ORDER BY SUM(o.subtotal - o.platformFeeAmount) DESC
+            """)
     List<AdminTopShopResponse> adminFindTopShopsByRevenueByDate(
             @Param("startDate") LocalDateTime startDate,
             @Param("endDate") LocalDateTime endDate,
             Pageable pageable);
 
     @Query(value = """
-        SELECT value FROM (
-            (
-                SELECT o.order_code AS value, 1 AS priority, o.created_at
-                FROM orders o
-                WHERE LOWER(o.order_code) LIKE LOWER(CONCAT('%', :keyword, '%'))
-                ORDER BY o.created_at DESC
+                SELECT value FROM (
+                    (
+                        SELECT o.order_code AS value, 1 AS priority, o.created_at
+                        FROM orders o
+                        WHERE o.shop_id = :shopId AND LOWER(o.order_code) LIKE LOWER(CONCAT('%', :keyword, '%'))
+                        ORDER BY o.created_at DESC
+                        LIMIT 5
+                    )
+                    UNION ALL
+                    (
+                        SELECT o.shipping_phone AS value, 2 AS priority, o.created_at
+                        FROM orders o
+                        WHERE o.shop_id = :shopId AND o.shipping_phone LIKE CONCAT('%', :keyword, '%')
+                        ORDER BY o.created_at DESC
+                        LIMIT 5
+                    )
+                    UNION ALL
+                    (
+                        SELECT u.full_name AS value, 3 AS priority, MAX(o.created_at) AS created_at
+                        FROM orders o
+                        JOIN users u ON o.user_id = u.id
+                        WHERE o.shop_id = :shopId AND LOWER(u.full_name) LIKE LOWER(CONCAT('%', :keyword, '%'))
+                        GROUP BY u.id, u.full_name
+                        ORDER BY created_at DESC
+                        LIMIT 5
+                    )
+                ) t
+                GROUP BY value
+                ORDER BY MIN(priority), MAX(created_at) DESC
                 LIMIT 5
-            )
-            UNION ALL
-            (
-                SELECT o.shipping_phone AS value, 2 AS priority, o.created_at
-                FROM orders o
-                WHERE o.shipping_phone LIKE CONCAT('%', :keyword, '%')
-                ORDER BY o.created_at DESC
-                LIMIT 5
-            )
-            UNION ALL
-            (
-                SELECT u.full_name AS value, 3 AS priority, MAX(o.created_at) AS created_at
-                FROM orders o
-                JOIN users u ON o.user_id = u.id
-                WHERE LOWER(u.full_name) LIKE LOWER(CONCAT('%', :keyword, '%'))
-                GROUP BY u.id, u.full_name
-                ORDER BY created_at DESC
-                LIMIT 5
-            )
-        ) t
-        GROUP BY value
-        ORDER BY MIN(priority), MAX(created_at) DESC
-        LIMIT 5
-    """, nativeQuery = true)
-    List<String> autocompleteSellerOrders(@Param("keyword") String keyword);
+            """, nativeQuery = true)
+    List<String> autocompleteSellerOrders(@Param("keyword") String keyword, @Param("shopId") Integer shopId);
 
     @Query("""
-        SELECT o FROM Order o
-        LEFT JOIN FETCH o.user u
-        LEFT JOIN FETCH o.shop s
-        LEFT JOIN FETCH o.items i
-        LEFT JOIN FETCH i.product p
-        WHERE (:shopId IS NULL OR o.shop.id = :shopId)
-        AND (:status IS NULL OR o.status = :status)
-        AND (:paymentMethod IS NULL OR o.paymentMethod = :paymentMethod)
-        AND (:paymentStatus IS NULL OR o.paymentStatus = :paymentStatus)
-        AND (
-            :keyword IS NULL OR :keyword = '' OR
-            LOWER(o.orderCode) LIKE LOWER(CONCAT('%', :keyword, '%')) OR
-            LOWER(u.fullName) LIKE LOWER(CONCAT('%', :keyword, '%')) OR
-            o.shippingPhone LIKE CONCAT('%', :keyword, '%')
-        )
-    """)
+                SELECT o FROM Order o
+                LEFT JOIN FETCH o.user u
+                LEFT JOIN FETCH o.shop s
+                LEFT JOIN FETCH o.items i
+                LEFT JOIN FETCH i.product p
+                WHERE (:shopId IS NULL OR o.shop.id = :shopId)
+                AND (:status IS NULL OR o.status = :status)
+                AND (:paymentMethod IS NULL OR o.paymentMethod = :paymentMethod)
+                AND (:paymentStatus IS NULL OR o.paymentStatus = :paymentStatus)
+                AND (
+                    :keyword IS NULL OR :keyword = '' OR
+                    LOWER(o.orderCode) LIKE LOWER(CONCAT('%', :keyword, '%')) OR
+                    LOWER(u.fullName) LIKE LOWER(CONCAT('%', :keyword, '%')) OR
+                    LOWER(u.username) LIKE LOWER(CONCAT('%', :keyword, '%')) OR
+                    o.shippingPhone LIKE CONCAT('%', :keyword, '%')
+                )
+            """)
     Page<Order> adminSearchOrders(
             @Param("shopId") Integer shopId,
             @Param("keyword") String keyword,
             @Param("status") OrderStatus status,
             @Param("paymentMethod") PaymentMethod paymentMethod,
             @Param("paymentStatus") PaymentStatus paymentStatus,
-            Pageable pageable
-    );
+            Pageable pageable);
 
     @Query(value = """
-        SELECT value FROM (
-            (
-                SELECT o.order_code AS value, 1 AS priority, o.created_at
-                FROM orders o
-                WHERE (:shopId IS NULL OR o.shop_id = :shopId)
-                  AND LOWER(o.order_code) LIKE LOWER(CONCAT('%', :keyword, '%'))
-            )
-            UNION ALL
-            (
-                SELECT o.shipping_phone AS value, 2 AS priority, o.created_at
-                FROM orders o
-                WHERE (:shopId IS NULL OR o.shop_id = :shopId)
-                  AND o.shipping_phone LIKE CONCAT('%', :keyword, '%')
-            )
-            UNION ALL
-            (
-                SELECT u.full_name AS value, 3 AS priority, MAX(o.created_at) AS created_at
-                FROM orders o
-                JOIN users u ON o.user_id = u.id
-                WHERE (:shopId IS NULL OR o.shop_id = :shopId)
-                  AND LOWER(u.full_name) LIKE LOWER(CONCAT('%', :keyword, '%'))
-                GROUP BY u.id, u.full_name
-            )
-        ) t
-        GROUP BY value
-        ORDER BY MIN(t.priority) ASC, MAX(t.created_at) DESC
-        LIMIT 5
-    """, nativeQuery = true)
+                SELECT value FROM (
+                    (
+                        SELECT o.order_code AS value, 1 AS priority, o.created_at
+                        FROM orders o
+                        WHERE (:shopId IS NULL OR o.shop_id = :shopId)
+                          AND LOWER(o.order_code) LIKE LOWER(CONCAT('%', :keyword, '%'))
+                    )
+                    UNION ALL
+                    (
+                        SELECT o.shipping_phone AS value, 2 AS priority, o.created_at
+                        FROM orders o
+                        WHERE (:shopId IS NULL OR o.shop_id = :shopId)
+                          AND o.shipping_phone LIKE CONCAT('%', :keyword, '%')
+                    )
+                    UNION ALL
+                    (
+                        SELECT u.full_name AS value, 3 AS priority, MAX(o.created_at) AS created_at
+                        FROM orders o
+                        JOIN users u ON o.user_id = u.id
+                        WHERE (:shopId IS NULL OR o.shop_id = :shopId)
+                          AND LOWER(u.full_name) LIKE LOWER(CONCAT('%', :keyword, '%'))
+                        GROUP BY u.id, u.full_name
+                    )
+                    UNION ALL
+                    (
+                        SELECT u.username AS value, 4 AS priority, MAX(o.created_at) AS created_at
+                        FROM orders o
+                        JOIN users u ON o.user_id = u.id
+                        WHERE (:shopId IS NULL OR o.shop_id = :shopId)
+                          AND LOWER(u.username) LIKE LOWER(CONCAT('%', :keyword, '%'))
+                        GROUP BY u.username
+                    )
+                ) t
+                GROUP BY value
+                ORDER BY MIN(t.priority) ASC, MAX(t.created_at) DESC
+                LIMIT 5
+            """, nativeQuery = true)
     List<String> autocompleteAdminOrders(
             @Param("keyword") String keyword,
-            @Param("shopId") Integer shopId
-    );
+            @Param("shopId") Integer shopId);
 
     @Query(value = """
-        SELECT p.category_id
-        FROM orders o
-        JOIN order_items oi ON o.id = oi.order_id
-        JOIN products p ON oi.product_id = p.id
-        WHERE o.user_id = :userId AND o.status = 'COMPLETED'
-        GROUP BY p.category_id
-        ORDER BY COUNT(*) DESC
-        LIMIT 1
-    """, nativeQuery = true)
+                SELECT p.category_id
+                FROM orders o
+                JOIN order_items oi ON o.id = oi.order_id
+                JOIN products p ON oi.product_id = p.id
+                WHERE o.user_id = :userId AND o.status = 'COMPLETED'
+                GROUP BY p.category_id
+                ORDER BY COUNT(*) DESC
+                LIMIT 1
+            """, nativeQuery = true)
     Optional<Integer> findFavoriteCategoryIdByUserId(@Param("userId") Integer userId);
 
     @EntityGraph(attributePaths = { "items", "items.product" })
