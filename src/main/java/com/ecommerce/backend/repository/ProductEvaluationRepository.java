@@ -30,4 +30,13 @@ public interface ProductEvaluationRepository extends JpaRepository<ProductEvalua
         """)
     List<ProductEvaluation> findAllByProductIdsAndType(List<Integer> productIds, ProductEvaluationType type);
 
+    @Query("""
+        SELECT pe FROM ProductEvaluation pe
+        JOIN FETCH pe.product p
+        JOIN FETCH p.category c
+        WHERE pe.type = :type AND p.status = 'APPROVED' AND c.id = :categoryId
+        ORDER BY pe.score DESC, p.createdAt DESC
+    """)
+    List<ProductEvaluation> findTopProductsByTypeAndCategory(ProductEvaluationType type, Integer categoryId, Pageable pageable);
+
 }

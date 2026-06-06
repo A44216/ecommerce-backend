@@ -16,8 +16,10 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -30,6 +32,7 @@ public class RecommendationService {
     private final ProductEvaluationRepository evaluationRepository;
     private final OrderRepository orderRepository;
     private final UserRepository userRepository;
+    private final ShopRepository shopRepository;
     private final SecurityUtils securityUtils;
 
     @Transactional
@@ -61,14 +64,43 @@ public class RecommendationService {
         if (user == null || user.getStatus() != UserStatus.ACTIVE) return;
         Integer userId = user.getId();
 
+        Integer userShopId = shopRepository.findByUserId(userId)
+                .map(com.ecommerce.backend.entity.Shop::getId)
+                .orElse(null);
+
         Map<Integer, Recommendation> existingRecsMap = recommendationRepository.findAllByUserId(userId)
                 .stream()
                 .collect(Collectors.toMap(r -> r.getProduct().getId(), r -> r));
 
         Integer favoriteCatId = orderRepository.findFavoriteCategoryIdByUserId(userId).orElse(null);
 
-        List<ProductEvaluation> topEvaluations = evaluationRepository.findTopProductsByType(
+        List<ProductEvaluation> topEvaluations = new ArrayList<>();
+        if (favoriteCatId != null) {
+            topEvaluations.addAll(evaluationRepository.findTopProductsByTypeAndCategory(
+                    ProductEvaluationType.FUZZY, favoriteCatId, PageRequest.of(0, 30)));
+        }
+
+        List<ProductEvaluation> globalEvals = evaluationRepository.findTopProductsByType(
                 ProductEvaluationType.FUZZY, PageRequest.of(0, 50));
+
+        // Filter out products from the user's own shop
+        if (userShopId != null) {
+            topEvaluations.removeIf(eval -> eval.getProduct().getShop().getId().equals(userShopId));
+        }
+
+        Set<Integer> addedProductIds = topEvaluations.stream()
+                .map(e -> e.getProduct().getId())
+                .collect(Collectors.toSet());
+
+        for (ProductEvaluation eval : globalEvals) {
+            if (topEvaluations.size() >= 50) break;
+            if (userShopId != null && eval.getProduct().getShop().getId().equals(userShopId)) continue;
+            
+            if (!addedProductIds.contains(eval.getProduct().getId())) {
+                topEvaluations.add(eval);
+                addedProductIds.add(eval.getProduct().getId());
+            }
+        }
 
         List<Recommendation> toSave = topEvaluations.stream().map(eval -> {
             double finalScore = eval.getScore().doubleValue();

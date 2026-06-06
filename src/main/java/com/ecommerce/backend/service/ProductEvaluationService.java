@@ -12,6 +12,8 @@ import com.ecommerce.backend.enums.ShopStatus;
 import com.ecommerce.backend.exception.ResourceNotFoundException;
 import com.ecommerce.backend.repository.ProductRepository;
 import com.ecommerce.backend.repository.ProductEvaluationRepository;
+import com.ecommerce.backend.repository.ShopRepository;
+import com.ecommerce.backend.util.SecurityUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
@@ -33,31 +35,61 @@ public class ProductEvaluationService {
 
     private final ProductEvaluationRepository evaluationRepository;
     private final ProductRepository productRepository;
+    private final SecurityUtils securityUtils;
+    private final ShopRepository shopRepository;
 
     public ProductEvaluationService(
             ProductEvaluationRepository evaluationRepository,
-            ProductRepository productRepository
+            ProductRepository productRepository,
+            SecurityUtils securityUtils,
+            ShopRepository shopRepository
     ) {
         this.evaluationRepository = evaluationRepository;
         this.productRepository = productRepository;
+        this.securityUtils = securityUtils;
+        this.shopRepository = shopRepository;
+    }
+
+    private Integer getSafeUserShopId() {
+        try {
+            String username = securityUtils.getCurrentUsername();
+            if (username != null && !username.equals("anonymousUser")) {
+                return shopRepository.findByUsername(username)
+                        .map(com.ecommerce.backend.entity.Shop::getId)
+                        .orElse(null);
+            }
+        } catch (Exception e) {
+            log.error("Lỗi khi lấy shop id của user hiện tại", e);
+        }
+        return null;
     }
 
     // Lấy danh sách hiển thị Trang chủ (Ví dụ: Top 20 Deal Hời nhất)
     public List<ProductEvaluationResponse> getTopFuzzyDeals(int limit) {
+        Integer userShopId = getSafeUserShopId();
+        int fetchLimit = userShopId != null ? limit + 20 : limit; // Lấy dư ra phòng trường hợp bị loại trừ
+
         return evaluationRepository.findTopProductsByType(
                         ProductEvaluationType.FUZZY,
-                        PageRequest.of(0, limit)
+                        PageRequest.of(0, fetchLimit)
                 ).stream()
+                .filter(eval -> userShopId == null || !eval.getProduct().getShop().getId().equals(userShopId))
+                .limit(limit)
                 .map(this::mapToDTO)
                 .collect(Collectors.toList());
     }
 
     // Lấy danh sách sản phẩm Xu hướng hiển thị lên trang chủ
     public List<ProductEvaluationResponse> getTopTrendingDeals(int limit) {
+        Integer userShopId = getSafeUserShopId();
+        int fetchLimit = userShopId != null ? limit + 20 : limit; // Lấy dư ra phòng trường hợp bị loại trừ
+
         return evaluationRepository.findTopProductsByType(
                         ProductEvaluationType.TRENDING,
-                        PageRequest.of(0, limit)
+                        PageRequest.of(0, fetchLimit)
                 ).stream()
+                .filter(eval -> userShopId == null || !eval.getProduct().getShop().getId().equals(userShopId))
+                .limit(limit)
                 .map(this::mapToDTO)
                 .collect(Collectors.toList());
     }
