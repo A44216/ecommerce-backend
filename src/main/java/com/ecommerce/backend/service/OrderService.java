@@ -5,9 +5,12 @@ import com.ecommerce.backend.dto.responses.OrderItemResponse;
 import com.ecommerce.backend.dto.responses.OrderResponse;
 import com.ecommerce.backend.entity.Address;
 import com.ecommerce.backend.entity.Order;
+import com.ecommerce.backend.entity.PlatformFee;
 import com.ecommerce.backend.entity.User;
 import com.ecommerce.backend.enums.NotificationType;
 import com.ecommerce.backend.enums.OrderStatus;
+import com.ecommerce.backend.enums.PaymentMethod;
+import com.ecommerce.backend.enums.PaymentStatus;
 import com.ecommerce.backend.exception.BadRequestException;
 import com.ecommerce.backend.exception.ResourceNotFoundException;
 import com.ecommerce.backend.repository.AddressRepository;
@@ -19,6 +22,7 @@ import lombok.Setter;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -39,6 +43,7 @@ public class OrderService {
     private final com.ecommerce.backend.repository.CouponRepository couponRepository;
     private final com.ecommerce.backend.repository.CartRepository cartRepository;
     private final com.ecommerce.backend.repository.CartItemRepository cartItemRepository;
+    private final com.ecommerce.backend.repository.PlatformFeeRepository platformFeeRepository;
 
     public OrderService(OrderRepository repository,
             UserRepository userRepository,
@@ -49,7 +54,8 @@ public class OrderService {
             NotificationService notificationService,
             com.ecommerce.backend.repository.CouponRepository couponRepository,
             com.ecommerce.backend.repository.CartRepository cartRepository,
-            com.ecommerce.backend.repository.CartItemRepository cartItemRepository) {
+            com.ecommerce.backend.repository.CartItemRepository cartItemRepository,
+            com.ecommerce.backend.repository.PlatformFeeRepository platformFeeRepository) {
         this.repository = repository;
         this.userRepository = userRepository;
         this.addressRepository = addressRepository;
@@ -60,6 +66,7 @@ public class OrderService {
         this.couponRepository = couponRepository;
         this.cartRepository = cartRepository;
         this.cartItemRepository = cartItemRepository;
+        this.platformFeeRepository = platformFeeRepository;
     }
 
     private OrderResponse mapToDTO(Order order) {
@@ -207,10 +214,10 @@ public class OrderService {
         order.setPaymentMethod(request.getPaymentMethod());
 
         // Tự động thiết lập trạng thái thanh toán
-        if (request.getPaymentMethod() == com.ecommerce.backend.enums.PaymentMethod.QR) {
-            order.setPaymentStatus(com.ecommerce.backend.enums.PaymentStatus.PAID);
+        if (request.getPaymentMethod() == PaymentMethod.QR) {
+            order.setPaymentStatus(PaymentStatus.PAID);
         } else {
-            order.setPaymentStatus(com.ecommerce.backend.enums.PaymentStatus.UNPAID);
+            order.setPaymentStatus(PaymentStatus.UNPAID);
         }
 
         // Snapshot thông tin vận chuyển tại thời điểm đặt hàng
@@ -230,11 +237,15 @@ public class OrderService {
         order.setShippingAddress(fullAddress);
         order.setTotalPrice(request.getTotalPrice());
         order.setSubtotal(request.getSubtotal());
-        order.setDiscountAmount(request.getDiscountAmount() != null ? request.getDiscountAmount() : java.math.BigDecimal.ZERO);
+        order.setDiscountAmount(request.getDiscountAmount() != null ? request.getDiscountAmount() : BigDecimal.ZERO);
         order.setStatus(OrderStatus.PENDING);
 
-        // Xử lý Platform Fee (Mặc định 5%)
-        java.math.BigDecimal platformFeeRate = new java.math.BigDecimal("5.00");
+        // Xử lý Platform Fee (Lấy từ cấu hình)
+        PlatformFee currentFee = platformFeeRepository.findByIsActiveTrue().orElse(null);
+        java.math.BigDecimal platformFeeRate = (currentFee != null && currentFee.getRate() != null) 
+                ? currentFee.getRate() 
+                : java.math.BigDecimal.ZERO;
+                
         order.setPlatformFeeRate(platformFeeRate);
         if (request.getSubtotal() != null) {
             order.setPlatformFeeAmount(
