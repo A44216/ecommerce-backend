@@ -254,14 +254,14 @@ public class AuthService {
                 user.setUsername("user_" + java.util.UUID.randomUUID().toString().substring(0, 8));
                 userRepository.save(user);
             } else {
-                // BỔ SUNG: Chặn việc ghi đè tài khoản LOCAL
-                if (user.getProvider() == Provider.LOCAL) {
-                    throw new BadRequestException("EMAIL_ALREADY_REGISTERED_LOCAL");
-                }
-
-                // Nếu user đã tồn tại và provider là GOOGLE thì cho đi tiếp (đăng nhập bình thường)
                 if (user.getStatus() == UserStatus.BLOCKED) {
                     throw new BadRequestException("ACCOUNT_BLOCKED");
+                }
+
+                // Liên kết tài khoản: Nếu user là LOCAL chưa có google_id thì cập nhật để liên kết
+                if (user.getProvider() == Provider.LOCAL && (user.getGoogleId() == null || user.getGoogleId().isEmpty())) {
+                    user.setGoogleId(googleId);
+                    userRepository.save(user);
                 }
             }
 

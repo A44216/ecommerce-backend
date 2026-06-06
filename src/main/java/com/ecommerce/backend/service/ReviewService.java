@@ -13,6 +13,7 @@ import com.ecommerce.backend.repository.ReviewRepository;
 import com.ecommerce.backend.repository.ShopRepository;
 import com.ecommerce.backend.repository.UserRepository;
 import com.ecommerce.backend.exception.ResourceNotFoundException;
+import com.ecommerce.backend.enums.NotificationType;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -29,17 +30,20 @@ public class ReviewService {
     private final ProductRepository productRepository;
     private final OrderItemRepository orderItemRepository;
     private final ShopRepository shopRepository;
+    private final NotificationService notificationService;
 
     public ReviewService(ReviewRepository reviewRepository,
                          UserRepository userRepository,
                          ProductRepository productRepository,
                          OrderItemRepository orderItemRepository,
-                         ShopRepository shopRepository) {
+                         ShopRepository shopRepository,
+                         NotificationService notificationService) {
         this.reviewRepository = reviewRepository;
         this.userRepository = userRepository;
         this.productRepository = productRepository;
         this.orderItemRepository = orderItemRepository;
         this.shopRepository = shopRepository;
+        this.notificationService = notificationService;
     }
 
     // ENTITY -> RESPONSE DTO
@@ -127,6 +131,14 @@ public class ReviewService {
         shop.setRatingAvg(shopAvg != null ? shopAvg : BigDecimal.ZERO);
         shop.setRatingCount(shopRatingCount != null ? shopRatingCount : 0);
         shopRepository.save(shop);
+
+        // Gửi thông báo cho Seller
+        User seller = shop.getUser();
+        if (seller != null) {
+            String title = "Đánh giá mới cho sản phẩm";
+            String body = "Sản phẩm " + product.getName() + " vừa nhận được đánh giá " + request.getRating() + " sao từ khách hàng " + user.getFullName() + ".";
+            notificationService.createNotification(seller.getId(), title, body, NotificationType.PRODUCT, product.getId());
+        }
 
         return mapToDTO(saved);
     }

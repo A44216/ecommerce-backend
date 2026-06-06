@@ -332,7 +332,7 @@ public class OrderService {
                     "Đơn hàng mới",
                     "Bạn vừa nhận được đơn hàng mới #" + savedOrder.getId() + " từ khách hàng "
                             + savedOrder.getUser().getFullName() + ".",
-                    NotificationType.ORDER,
+                    NotificationType.SELLER_ORDER,
                     savedOrder.getId());
         }
 
@@ -417,7 +417,7 @@ public class OrderService {
                     "Đơn hàng đã bị hủy",
                     "Khách hàng " + savedOrder.getUser().getFullName() + " đã hủy đơn hàng #" + savedOrder.getId()
                             + ".",
-                    NotificationType.ORDER,
+                    NotificationType.SELLER_ORDER,
                     savedOrder.getId());
         }
 
@@ -446,7 +446,7 @@ public class OrderService {
                     savedOrder.getShop().getUser().getId(),
                     "Khách đã nhận hàng",
                     "Đơn hàng #" + savedOrder.getId() + " đã được khách xác nhận nhận hàng thành công.",
-                    NotificationType.ORDER,
+                    NotificationType.SELLER_ORDER,
                     savedOrder.getId());
         }
 
@@ -470,7 +470,7 @@ public class OrderService {
                     savedOrder.getShop().getUser().getId(),
                     "Yêu cầu trả hàng/hoàn tiền",
                     "Khách hàng đã yêu cầu trả hàng cho đơn hàng #" + savedOrder.getId() + " với lý do: " + reason,
-                    NotificationType.ORDER,
+                    NotificationType.SELLER_ORDER,
                     savedOrder.getId());
         }
 
@@ -564,7 +564,7 @@ public class OrderService {
                     order.getShop().getUser().getId(),
                     "Phán quyết tranh chấp",
                     "Admin đã xử hoàn tiền cho khách ở đơn hàng #" + order.getId() + ".",
-                    NotificationType.ORDER,
+                    NotificationType.SELLER_ORDER,
                     order.getId());
         } else if ("COMPLETED".equalsIgnoreCase(decision)) {
             order.setStatus(OrderStatus.COMPLETED);
@@ -583,7 +583,7 @@ public class OrderService {
                     order.getShop().getUser().getId(),
                     "Phán quyết tranh chấp",
                     "Admin đã xử thắng cho Shop ở đơn hàng #" + order.getId() + ". Tiền sẽ được chuyển cho bạn.",
-                    NotificationType.ORDER,
+                    NotificationType.SELLER_ORDER,
                     order.getId());
         } else {
             throw new BadRequestException("Quyết định không hợp lệ!");
