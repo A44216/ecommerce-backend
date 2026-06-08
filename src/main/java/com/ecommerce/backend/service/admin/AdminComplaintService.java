@@ -9,6 +9,8 @@ import com.ecommerce.backend.entity.User;
 import com.ecommerce.backend.enums.ComplaintStatus;
 import com.ecommerce.backend.exception.ResourceNotFoundException;
 import com.ecommerce.backend.repository.ComplaintRepository;
+import com.ecommerce.backend.service.NotificationService;
+import com.ecommerce.backend.enums.NotificationType;
 import com.ecommerce.backend.util.SecurityUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -28,6 +30,7 @@ public class AdminComplaintService {
 
     private final ComplaintRepository complaintRepository;
     private final SecurityUtils securityUtils;
+    private final NotificationService notificationService;
 
     public PageResponse<AdminComplaintResponse> getComplaints(
             int page,
@@ -144,6 +147,19 @@ public class AdminComplaintService {
         complaint.setResolvedAt(LocalDateTime.now());
 
         complaintRepository.save(complaint);
+
+        // Send notification to the user who created the complaint
+        if (complaint.getUser() != null) {
+            String notifTitle = "Yêu cầu khiếu nại đã được xử lý";
+            String notifBody = "Yêu cầu khiếu nại " + complaint.getComplaintCode() + " của bạn đã được quản trị viên xử lý.";
+            notificationService.createNotification(
+                    complaint.getUser().getId(),
+                    notifTitle,
+                    notifBody,
+                    NotificationType.COMPLAINT,
+                    complaint.getId()
+            );
+        }
     }
 
 }

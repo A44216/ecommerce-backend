@@ -45,6 +45,7 @@ public class ComplaintService {
                 .complaintCode(complaint.getComplaintCode())
                 .createdAt(complaint.getCreatedAt())
                 .resolvedAt(complaint.getResolvedAt())
+                .adminResponse(complaint.getAdminResponse())
                 .build();
     }
 
@@ -146,6 +147,7 @@ public class ComplaintService {
         res.setStatus(c.getStatus());
         res.setComplaintCode(c.getComplaintCode());
         res.setCreatedAt(c.getCreatedAt());
+        res.setAdminResponse(c.getAdminResponse());
         return res;
 
     }
