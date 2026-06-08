@@ -23,5 +23,6 @@ public class ComplaintResponse {
     private String complaintCode;
     private LocalDateTime createdAt;
     private LocalDateTime resolvedAt;
+    private String adminResponse;
 
 }
