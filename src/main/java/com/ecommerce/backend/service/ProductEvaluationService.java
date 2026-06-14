@@ -73,7 +73,7 @@ public class ProductEvaluationService {
                         ProductEvaluationType.FUZZY,
                         PageRequest.of(0, fetchLimit)
                 ).stream()
-                .filter(eval -> userShopId == null || !eval.getProduct().getShop().getId().equals(userShopId))
+                .filter(eval -> !eval.getProduct().getShop().getId().equals(userShopId))
                 .limit(limit)
                 .map(this::mapToDTO)
                 .collect(Collectors.toList());
@@ -88,7 +88,7 @@ public class ProductEvaluationService {
                         ProductEvaluationType.TRENDING,
                         PageRequest.of(0, fetchLimit)
                 ).stream()
-                .filter(eval -> userShopId == null || !eval.getProduct().getShop().getId().equals(userShopId))
+                .filter(eval -> !eval.getProduct().getShop().getId().equals(userShopId))
                 .limit(limit)
                 .map(this::mapToDTO)
                 .collect(Collectors.toList());
@@ -115,7 +115,7 @@ public class ProductEvaluationService {
         CategoryContext ctx = new CategoryContext(1, BigDecimal.ZERO, BigDecimal.ONE);
         for (Object[] row : contexts) {
             if (row[0].equals(catId)) {
-                Integer sMax = ((Number) row[1]).intValue();
+                int sMax = ((Number) row[1]).intValue();
                 BigDecimal pMin = (BigDecimal) row[2];
                 BigDecimal pMax = (BigDecimal) row[3];
                 ctx = new CategoryContext(sMax > 0 ? sMax : 1, pMin != null ? pMin : BigDecimal.ZERO, pMax != null ? pMax : BigDecimal.ONE);
@@ -235,7 +235,7 @@ public class ProductEvaluationService {
         List<Object[]> categoryContexts = productRepository.findAllCategoryContexts();
         for (Object[] row : categoryContexts) {
             Integer catId = (Integer) row[0];
-            Integer sMax = ((Number) row[1]).intValue();
+            int sMax = ((Number) row[1]).intValue();
             BigDecimal pMin = (BigDecimal) row[2];
             BigDecimal pMax = (BigDecimal) row[3];
             contextMap.put(catId, new CategoryContext(sMax, pMin, pMax));
@@ -284,7 +284,7 @@ public class ProductEvaluationService {
         List<Object[]> categoryContexts = productRepository.findAllCategoryContexts();
         for (Object[] row : categoryContexts) {
             Integer catId = (Integer) row[0];
-            Integer sMax = ((Number) row[1]).intValue();
+            int sMax = ((Number) row[1]).intValue();
             BigDecimal pMin = (BigDecimal) row[2];
             BigDecimal pMax = (BigDecimal) row[3];
             contextMap.put(catId, new CategoryContext(sMax, pMin, pMax));
@@ -389,7 +389,7 @@ public class ProductEvaluationService {
         double muFairP = fuzzyTriangle(pScore, 0.2, 0.5, 0.8);
         double muExpensiveP = fuzzyRightShoulder(pScore, 0.6, 1.0);
 
-        // BƯỚC 3 & 4: SUY LUẬN LUẬT MAMDANI VÀ TRÍCH XUẤT XAI
+        // BƯỚC 3: SUY LUẬN LUẬT MỜ (SUGENO BẬC 0) VÀ TRÍCH XUẤT XAI
         List<FuzzyRule> rules = new ArrayList<>();
 
         // Nhóm luật chuyên biệt (L1-L11)
@@ -411,20 +411,37 @@ public class ProductEvaluationService {
         rules.add(new FuzzyRule("L13", "Chất lượng ở mức cơ bản, đáp ứng được các nhu cầu mua sắm phổ thông.", 0.50, Math.min(muAvgR, muAny)));
         rules.add(new FuzzyRule("L14", "Chất lượng tốt, nhận được nhiều phản hồi tích cực và sự tin tưởng từ người dùng.", 0.70, Math.min(muGoodR, muAny)));
 
-        // Chọn Luật chi phối2
-        FuzzyRule dominantRule = rules.getFirst();
-        for (FuzzyRule rule : rules) {
-            if (rule.getFiringStrength() > dominantRule.getFiringStrength()) dominantRule = rule;
-        }
-
-        // BƯỚC 5: GIẢI MỜ (DEFUZZIFICATION)
+        // BƯỚC 4: GIẢI MỜ (DEFUZZIFICATION) & CHỌN LUẬT CHI PHỐI
+        // 1. Quét qua nhóm chuyên biệt (Luật 1-11) để chọn lời giải thích và tính điểm
+        FuzzyRule dominantRule = null;
         double numerator = 0;
         double denominator = 0;
-        for (FuzzyRule rule : rules) {
+
+        for (FuzzyRule rule : rules.subList(0, 11)) {
+            if (dominantRule == null || rule.getFiringStrength() > dominantRule.getFiringStrength()) {
+                dominantRule = rule;
+            }
             numerator += rule.getFiringStrength() * rule.getCentroidValue();
             denominator += rule.getFiringStrength();
         }
 
+        // 2. FALLBACK: Nếu nhóm chuyên biệt quá yếu (độ thỏa mãn < 0.1)
+        // Ta reset điểm và chuyển sang dùng nhóm luật bao quát (Luật 12-14)
+        if (dominantRule == null || dominantRule.getFiringStrength() < 0.1) {
+            dominantRule = null;
+            numerator = 0;   // Reset tử số để tránh pha loãng điểm
+            denominator = 0; // Reset mẫu số
+            
+            for (FuzzyRule rule : rules.subList(11, rules.size())) {
+                if (dominantRule == null || rule.getFiringStrength() > dominantRule.getFiringStrength()) {
+                    dominantRule = rule;
+                }
+                numerator += rule.getFiringStrength() * rule.getCentroidValue();
+                denominator += rule.getFiringStrength();
+            }
+        }
+
+        // 3. Chốt kết quả cuối cùng
         double finalScore = denominator > 0 ? numerator / denominator : 0.5;
         String xaiReason = denominator > 0 ? dominantRule.getReason() : "Hệ thống đang phân tích thêm dữ liệu để đánh giá.";
 
@@ -445,8 +462,8 @@ public class ProductEvaluationService {
     }
 
     // Tối ưu: evaluate Fuzzy dùng map thay vì query từng sản phẩm
-    private ProductEvaluation evaluateFuzzyWithMap(Product product, CategoryContext ctx, int totalSales,
-                                                   Map<Integer, ProductEvaluation> evalMap) {
+    private void evaluateFuzzyWithMap(Product product, CategoryContext ctx, int totalSales,
+                                      Map<Integer, ProductEvaluation> evalMap) {
         double pScore = 0.5;
         if (ctx.getPMax() != null && ctx.getPMin() != null && ctx.getPMax().compareTo(ctx.getPMin()) > 0 && product.getPrice() != null) {
             pScore = product.getPrice().subtract(ctx.getPMin())
@@ -472,7 +489,8 @@ public class ProductEvaluationService {
             evaluation.setType(ProductEvaluationType.FUZZY);
             evaluation.setReason(xaiReason);
 
-            return evaluationRepository.save(evaluation);
+            evaluationRepository.save(evaluation);
+            return;
         }
 
         // BƯỚC 1: CHUẨN HÓA (Dùng dữ liệu all-time)
@@ -495,7 +513,7 @@ public class ProductEvaluationService {
         double muFairP = fuzzyTriangle(pScore, 0.2, 0.5, 0.8);
         double muExpensiveP = fuzzyRightShoulder(pScore, 0.6, 1.0);
 
-        // BƯỚC 3 & 4: SUY LUẬN LUẬT MAMDANI VÀ TRÍCH XUẤT XAI
+        // BƯỚC 3: SUY LUẬN LUẬT MỜ (SUGENO BẬC 0) VÀ TRÍCH XUẤT XAI
         List<FuzzyRule> rules = new ArrayList<>();
 
         rules.add(new FuzzyRule("L1", "Deal cực hời: Sản phẩm có giá cực tốt, bán rất chạy và đánh giá rất cao!", 0.95, Math.min(Math.min(muGoodR, muHighS), muCheapP)));
@@ -513,18 +531,37 @@ public class ProductEvaluationService {
         rules.add(new FuzzyRule("L13", "Chất lượng ở mức cơ bản, đáp ứng được các nhu cầu mua sắm phổ thông.", 0.50, Math.min(muAvgR, 1.0)));
         rules.add(new FuzzyRule("L14", "Chất lượng tốt, nhận được nhiều phản hồi tích cực và sự tin tưởng từ người dùng.", 0.70, Math.min(muGoodR, 1.0)));
 
-        FuzzyRule dominantRule = rules.getFirst();
-        for (FuzzyRule rule : rules) {
-            if (rule.getFiringStrength() > dominantRule.getFiringStrength()) dominantRule = rule;
-        }
-
+        // BƯỚC 4: GIẢI MỜ (DEFUZZIFICATION) & CHỌN LUẬT CHI PHỐI
+        // 1. Quét qua nhóm chuyên biệt (Luật 1-11) để chọn lời giải thích và tính điểm
+        FuzzyRule dominantRule = null;
         double numerator = 0;
         double denominator = 0;
-        for (FuzzyRule rule : rules) {
+
+        for (FuzzyRule rule : rules.subList(0, 11)) {
+            if (dominantRule == null || rule.getFiringStrength() > dominantRule.getFiringStrength()) {
+                dominantRule = rule;
+            }
             numerator += rule.getFiringStrength() * rule.getCentroidValue();
             denominator += rule.getFiringStrength();
         }
 
+        // 2. FALLBACK: Nếu nhóm chuyên biệt quá yếu (độ thỏa mãn < 0.1)
+        // Ta reset điểm và chuyển sang dùng nhóm luật bao quát (Luật 12-14)
+        if (dominantRule == null || dominantRule.getFiringStrength() < 0.1) {
+            dominantRule = null;
+            numerator = 0;   // Reset tử số để tránh pha loãng điểm
+            denominator = 0; // Reset mẫu số
+            
+            for (FuzzyRule rule : rules.subList(11, rules.size())) {
+                if (dominantRule == null || rule.getFiringStrength() > dominantRule.getFiringStrength()) {
+                    dominantRule = rule;
+                }
+                numerator += rule.getFiringStrength() * rule.getCentroidValue();
+                denominator += rule.getFiringStrength();
+            }
+        }
+
+        // 3. Chốt kết quả cuối cùng
         double finalScore = denominator > 0 ? numerator / denominator : 0.5;
         String xaiReason = denominator > 0 ? dominantRule.getReason() : "Hệ thống đang phân tích thêm dữ liệu để đánh giá.";
 
@@ -537,11 +574,11 @@ public class ProductEvaluationService {
         evaluation.setType(ProductEvaluationType.FUZZY);
         evaluation.setReason(xaiReason);
 
-        return evaluationRepository.save(evaluation);
+        evaluationRepository.save(evaluation);
     }
 
-    private ProductEvaluation evaluateTrendingWithMap(Product product, int salesInMonth, double pScore,
-                                                      Map<Integer, ProductEvaluation> evalMap) {
+    private void evaluateTrendingWithMap(Product product, int salesInMonth, double pScore,
+                                         Map<Integer, ProductEvaluation> evalMap) {
         double salesFactor = Math.min((double) salesInMonth / 100.0, 1.0);
         
         int ratingCount = product.getRatingCount() != null ? product.getRatingCount() : 0;
@@ -583,7 +620,7 @@ public class ProductEvaluationService {
         evaluation.setRatingScore(BigDecimal.valueOf(ratingFactor));
         evaluation.setPriceScore(BigDecimal.valueOf(pScore));
 
-        return evaluationRepository.save(evaluation);
+        evaluationRepository.save(evaluation);
     }
 
     public SellerAssistantResponse evaluateProductForSeller(Integer productId) {
@@ -596,7 +633,7 @@ public class ProductEvaluationService {
         CategoryContext ctx = new CategoryContext(1, BigDecimal.ZERO, BigDecimal.ONE);
         for (Object[] row : contexts) {
             if (row[0].equals(catId)) {
-                Integer sMax = ((Number) row[1]).intValue();
+                int sMax = ((Number) row[1]).intValue();
                 BigDecimal pMin = (BigDecimal) row[2];
                 BigDecimal pMax = (BigDecimal) row[3];
                 ctx = new CategoryContext(sMax > 0 ? sMax : 1, pMin != null ? pMin : BigDecimal.ZERO, pMax != null ? pMax : BigDecimal.ONE);
@@ -606,6 +643,7 @@ public class ProductEvaluationService {
 
         int totalSales = product.getSoldCount() != null ? product.getSoldCount() : 0;
 
+        // BƯỚC 1: TIỀN XỬ LÝ VÀ CHUẨN HÓA (Normalization)
         double pScore = 0.5;
         if (ctx.getPMax() != null && ctx.getPMin() != null && ctx.getPMax().compareTo(ctx.getPMin()) > 0 && product.getPrice() != null) {
             pScore = product.getPrice().subtract(ctx.getPMin())
@@ -638,6 +676,7 @@ public class ProductEvaluationService {
         }
         double sScore = ctx.getSMax() > 0 ? (double) totalSales / ctx.getSMax() : 0;
 
+        // BƯỚC 2: MỜ HÓA (FUZZIFICATION)
         double muPoorR = fuzzyLeftShoulder(rScore, 0.0, 0.4);
         double muAvgR = fuzzyTriangle(rScore, 0.2, 0.5, 0.8);
         double muGoodR = fuzzyRightShoulder(rScore, 0.6, 1.0);
@@ -650,6 +689,7 @@ public class ProductEvaluationService {
         double muFairP = fuzzyTriangle(pScore, 0.2, 0.5, 0.8);
         double muExpensiveP = fuzzyRightShoulder(pScore, 0.6, 1.0);
 
+        // BƯỚC 3: SUY LUẬN LUẬT MỜ (SUGENO BẬC 0) VÀ TRÍCH XUẤT XAI - 9 luật S1-S8, S_DEF
         List<SellerRule> rules = new ArrayList<>();
 
         rules.add(new SellerRule("S1", "Sản phẩm của bạn đang có điểm gợi ý thấp do mức giá cao so với mặt bằng chung nhưng lượt mua còn hạn chế.", "Hệ thống khuyến nghị bạn nên cân nhắc điều chỉnh giảm giá 10-15% trong tuần tới để tăng điểm xếp hạng và thu hút người mua.", 0.2, Math.min(Math.min(muAvgR, muLowS), muExpensiveP)));
@@ -664,6 +704,7 @@ public class ProductEvaluationService {
         double muAny = 1.0;
         rules.add(new SellerRule("S_DEF", "Sản phẩm đang ở mức ổn định, đáp ứng được nhu cầu cơ bản của thị trường.", "Hãy theo dõi thêm dữ liệu phản hồi của khách hàng. Bạn có thể thử nghiệm tạo các combo mua kèm để tăng giá trị trung bình trên mỗi đơn hàng.", 0.5, Math.min(muAvgR, muAny)));
 
+        // BƯỚC 4: GIẢI MỜ (DEFUZZIFICATION) & CHỌN LUẬT CHI PHỐI
         SellerRule dominantRule = rules.getFirst();
         for (SellerRule rule : rules) {
             if (rule.getFiringStrength() > dominantRule.getFiringStrength()) dominantRule = rule;
