@@ -124,7 +124,7 @@ public class CustomerAssistantService {
         Map<String, Object> properties = new HashMap<>();
         Map<String, Object> keywordProp = new HashMap<>();
         keywordProp.put("type", "STRING");
-        keywordProp.put("description", "Từ khóa tìm kiếm sản phẩm. Ví dụ: 'áo thun', 'điện thoại'");
+        keywordProp.put("description", "Từ khóa tìm kiếm sản phẩm. MẸO QUAN TRỌNG: Cơ sở dữ liệu sử dụng cả tiếng Anh và tiếng Việt. Khi khách hàng tìm bằng tiếng Việt (VD: 'điện thoại', 'máy tính'), bạn BẮT BUỘC phải dịch sang tiếng Anh và truyền cả 2 ngôn ngữ cách nhau bởi dấu '|' (VD: 'điện thoại|phone', 'máy tính|laptop', 'chuột|mouse').");
         properties.put("keyword", keywordProp);
         
         Map<String, Object> upSellProp = new HashMap<>();
@@ -157,10 +157,10 @@ public class CustomerAssistantService {
         Map<String, Object> compareProps = new HashMap<>();
         Map<String, Object> kw1Prop = new HashMap<>();
         kw1Prop.put("type", "STRING");
-        kw1Prop.put("description", "Từ khóa sản phẩm thứ nhất");
+        kw1Prop.put("description", "Từ khóa sản phẩm thứ nhất. BẮT BUỘC dịch sang tiếng Anh và truyền cả 2 ngôn ngữ cách nhau bởi dấu '|' (VD: 'điện thoại|phone').");
         Map<String, Object> kw2Prop = new HashMap<>();
         kw2Prop.put("type", "STRING");
-        kw2Prop.put("description", "Từ khóa sản phẩm thứ hai");
+        kw2Prop.put("description", "Từ khóa sản phẩm thứ hai. BẮT BUỘC dịch sang tiếng Anh và truyền cả 2 ngôn ngữ cách nhau bởi dấu '|' (VD: 'máy tính|laptop').");
         compareProps.put("keyword1", kw1Prop);
         compareProps.put("keyword2", kw2Prop);
         compareParams.put("properties", compareProps);
