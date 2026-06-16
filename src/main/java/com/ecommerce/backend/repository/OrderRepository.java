@@ -235,6 +235,7 @@ public interface OrderRepository extends JpaRepository<Order, Integer> {
                 AND o.completed_at BETWEEN :startDate AND :endDate
                 GROUP BY c.id, c.name
                 ORDER BY totalSales DESC
+                LIMIT 3
             """, nativeQuery = true)
     List<Object[]> getCategorySalesByDate(
             @Param("startDate") LocalDateTime startDate,
